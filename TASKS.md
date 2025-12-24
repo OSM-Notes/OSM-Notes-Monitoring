@@ -64,7 +64,7 @@
 ### Logging Infrastructure
 
 - [x] Set up log rotation configuration (`config/logrotate.conf`, `scripts/setup_logrotate.sh`, `docs/LOGGING.md`)
-- [ ] Test logging with different log levels
+- [x] Test logging with different log levels (`scripts/test_logging_levels.sh`, `tests/integration/test_logging_levels.sh`)
 - [ ] Create log aggregation utilities
 - [ ] Document logging best practices
 - [ ] Test logging performance
