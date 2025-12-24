@@ -1,10 +1,25 @@
 -- OSM-Notes-Monitoring Database Initialization Script
 -- Version: 2025-01-23
 -- Purpose: Create database schema for monitoring metrics and alerts
+--
+-- This script creates all necessary tables, indexes, functions, and views
+-- for the OSM-Notes-Monitoring system.
+--
+-- Usage:
+--   psql -d osm_notes_monitoring -f sql/init.sql
+--
+-- Requirements:
+--   - PostgreSQL 12+ (for JSONB and other features)
+--   - Extensions: uuid-ossp, pg_trgm
+--   - Optional: TimescaleDB extension for better time-series performance
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- Optional: Enable TimescaleDB for better time-series performance
+-- Uncomment if TimescaleDB is installed:
+-- CREATE EXTENSION IF NOT EXISTS "timescaledb";
 
 -- Metrics table for storing time-series monitoring data
 CREATE TABLE IF NOT EXISTS metrics (
@@ -18,10 +33,12 @@ CREATE TABLE IF NOT EXISTS metrics (
     CONSTRAINT metrics_component_check CHECK (component IN ('ingestion', 'analytics', 'wms', 'api', 'data', 'infrastructure'))
 );
 
--- Create index for efficient time-series queries
+-- Create indexes for efficient time-series queries
 CREATE INDEX IF NOT EXISTS idx_metrics_component_timestamp ON metrics(component, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_metrics_metric_name ON metrics(metric_name);
 CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_metrics_component_metric_timestamp ON metrics(component, metric_name, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_metrics_metadata ON metrics USING GIN(metadata) WHERE metadata IS NOT NULL;
 
 -- Alerts table for storing alert history
 CREATE TABLE IF NOT EXISTS alerts (
@@ -38,10 +55,12 @@ CREATE TABLE IF NOT EXISTS alerts (
     CONSTRAINT alerts_status_check CHECK (status IN ('active', 'resolved', 'acknowledged'))
 );
 
--- Create index for alert queries
+-- Create indexes for alert queries
 CREATE INDEX IF NOT EXISTS idx_alerts_component_status ON alerts(component, status);
 CREATE INDEX IF NOT EXISTS idx_alerts_level_created ON alerts(alert_level, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_alerts_status_created ON alerts(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_component_type ON alerts(component, alert_type);
+CREATE INDEX IF NOT EXISTS idx_alerts_metadata ON alerts USING GIN(metadata) WHERE metadata IS NOT NULL;
 
 -- Security events table for API security monitoring
 CREATE TABLE IF NOT EXISTS security_events (
@@ -56,10 +75,12 @@ CREATE TABLE IF NOT EXISTS security_events (
     CONSTRAINT security_events_type_check CHECK (event_type IN ('rate_limit', 'ddos', 'abuse', 'block', 'unblock'))
 );
 
--- Create index for security event queries
+-- Create indexes for security event queries
 CREATE INDEX IF NOT EXISTS idx_security_events_type_timestamp ON security_events(event_type, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_security_events_ip ON security_events(ip_address);
 CREATE INDEX IF NOT EXISTS idx_security_events_timestamp ON security_events(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_security_events_ip_timestamp ON security_events(ip_address, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_security_events_metadata ON security_events USING GIN(metadata) WHERE metadata IS NOT NULL;
 
 -- IP management table for whitelist/blacklist
 CREATE TABLE IF NOT EXISTS ip_management (
@@ -134,6 +155,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Create function to clean up old security events
+CREATE OR REPLACE FUNCTION cleanup_old_security_events(retention_days INTEGER DEFAULT 90)
+RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM security_events
+    WHERE timestamp < CURRENT_TIMESTAMP - (retention_days || ' days')::INTERVAL;
+    
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Insert initial component health records
 INSERT INTO component_health (component, status) VALUES
     ('ingestion', 'unknown'),
@@ -173,9 +208,50 @@ GROUP BY component, alert_level;
 -- GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO monitoring_user;
 -- GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO monitoring_user;
 
+-- Table comments
 COMMENT ON TABLE metrics IS 'Time-series metrics storage for all monitored components';
 COMMENT ON TABLE alerts IS 'Alert history and status tracking';
 COMMENT ON TABLE security_events IS 'Security-related events (rate limiting, DDoS, abuse detection)';
 COMMENT ON TABLE ip_management IS 'IP whitelist, blacklist, and temporary blocks';
 COMMENT ON TABLE component_health IS 'Current health status of each monitored component';
+
+-- Column comments for metrics table
+COMMENT ON COLUMN metrics.component IS 'Component name: ingestion, analytics, wms, api, data, infrastructure';
+COMMENT ON COLUMN metrics.metric_name IS 'Name of the metric being tracked';
+COMMENT ON COLUMN metrics.metric_value IS 'Numeric value of the metric';
+COMMENT ON COLUMN metrics.metric_unit IS 'Unit of measurement (ms, %, count, etc.)';
+COMMENT ON COLUMN metrics.metadata IS 'Additional metadata as JSON (tags, labels, etc.)';
+
+-- Column comments for alerts table
+COMMENT ON COLUMN alerts.alert_level IS 'Alert severity: critical, warning, info';
+COMMENT ON COLUMN alerts.alert_type IS 'Type/category of alert (e.g., data_quality, performance, availability)';
+COMMENT ON COLUMN alerts.status IS 'Alert status: active, resolved, acknowledged';
+COMMENT ON COLUMN alerts.metadata IS 'Additional alert context as JSON';
+
+-- Column comments for security_events table
+COMMENT ON COLUMN security_events.event_type IS 'Type of security event: rate_limit, ddos, abuse, block, unblock';
+COMMENT ON COLUMN security_events.ip_address IS 'IP address associated with the event';
+COMMENT ON COLUMN security_events.endpoint IS 'API endpoint accessed (if applicable)';
+COMMENT ON COLUMN security_events.request_count IS 'Number of requests in this event';
+
+-- Column comments for ip_management table
+COMMENT ON COLUMN ip_management.list_type IS 'Type of list: whitelist, blacklist, temp_block';
+COMMENT ON COLUMN ip_management.reason IS 'Reason for adding IP to list';
+COMMENT ON COLUMN ip_management.expires_at IS 'Expiration time for temporary blocks (NULL for permanent)';
+
+-- Column comments for component_health table
+COMMENT ON COLUMN component_health.status IS 'Health status: healthy, degraded, down, unknown';
+COMMENT ON COLUMN component_health.last_check IS 'Timestamp of last health check';
+COMMENT ON COLUMN component_health.last_success IS 'Timestamp of last successful check';
+COMMENT ON COLUMN component_health.error_count IS 'Consecutive error count';
+
+-- Function comments
+COMMENT ON FUNCTION cleanup_old_metrics(INTEGER) IS 'Remove metrics older than retention_days (default: 90)';
+COMMENT ON FUNCTION cleanup_old_alerts(INTEGER) IS 'Remove resolved alerts older than retention_days (default: 180)';
+COMMENT ON FUNCTION cleanup_expired_ip_blocks() IS 'Remove expired temporary IP blocks';
+COMMENT ON FUNCTION cleanup_old_security_events(INTEGER) IS 'Remove security events older than retention_days (default: 90)';
+
+-- View comments
+COMMENT ON VIEW metrics_summary IS 'Summary of metrics from last 24 hours grouped by component and metric name';
+COMMENT ON VIEW active_alerts_summary IS 'Summary of active alerts grouped by component and alert level';
 

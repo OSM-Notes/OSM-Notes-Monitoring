@@ -40,7 +40,7 @@
 
 ### Database Schema & Initialization
 
-- [ ] Review and finalize `sql/init.sql` schema
+- [x] Review and finalize `sql/init.sql` schema
 - [ ] Add database migration scripts structure
 - [ ] Create database backup/restore procedures
 - [ ] Document database schema (ER diagrams, table descriptions)
