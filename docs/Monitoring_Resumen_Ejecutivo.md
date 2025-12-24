@@ -2,7 +2,7 @@
 
 > **Propósito:** Resumen en español de la propuesta de arquitectura de monitoreo  
 > **Autor:** Andres Gomez (AngocA)  
-> **Versión:** 2025-01-23
+> **Versión:** 2025-12-24
 
 ## Decisión: Crear el 8vo Repositorio
 

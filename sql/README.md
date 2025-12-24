@@ -131,14 +131,44 @@ SELECT * FROM component_health
 ORDER BY status, component;
 ```
 
-## Migration
+## Migrations
 
-When schema changes are needed:
+The project uses a migration system to track and apply database schema changes.
 
-1. Create migration script in `sql/migrations/` (to be created)
-2. Name format: `YYYYMMDD_description.sql`
-3. Test migration on test database first
-4. Document breaking changes
+### Migration Structure
+
+Migrations are stored in `sql/migrations/` and follow the naming pattern:
+```
+YYYYMMDD_HHMMSS_description.sql
+```
+
+### Running Migrations
+
+```bash
+# List pending migrations
+./sql/migrations/run_migrations.sh --list -d osm_notes_monitoring
+
+# Run all pending migrations
+./sql/migrations/run_migrations.sh -d osm_notes_monitoring
+
+# Run specific migration
+./sql/migrations/run_migrations.sh -d osm_notes_monitoring 20251224_120000_description.sql
+
+# Verbose output
+./sql/migrations/run_migrations.sh -d osm_notes_monitoring -v
+```
+
+### Creating a New Migration
+
+1. Create a new SQL file in `sql/migrations/` with the naming pattern
+2. Use transactions (BEGIN/COMMIT)
+3. Include comments describing the change
+4. Test on a test database first
+5. See `sql/migrations/README.md` for detailed guidelines
+
+### Migration Tracking
+
+Applied migrations are tracked in the `schema_migrations` table, which is created automatically by `init.sql` or the first migration.
 
 ## References
 

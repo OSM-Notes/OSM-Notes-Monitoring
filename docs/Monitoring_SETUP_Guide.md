@@ -2,7 +2,7 @@
 
 > **Propósito:** Guía paso a paso para crear y configurar el repositorio OSM-Notes-Monitoring  
 > **Autor:** Andres Gomez (AngocA)  
-> **Versión:** 2025-01-23
+> **Versión:** 2025-12-24
 
 ## Paso 1: Crear el Repositorio en GitHub
 

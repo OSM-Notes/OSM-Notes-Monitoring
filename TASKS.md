@@ -1,7 +1,7 @@
 # OSM-Notes-Monitoring - Task List
 
 > **Purpose:** Ordered task list for implementation - follow this list step by step  
-> **Last Updated:** 2025-01-23  
+> **Last Updated:** 2025-12-24  
 > **Status:** Active
 
 ## How to Use This List
@@ -43,7 +43,9 @@
 - [x] Review and finalize `sql/init.sql` schema
 - [x] Create database initialization test script (`sql/test_schema.sh`)
 - [x] Test database initialization on clean database
-- [ ] Add database migration scripts structure
+- [x] Add database migration scripts structure
+- [x] Create migration runner script (`sql/migrations/run_migrations.sh`)
+- [x] Create migration tracking table in init.sql
 - [ ] Create database backup/restore procedures
 - [ ] Document database schema (ER diagrams, table descriptions)
 - [ ] Create database initialization test script
@@ -513,7 +515,7 @@
 
 ---
 
-**Last Updated:** 2025-01-23  
+**Last Updated:** 2025-12-24  
 **Current Phase:** Phase 1 - Core Infrastructure  
 **Next Task:** Review and finalize `sql/init.sql` schema
 

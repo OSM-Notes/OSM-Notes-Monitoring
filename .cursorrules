@@ -1,0 +1,42 @@
+# Cursor Rules for OSM-Notes-Monitoring
+
+## Date Handling
+
+**IMPORTANT**: Always use the current date when creating files or updating dates.
+
+### Getting Current Date
+
+Before using dates in code or documentation, get the current date:
+```bash
+date +"%Y-%m-%d"  # Format: 2025-12-24
+date +"%Y%m%d"    # Format: 20251224
+```
+
+### Date Usage Guidelines
+
+1. **File Headers**: Use current date for "Date:" or "Last Updated:" fields
+2. **Version Numbers**: Use current date format YYYY-MM-DD
+3. **Migration Files**: Use format YYYYMMDD_HHMMSS_description.sql with current date
+4. **Changelog**: Use current date for new entries
+5. **Documentation**: Update "Last Updated" to current date when modifying
+
+### Examples
+
+```bash
+# Get current date before creating files
+CURRENT_DATE=$(date +"%Y-%m-%d")
+CURRENT_DATE_COMPACT=$(date +"%Y%m%d")
+
+# Use in file headers
+# Date: ${CURRENT_DATE}
+# Version: ${CURRENT_DATE}
+
+# Use in migration filenames
+# sql/migrations/${CURRENT_DATE_COMPACT}_120000_description.sql
+```
+
+### Never Hardcode Dates
+
+❌ Don't hardcode dates like "2025-01-23"
+✅ Always get current date: `date +"%Y-%m-%d"`
+

@@ -2,7 +2,7 @@
 
 > **Purpose:** Design document for centralized monitoring system across all OSM Notes repositories  
 > **Author:** Andres Gomez (AngocA)  
-> **Version:** 2025-01-23  
+> **Version:** 2025-12-24  
 > **Status:** Proposal
 
 ## Executive Summary

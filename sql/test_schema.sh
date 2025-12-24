@@ -4,13 +4,14 @@
 # Tests the database initialization script (init.sql)
 #
 # Version: 1.0.0
-# Date: 2025-01-23
+# Date: 2025-12-24
 #
 
 set -euo pipefail
 
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+SCRIPT_DIR=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 readonly TEST_DB="osm_notes_monitoring_test"
 readonly INIT_SQL="${SCRIPT_DIR}/init.sql"
 

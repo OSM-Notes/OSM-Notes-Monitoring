@@ -1,7 +1,7 @@
 # Coding Standards - OSM-Notes-Monitoring
 
 > **Purpose:** Coding standards and best practices for the project  
-> **Version:** 2025-01-23
+> **Version:** 2025-12-24
 
 ## Table of Contents
 
@@ -242,7 +242,7 @@ ORDER BY
 ```bash
 # Configuration file: config/component.conf
 # Version: 1.0.0
-# Last Updated: 2025-01-23
+# Last Updated: 2025-12-24
 
 # Section: Component Settings
 COMPONENT_ENABLED=true
@@ -401,7 +401,7 @@ log_error() { log_message "ERROR" "$@"; }
 
 ```bash
 # Format: TIMESTAMP [LEVEL] SCRIPT_NAME: MESSAGE
-# Example: 2025-01-23 10:30:45 [INFO] monitorIngestion.sh: Check completed successfully
+# Example: 2025-12-24 10:30:45 [INFO] monitorIngestion.sh: Check completed successfully
 
 log_message() {
     local level="${1:?Log level required}"
@@ -475,6 +475,6 @@ load "$(dirname "$0")/../tests/test_helper.bash"
 
 ---
 
-**Last Updated:** 2025-01-23  
+**Last Updated:** 2025-12-24  
 **Maintainer:** Andres Gomez (AngocA)
 

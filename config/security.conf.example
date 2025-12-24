@@ -1,5 +1,5 @@
 # Security Configuration for OSM-Notes-Monitoring
-# Version: 2025-01-23
+# Version: 2025-12-24
 
 # Rate Limiting
 RATE_LIMIT_PER_IP_PER_MINUTE=60

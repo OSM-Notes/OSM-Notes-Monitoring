@@ -1,6 +1,6 @@
 # Properties for OSM-Notes-Monitoring
 # Copy this file to properties.sh and configure
-# Version: 2025-01-23
+# Version: 2025-12-24
 
 # Database
 DBNAME="osm_notes_monitoring"

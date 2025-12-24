@@ -1,5 +1,5 @@
 -- OSM-Notes-Monitoring Database Initialization Script
--- Version: 2025-01-23
+-- Version: 2025-12-24
 -- Purpose: Create database schema for monitoring metrics and alerts
 --
 -- This script creates all necessary tables, indexes, functions, and views
@@ -168,6 +168,20 @@ BEGIN
     RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Create migration tracking table (for future migrations)
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version VARCHAR(255) PRIMARY KEY,
+    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    description TEXT
+);
+
+COMMENT ON TABLE schema_migrations IS 'Tracks which database migrations have been applied';
+
+-- Record initial schema version
+INSERT INTO schema_migrations (version, description) VALUES
+    ('init', 'Initial database schema from init.sql')
+ON CONFLICT (version) DO NOTHING;
 
 -- Insert initial component health records
 INSERT INTO component_health (component, status) VALUES

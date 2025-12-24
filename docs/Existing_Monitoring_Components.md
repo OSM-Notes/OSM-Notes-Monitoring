@@ -2,7 +2,7 @@
 
 > **Purpose:** Document existing monitoring components in OSM-Notes-Ingestion that OSM-Notes-Monitoring should integrate with or reference  
 > **Author:** Andres Gomez (AngocA)  
-> **Version:** 2025-01-23
+> **Version:** 2025-12-24
 
 ## Overview
 
