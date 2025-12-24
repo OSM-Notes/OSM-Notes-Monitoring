@@ -235,6 +235,8 @@ log_error_with_trace "Function failed" "${BASH_SOURCE[0]}" "${LINENO}"
 
 ## Best Practices
 
+> **Note:** For comprehensive logging best practices, see **[Logging Best Practices](./LOGGING_BEST_PRACTICES.md)**
+
 ### 1. Use Appropriate Log Levels
 
 - **DEBUG**: Only for detailed debugging
