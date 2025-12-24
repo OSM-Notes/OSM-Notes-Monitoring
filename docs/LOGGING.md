@@ -385,9 +385,93 @@ set_log_component "COMPONENT_NAME"
 
 ---
 
-## Log Aggregation
+## Log Aggregation Utilities
 
-For large deployments, consider using log aggregation tools:
+OSM-Notes-Monitoring includes built-in log aggregation and analysis utilities:
+
+### Log Aggregator (`scripts/log_aggregator.sh`)
+
+Aggregates logs from multiple components with filtering options.
+
+**Usage:**
+```bash
+# Show last 100 lines from all logs
+./scripts/log_aggregator.sh
+
+# Show only ERROR logs
+./scripts/log_aggregator.sh --level ERROR
+
+# Show logs from ingestion component
+./scripts/log_aggregator.sh --component ingestion
+
+# Show logs from last hour
+./scripts/log_aggregator.sh --since "1 hour ago"
+
+# Search for pattern
+./scripts/log_aggregator.sh --grep "database"
+
+# Follow logs in real-time
+./scripts/log_aggregator.sh --follow
+
+# Combine filters
+./scripts/log_aggregator.sh --component ingestion --level ERROR --since "1 hour ago"
+```
+
+**Options:**
+- `-d, --dir DIR`: Log directory
+- `-c, --component NAME`: Filter by component
+- `-l, --level LEVEL`: Filter by log level
+- `-s, --since TIME`: Show logs since time
+- `-u, --until TIME`: Show logs until time
+- `-g, --grep PATTERN`: Search for pattern
+- `-f, --follow`: Follow logs (like tail -f)
+- `-n, --lines N`: Show last N lines
+
+### Log Analyzer (`scripts/log_analyzer.sh`)
+
+Analyzes logs and generates statistics and reports.
+
+**Usage:**
+```bash
+# Show statistics
+./scripts/log_analyzer.sh stats
+
+# Show error summary
+./scripts/log_analyzer.sh errors
+
+# Show top error messages
+./scripts/log_analyzer.sh top-errors
+
+# Show component statistics
+./scripts/log_analyzer.sh components
+
+# Show summary report
+./scripts/log_analyzer.sh summary
+
+# Analyze last hour
+./scripts/log_analyzer.sh --since "1 hour ago" stats
+
+# Component-specific analysis
+./scripts/log_analyzer.sh --component ingestion errors
+```
+
+**Commands:**
+- `stats`: Show log statistics
+- `errors`: Show error summary
+- `top-errors`: Show top error messages
+- `components`: Show component statistics
+- `summary`: Show summary report
+
+**Options:**
+- `-d, --dir DIR`: Log directory
+- `-s, --since TIME`: Analyze logs since time
+- `-u, --until TIME`: Analyze logs until time
+- `-c, --component NAME`: Filter by component
+- `-o, --output FILE`: Output to file
+
+## External Log Aggregation
+
+For large deployments, consider using external log aggregation tools:
 
 ### Options
 
