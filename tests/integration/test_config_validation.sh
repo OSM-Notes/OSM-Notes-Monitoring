@@ -4,6 +4,10 @@
 # Tests configuration validation with various scenarios
 #
 
+# shellcheck disable=SC2030,SC2031
+# SC2030/SC2031: Variables modified in subshells are expected in BATS tests
+# Each test runs in an isolated subshell, so variable modifications are intentional
+
 load "${BATS_TEST_DIRNAME}/../test_helper.bash"
 
 # Source libraries
