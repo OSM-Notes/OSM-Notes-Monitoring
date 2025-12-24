@@ -216,6 +216,7 @@ DDOS_THRESHOLD_REQUESTS_PER_SECOND=100
 
 ## Documentation
 
+- **[Task List](./TASKS.md)**: **Ordered implementation task list - follow this for development**
 - **[Architecture Proposal](./docs/Monitoring_Architecture_Proposal.md)**: Complete system architecture
 - **[API Security Design](./docs/API_Security_Design.md)**: Security and protection mechanisms
 - **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)**: Detailed implementation plan with testing and standards
