@@ -311,6 +311,75 @@ check_ingestion_performance() {
 }
 
 ##
+# Check data completeness
+##
+check_data_completeness() {
+    log_debug "${COMPONENT}: Checking data completeness"
+    
+    # Check database connection
+    if ! check_database_connection; then
+        log_warning "${COMPONENT}: Cannot check data completeness - database connection failed"
+        return 0
+    fi
+    
+    # Query to check for missing or null data
+    # This is a placeholder - actual queries depend on database schema
+    local completeness_query="
+        SELECT 
+            COUNT(*) as total_notes,
+            COUNT(*) FILTER (WHERE id IS NULL) as null_ids,
+            COUNT(*) FILTER (WHERE created_at IS NULL) as null_dates
+        FROM notes
+        LIMIT 1;
+    "
+    
+    # Try to execute query (may fail if table doesn't exist or schema differs)
+    local result
+    result=$(execute_sql_query "${completeness_query}" 2>/dev/null || echo "")
+    
+    if [[ -n "${result}" ]]; then
+        log_debug "${COMPONENT}: Data completeness check result: ${result}"
+        # Parse and record metrics if needed
+    fi
+    
+    return 0
+}
+
+##
+# Check data freshness
+##
+check_data_freshness() {
+    log_debug "${COMPONENT}: Checking data freshness"
+    
+    # Check database connection
+    if ! check_database_connection; then
+        log_warning "${COMPONENT}: Cannot check data freshness - database connection failed"
+        return 0
+    fi
+    
+    # Query to check last update time
+    # This is a placeholder - actual queries depend on database schema
+    local freshness_query="
+        SELECT 
+            MAX(updated_at) as last_update,
+            COUNT(*) FILTER (WHERE updated_at > NOW() - INTERVAL '1 hour') as recent_updates
+        FROM notes
+        LIMIT 1;
+    "
+    
+    # Try to execute query
+    local result
+    result=$(execute_sql_query "${freshness_query}" 2>/dev/null || echo "")
+    
+    if [[ -n "${result}" ]]; then
+        log_debug "${COMPONENT}: Data freshness check result: ${result}"
+        # Parse and record metrics if needed
+    fi
+    
+    return 0
+}
+
+##
 # Check ingestion data quality using notesCheckVerifier.sh
 ##
 check_ingestion_data_quality() {
@@ -322,56 +391,76 @@ check_ingestion_data_quality() {
         return 1
     fi
     
-    # Path to notesCheckVerifier.sh
+    local quality_score=100
+    local issues_found=0
+    
+    # Run notesCheckVerifier.sh if available
     local verifier_script="${INGESTION_REPO_PATH}/bin/monitor/notesCheckVerifier.sh"
     
-    if [[ ! -f "${verifier_script}" ]]; then
+    if [[ -f "${verifier_script}" ]]; then
+        log_info "${COMPONENT}: Running notesCheckVerifier.sh"
+        
+        # Run the verifier script
+        local start_time
+        start_time=$(date +%s)
+        
+        local exit_code=0
+        local output
+        output=$(cd "${INGESTION_REPO_PATH}" && bash "${verifier_script}" 2>&1) || exit_code=$?
+        
+        local end_time
+        end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        
+        # Log the output
+        log_debug "${COMPONENT}: notesCheckVerifier.sh output:\n${output}"
+        
+        # Check exit code
+        if [[ ${exit_code} -eq 0 ]]; then
+            log_info "${COMPONENT}: notesCheckVerifier check passed (duration: ${duration}s)"
+            record_metric "${COMPONENT}" "data_quality_check_status" "1" "component=ingestion,check=notesCheckVerifier"
+            record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
+        else
+            log_error "${COMPONENT}: notesCheckVerifier check failed (exit_code: ${exit_code}, duration: ${duration}s)"
+            record_metric "${COMPONENT}" "data_quality_check_status" "0" "component=ingestion,check=notesCheckVerifier"
+            record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
+            issues_found=$((issues_found + 1))
+            quality_score=$((quality_score - 10))
+            
+            # Parse output for error details
+            local error_count
+            error_count=$(echo "${output}" | grep -c "error\|failed\|discrepancy" || echo "0")
+            
+            if [[ ${error_count} -gt 0 ]]; then
+                log_warning "${COMPONENT}: Found ${error_count} potential issues in notesCheckVerifier"
+                quality_score=$((quality_score - (error_count * 5)))
+            fi
+        fi
+    else
         log_warning "${COMPONENT}: notesCheckVerifier.sh not found: ${verifier_script}"
-        log_info "${COMPONENT}: Skipping data quality check (script not available)"
-        return 0
+        log_info "${COMPONENT}: Skipping notesCheckVerifier check (script not available)"
     fi
     
-    log_info "${COMPONENT}: Running notesCheckVerifier.sh"
+    # Check data completeness
+    check_data_completeness
     
-    # Run the verifier script
-    local start_time
-    start_time=$(date +%s)
+    # Check data freshness
+    check_data_freshness
     
-    local exit_code=0
-    local output
-    output=$(cd "${INGESTION_REPO_PATH}" && bash "${verifier_script}" 2>&1) || exit_code=$?
+    # Record overall quality score
+    record_metric "${COMPONENT}" "data_quality_score" "${quality_score}" "component=ingestion"
     
-    local end_time
-    end_time=$(date +%s)
-    local duration=$((end_time - start_time))
+    # Check against threshold
+    local quality_threshold="${INGESTION_DATA_QUALITY_THRESHOLD:-95}"
     
-    # Log the output
-    log_debug "${COMPONENT}: notesCheckVerifier.sh output:\n${output}"
-    
-    # Check exit code
-    if [[ ${exit_code} -eq 0 ]]; then
-        log_info "${COMPONENT}: Data quality check passed (duration: ${duration}s)"
-        record_metric "${COMPONENT}" "data_quality_check_status" "1" "component=ingestion,check=notesCheckVerifier"
-        record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
-        return 0
-    else
-        log_error "${COMPONENT}: Data quality check failed (exit_code: ${exit_code}, duration: ${duration}s)"
-        record_metric "${COMPONENT}" "data_quality_check_status" "0" "component=ingestion,check=notesCheckVerifier"
-        record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
-        
-        # Parse output for error details
-        local error_count
-        error_count=$(echo "${output}" | grep -c "error\|failed\|discrepancy" || echo "0")
-        
-        if [[ ${error_count} -gt 0 ]]; then
-            log_warning "${COMPONENT}: Found ${error_count} potential issues in data quality check"
-            send_alert "WARNING" "${COMPONENT}" "Data quality check found issues: ${error_count} potential problems detected"
-        else
-            send_alert "ERROR" "${COMPONENT}" "Data quality check failed: exit_code=${exit_code}"
-        fi
-        
+    if [[ ${quality_score} -lt ${quality_threshold} ]]; then
+        log_warning "${COMPONENT}: Data quality score (${quality_score}%) below threshold (${quality_threshold}%)"
+        send_alert "WARNING" "${COMPONENT}" "Data quality below threshold: ${quality_score}% (threshold: ${quality_threshold}%)"
         return 1
     fi
+    
+    log_info "${COMPONENT}: Data quality check passed - Score: ${quality_score}%"
+    return 0
 }
 
 ##
