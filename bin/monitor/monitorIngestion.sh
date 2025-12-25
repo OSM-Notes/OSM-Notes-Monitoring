@@ -55,6 +55,7 @@ Check Types:
     health          Check component health status
     performance     Check performance metrics
     data-quality    Check data quality metrics
+    execution-status Check script execution status
     all             Run all checks (default)
 
 Examples:
@@ -68,6 +69,113 @@ Examples:
     $0 --dry-run
 
 EOF
+}
+
+##
+# Check script execution status
+##
+check_script_execution_status() {
+    log_info "${COMPONENT}: Starting script execution status check"
+    
+    local scripts_to_check=(
+        "processAPINotes.sh"
+        "processPlanetNotes.sh"
+        "notesCheckVerifier.sh"
+        "processCheckPlanetNotes.sh"
+        "analyzeDatabasePerformance.sh"
+    )
+    
+    local scripts_dir="${INGESTION_REPO_PATH}/bin"
+    local scripts_found=0
+    local scripts_executable=0
+    local scripts_running=0
+    
+    for script_name in "${scripts_to_check[@]}"; do
+        local script_path="${scripts_dir}/${script_name}"
+        
+        # Check if script exists
+        if [[ ! -f "${script_path}" ]]; then
+            log_debug "${COMPONENT}: Script not found: ${script_name}"
+            continue
+        fi
+        
+        scripts_found=$((scripts_found + 1))
+        
+        # Check if script is executable
+        if [[ -x "${script_path}" ]]; then
+            scripts_executable=$((scripts_executable + 1))
+        else
+            log_warning "${COMPONENT}: Script exists but not executable: ${script_name}"
+        fi
+        
+        # Check if script process is running
+        local script_basename
+        script_basename=$(basename "${script_path}")
+        if pgrep -f "${script_basename}" > /dev/null 2>&1; then
+            scripts_running=$((scripts_running + 1))
+            log_info "${COMPONENT}: Script is running: ${script_name}"
+            
+            # Get process info
+            local pid
+            pid=$(pgrep -f "${script_basename}" | head -1)
+            local runtime
+            runtime=$(ps -o etime= -p "${pid}" 2>/dev/null | tr -d ' ' || echo "unknown")
+            log_debug "${COMPONENT}: Script ${script_name} PID: ${pid}, Runtime: ${runtime}"
+        fi
+    done
+    
+    # Record metrics
+    record_metric "${COMPONENT}" "scripts_found" "${scripts_found}" "component=ingestion"
+    record_metric "${COMPONENT}" "scripts_executable" "${scripts_executable}" "component=ingestion"
+    record_metric "${COMPONENT}" "scripts_running" "${scripts_running}" "component=ingestion"
+    
+    log_info "${COMPONENT}: Script execution status - Found: ${scripts_found}, Executable: ${scripts_executable}, Running: ${scripts_running}"
+    
+    # Check last execution time from log files
+    check_last_execution_time
+    
+    return 0
+}
+
+##
+# Check last execution time from log files
+##
+check_last_execution_time() {
+    local ingestion_log_dir="${INGESTION_REPO_PATH}/logs"
+    
+    if [[ ! -d "${ingestion_log_dir}" ]]; then
+        log_debug "${COMPONENT}: Log directory not found: ${ingestion_log_dir}"
+        return 0
+    fi
+    
+    # Find most recent log file
+    local latest_log
+    latest_log=$(find "${ingestion_log_dir}" -name "*.log" -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-)
+    
+    if [[ -z "${latest_log}" ]]; then
+        log_warning "${COMPONENT}: No log files found"
+        return 0
+    fi
+    
+    # Get modification time
+    local log_mtime
+    log_mtime=$(stat -c %Y "${latest_log}" 2>/dev/null || stat -f %m "${latest_log}" 2>/dev/null || echo "0")
+    local current_time
+    current_time=$(date +%s)
+    local age_seconds=$((current_time - log_mtime))
+    local age_hours=$((age_seconds / 3600))
+    
+    log_info "${COMPONENT}: Latest log file: $(basename "${latest_log}"), Age: ${age_hours} hours"
+    
+    record_metric "${COMPONENT}" "last_log_age_hours" "${age_hours}" "component=ingestion"
+    
+    # Alert if log is too old (more than 24 hours)
+    if [[ ${age_hours} -gt 24 ]]; then
+        log_warning "${COMPONENT}: Log file is older than 24 hours (${age_hours} hours)"
+        send_alert "WARNING" "${COMPONENT}" "No recent activity detected: last log is ${age_hours} hours old"
+    fi
+    
+    return 0
 }
 
 ##
@@ -89,9 +197,8 @@ check_ingestion_health() {
         return 1
     fi
     
-    # Check if ingestion processes are running
-    # TODO: Implement process check based on ingestion setup
-    # This is a placeholder - actual implementation depends on ingestion architecture
+    # Check script execution status
+    check_script_execution_status
     
     # Check if ingestion log files exist and are recent
     local ingestion_log_dir="${INGESTION_REPO_PATH}/logs"
@@ -282,6 +389,13 @@ run_all_checks() {
         checks_failed=$((checks_failed + 1))
     fi
     
+    # Execution status check
+    if check_script_execution_status; then
+        checks_passed=$((checks_passed + 1))
+    else
+        checks_failed=$((checks_failed + 1))
+    fi
+    
     # Performance check
     if check_ingestion_performance; then
         checks_passed=$((checks_passed + 1))
@@ -383,6 +497,13 @@ main() {
             ;;
         data-quality)
             if check_ingestion_data_quality; then
+                exit 0
+            else
+                exit 1
+            fi
+            ;;
+        execution-status)
+            if check_script_execution_status; then
                 exit 0
             else
                 exit 1
