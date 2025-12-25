@@ -99,7 +99,7 @@
 - [x] Create `sql/ingestion/performance_analysis.sql`
 - [x] Create `sql/ingestion/data_quality.sql`
 - [x] Create `sql/ingestion/error_analysis.sql`
-- [ ] Test all SQL queries with sample data
+- [x] Test all SQL queries with sample data (`sql/ingestion/test_queries.sh` - test script created)
 - [ ] Optimize queries for performance
 
 ### Metrics & Alerts

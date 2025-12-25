@@ -238,6 +238,27 @@ Queries may need to be adjusted based on:
 - Indexes available
 - PostgreSQL version
 
+## Testing
+
+A test script is provided to validate all SQL queries:
+
+```bash
+# Test syntax only (doesn't require database connection)
+./sql/ingestion/test_queries.sh --syntax-only
+
+# Test with database connection (requires database access)
+./sql/ingestion/test_queries.sh --database osm_notes
+
+# Show help
+./sql/ingestion/test_queries.sh --help
+```
+
+The test script:
+- Validates SQL query structure
+- Tests syntax (if database connection available)
+- Executes queries (if database connection available)
+- Reports test results
+
 ## Related Documentation
 
 - [Database Schema](./../../docs/DATABASE_SCHEMA.md)
