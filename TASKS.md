@@ -76,9 +76,9 @@
 ### Script Migration & Adaptation
 
 - [x] Create `bin/monitor/monitorIngestion.sh` skeleton
-- [ ] Integrate with existing `notesCheckVerifier.sh` from OSM-Notes-Ingestion
-- [ ] Integrate with existing `processCheckPlanetNotes.sh` from OSM-Notes-Ingestion
-- [ ] Integrate with existing `analyzeDatabasePerformance.sh` from OSM-Notes-Ingestion
+- [x] Integrate with existing `notesCheckVerifier.sh` from OSM-Notes-Ingestion (integrated in `check_ingestion_data_quality`)
+- [x] Integrate with existing `processCheckPlanetNotes.sh` from OSM-Notes-Ingestion (integrated in `checkPlanetNotes.sh` wrapper)
+- [x] Integrate with existing `analyzeDatabasePerformance.sh` from OSM-Notes-Ingestion (integrated in `check_ingestion_performance`)
 - [ ] Adapt scripts to use shared libraries
 - [ ] Update script references in OSM-Notes-Ingestion (if needed)
 

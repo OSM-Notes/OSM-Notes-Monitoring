@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+#
+# Planet Notes Check Integration
+# Wrapper to integrate processCheckPlanetNotes.sh from OSM-Notes-Ingestion
+#
+# Version: 1.0.0
+# Date: 2025-12-24
+#
+
+set -euo pipefail
+
+SCRIPT_DIR=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+PROJECT_ROOT=""
+PROJECT_ROOT="$(dirname "$(dirname "${SCRIPT_DIR}")")"
+readonly PROJECT_ROOT
+
+# Source libraries
+# shellcheck disable=SC1091
+source "${PROJECT_ROOT}/bin/lib/loggingFunctions.sh"
+# shellcheck disable=SC1091
+source "${PROJECT_ROOT}/bin/lib/monitoringFunctions.sh"
+# shellcheck disable=SC1091
+source "${PROJECT_ROOT}/bin/lib/configFunctions.sh"
+# shellcheck disable=SC1091
+source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
+# shellcheck disable=SC1091
+source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
+
+# Initialize logging
+init_logging "${LOG_DIR}/ingestion.log" "checkPlanetNotes"
+
+# Component name
+readonly COMPONENT="INGESTION"
+
+##
+# Run Planet Notes check using processCheckPlanetNotes.sh
+##
+run_planet_check() {
+    log_info "${COMPONENT}: Starting Planet Notes check"
+    
+    # Check if ingestion repository exists
+    if [[ ! -d "${INGESTION_REPO_PATH}" ]]; then
+        log_error "${COMPONENT}: Ingestion repository not found: ${INGESTION_REPO_PATH}"
+        return 1
+    fi
+    
+    # Path to processCheckPlanetNotes.sh
+    local planet_check_script="${INGESTION_REPO_PATH}/bin/monitor/processCheckPlanetNotes.sh"
+    
+    if [[ ! -f "${planet_check_script}" ]]; then
+        log_warning "${COMPONENT}: processCheckPlanetNotes.sh not found: ${planet_check_script}"
+        log_info "${COMPONENT}: Skipping Planet Notes check (script not available)"
+        return 0
+    fi
+    
+    if [[ ! -x "${planet_check_script}" ]]; then
+        log_error "${COMPONENT}: processCheckPlanetNotes.sh is not executable: ${planet_check_script}"
+        return 1
+    fi
+    
+    log_info "${COMPONENT}: Running processCheckPlanetNotes.sh"
+    
+    # Run the Planet check script
+    local start_time
+    start_time=$(date +%s)
+    
+    local exit_code=0
+    local output
+    output=$(cd "${INGESTION_REPO_PATH}" && bash "${planet_check_script}" 2>&1) || exit_code=$?
+    
+    local end_time
+    end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    # Log the output
+    log_debug "${COMPONENT}: processCheckPlanetNotes.sh output:\n${output}"
+    
+    # Check exit code
+    if [[ ${exit_code} -eq 0 ]]; then
+        log_info "${COMPONENT}: Planet Notes check passed (duration: ${duration}s)"
+        record_metric "${COMPONENT}" "planet_check_status" "1" "component=ingestion,check=processCheckPlanetNotes"
+        record_metric "${COMPONENT}" "planet_check_duration" "${duration}" "component=ingestion,check=processCheckPlanetNotes"
+        return 0
+    else
+        log_error "${COMPONENT}: Planet Notes check failed (exit_code: ${exit_code}, duration: ${duration}s)"
+        record_metric "${COMPONENT}" "planet_check_status" "0" "component=ingestion,check=processCheckPlanetNotes"
+        record_metric "${COMPONENT}" "planet_check_duration" "${duration}" "component=ingestion,check=processCheckPlanetNotes"
+        send_alert "ERROR" "${COMPONENT}" "Planet Notes check failed: exit_code=${exit_code}"
+        return 1
+    fi
+}
+
+##
+# Main
+##
+main() {
+    # Load configuration
+    if ! load_all_configs; then
+        log_error "${COMPONENT}: Failed to load configuration"
+        exit 1
+    fi
+    
+    # Validate configuration
+    if ! validate_all_configs; then
+        log_error "${COMPONENT}: Configuration validation failed"
+        exit 1
+    fi
+    
+    # Run Planet check
+    if run_planet_check; then
+        exit 0
+    else
+        exit 1
+    fi
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
+

@@ -109,6 +109,16 @@ check_ingestion_health() {
         fi
     fi
     
+    # Check if processCheckPlanetNotes.sh exists and can be executed
+    local planet_check_script="${INGESTION_REPO_PATH}/bin/monitor/processCheckPlanetNotes.sh"
+    if [[ -f "${planet_check_script}" ]]; then
+        if [[ ! -x "${planet_check_script}" ]]; then
+            log_warning "${COMPONENT}: processCheckPlanetNotes.sh exists but is not executable"
+        else
+            log_debug "${COMPONENT}: processCheckPlanetNotes.sh is available and executable"
+        fi
+    fi
+    
     # If we get here, component appears healthy
     # shellcheck disable=SC2034
     health_status="healthy"
@@ -119,39 +129,141 @@ check_ingestion_health() {
 }
 
 ##
-# Check ingestion performance metrics
+# Check ingestion performance metrics using analyzeDatabasePerformance.sh
 ##
 check_ingestion_performance() {
     log_info "${COMPONENT}: Starting performance check"
     
-    # TODO: Implement performance metrics collection
-    # This should check:
-    # - Processing rate (notes per hour)
-    # - Processing latency
-    # - Error rate
-    # - Queue depth (if applicable)
+    # Check if ingestion repository exists
+    if [[ ! -d "${INGESTION_REPO_PATH}" ]]; then
+        log_error "${COMPONENT}: Ingestion repository not found: ${INGESTION_REPO_PATH}"
+        return 1
+    fi
     
-    log_info "${COMPONENT}: Performance check completed (placeholder)"
+    # Path to analyzeDatabasePerformance.sh
+    local perf_script="${INGESTION_REPO_PATH}/bin/monitor/analyzeDatabasePerformance.sh"
     
-    return 0
+    if [[ ! -f "${perf_script}" ]]; then
+        log_warning "${COMPONENT}: analyzeDatabasePerformance.sh not found: ${perf_script}"
+        log_info "${COMPONENT}: Skipping performance check (script not available)"
+        return 0
+    fi
+    
+    log_info "${COMPONENT}: Running analyzeDatabasePerformance.sh"
+    
+    # Run the performance analysis script
+    local start_time
+    start_time=$(date +%s)
+    
+    local exit_code=0
+    local output
+    output=$(cd "${INGESTION_REPO_PATH}" && bash "${perf_script}" 2>&1) || exit_code=$?
+    
+    local end_time
+    end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    # Log the output
+    log_debug "${COMPONENT}: analyzeDatabasePerformance.sh output:\n${output}"
+    
+    # Check exit code
+    if [[ ${exit_code} -eq 0 ]]; then
+        log_info "${COMPONENT}: Performance check passed (duration: ${duration}s)"
+        record_metric "${COMPONENT}" "performance_check_status" "1" "component=ingestion,check=analyzeDatabasePerformance"
+        record_metric "${COMPONENT}" "performance_check_duration" "${duration}" "component=ingestion,check=analyzeDatabasePerformance"
+        
+        # Parse output for performance metrics
+        # Look for PASS/FAIL/WARNING patterns
+        local pass_count
+        pass_count=$(echo "${output}" | grep -c "PASS\|✓" || echo "0")
+        local fail_count
+        fail_count=$(echo "${output}" | grep -c "FAIL\|✗" || echo "0")
+        local warning_count
+        warning_count=$(echo "${output}" | grep -c "WARNING\|⚠" || echo "0")
+        
+        record_metric "${COMPONENT}" "performance_check_passes" "${pass_count}" "component=ingestion"
+        record_metric "${COMPONENT}" "performance_check_failures" "${fail_count}" "component=ingestion"
+        record_metric "${COMPONENT}" "performance_check_warnings" "${warning_count}" "component=ingestion"
+        
+        if [[ ${fail_count} -gt 0 ]]; then
+            log_warning "${COMPONENT}: Performance check found ${fail_count} failures"
+            send_alert "WARNING" "${COMPONENT}" "Performance check found ${fail_count} failures, ${warning_count} warnings"
+        elif [[ ${warning_count} -gt 0 ]]; then
+            log_warning "${COMPONENT}: Performance check found ${warning_count} warnings"
+        fi
+        
+        return 0
+    else
+        log_error "${COMPONENT}: Performance check failed (exit_code: ${exit_code}, duration: ${duration}s)"
+        record_metric "${COMPONENT}" "performance_check_status" "0" "component=ingestion,check=analyzeDatabasePerformance"
+        record_metric "${COMPONENT}" "performance_check_duration" "${duration}" "component=ingestion,check=analyzeDatabasePerformance"
+        send_alert "ERROR" "${COMPONENT}" "Performance check failed: exit_code=${exit_code}"
+        return 1
+    fi
 }
 
 ##
-# Check ingestion data quality
+# Check ingestion data quality using notesCheckVerifier.sh
 ##
 check_ingestion_data_quality() {
     log_info "${COMPONENT}: Starting data quality check"
     
-    # TODO: Implement data quality checks
-    # This should check:
-    # - Data completeness
-    # - Data accuracy
-    # - Data freshness
-    # - Duplicate detection
+    # Check if ingestion repository exists
+    if [[ ! -d "${INGESTION_REPO_PATH}" ]]; then
+        log_error "${COMPONENT}: Ingestion repository not found: ${INGESTION_REPO_PATH}"
+        return 1
+    fi
     
-    log_info "${COMPONENT}: Data quality check completed (placeholder)"
+    # Path to notesCheckVerifier.sh
+    local verifier_script="${INGESTION_REPO_PATH}/bin/monitor/notesCheckVerifier.sh"
     
-    return 0
+    if [[ ! -f "${verifier_script}" ]]; then
+        log_warning "${COMPONENT}: notesCheckVerifier.sh not found: ${verifier_script}"
+        log_info "${COMPONENT}: Skipping data quality check (script not available)"
+        return 0
+    fi
+    
+    log_info "${COMPONENT}: Running notesCheckVerifier.sh"
+    
+    # Run the verifier script
+    local start_time
+    start_time=$(date +%s)
+    
+    local exit_code=0
+    local output
+    output=$(cd "${INGESTION_REPO_PATH}" && bash "${verifier_script}" 2>&1) || exit_code=$?
+    
+    local end_time
+    end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    # Log the output
+    log_debug "${COMPONENT}: notesCheckVerifier.sh output:\n${output}"
+    
+    # Check exit code
+    if [[ ${exit_code} -eq 0 ]]; then
+        log_info "${COMPONENT}: Data quality check passed (duration: ${duration}s)"
+        record_metric "${COMPONENT}" "data_quality_check_status" "1" "component=ingestion,check=notesCheckVerifier"
+        record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
+        return 0
+    else
+        log_error "${COMPONENT}: Data quality check failed (exit_code: ${exit_code}, duration: ${duration}s)"
+        record_metric "${COMPONENT}" "data_quality_check_status" "0" "component=ingestion,check=notesCheckVerifier"
+        record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
+        
+        # Parse output for error details
+        local error_count
+        error_count=$(echo "${output}" | grep -c "error\|failed\|discrepancy" || echo "0")
+        
+        if [[ ${error_count} -gt 0 ]]; then
+            log_warning "${COMPONENT}: Found ${error_count} potential issues in data quality check"
+            send_alert "WARNING" "${COMPONENT}" "Data quality check found issues: ${error_count} potential problems detected"
+        else
+            send_alert "ERROR" "${COMPONENT}" "Data quality check failed: exit_code=${exit_code}"
+        fi
+        
+        return 1
+    fi
 }
 
 ##
