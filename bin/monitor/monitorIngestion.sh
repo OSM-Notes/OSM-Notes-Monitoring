@@ -56,6 +56,7 @@ Check Types:
     performance     Check performance metrics
     data-quality    Check data quality metrics
     execution-status Check script execution status
+    latency         Check processing latency
     all             Run all checks (default)
 
 Examples:
@@ -396,6 +397,13 @@ run_all_checks() {
         checks_failed=$((checks_failed + 1))
     fi
     
+    # Latency check
+    if check_processing_latency; then
+        checks_passed=$((checks_passed + 1))
+    else
+        checks_failed=$((checks_failed + 1))
+    fi
+    
     # Performance check
     if check_ingestion_performance; then
         checks_passed=$((checks_passed + 1))
@@ -504,6 +512,13 @@ main() {
             ;;
         execution-status)
             if check_script_execution_status; then
+                exit 0
+            else
+                exit 1
+            fi
+            ;;
+        latency)
+            if check_processing_latency; then
                 exit 0
             else
                 exit 1

@@ -14,6 +14,7 @@ INGESTION_ENABLED=true
 INGESTION_CHECK_TIMEOUT=300  # seconds
 INGESTION_MAX_ERROR_RATE=5   # percentage
 INGESTION_DATA_QUALITY_THRESHOLD=95  # percentage
+INGESTION_LATENCY_THRESHOLD=300  # seconds (5 minutes) - threshold for processing latency
 
 # Analytics Monitoring
 ANALYTICS_ENABLED=true

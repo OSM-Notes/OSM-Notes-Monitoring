@@ -85,7 +85,7 @@
 ### Monitoring Checks Implementation
 
 - [x] Script execution status monitoring (implemented in `check_script_execution_status()`)
-- [ ] Processing latency checks
+- [x] Processing latency checks (implemented in `check_processing_latency()` and `check_processing_frequency()`)
 - [ ] Data quality validation
 - [ ] Database performance monitoring
 - [ ] Error rate tracking
