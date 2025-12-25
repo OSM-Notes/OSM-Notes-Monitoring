@@ -8,6 +8,8 @@
 
 OSM-Notes-Ingestion already contains several monitoring components that are specific to data ingestion verification. OSM-Notes-Monitoring should be aware of these components and integrate with them where appropriate.
 
+> **Note:** For recommended changes to improve integration, see **[Integration Changes](./INTEGRATION_CHANGES.md)**.
+
 ## Monitoring Scripts in OSM-Notes-Ingestion
 
 ### Location: `bin/monitor/`

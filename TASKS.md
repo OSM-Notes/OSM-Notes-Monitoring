@@ -79,8 +79,8 @@
 - [x] Integrate with existing `notesCheckVerifier.sh` from OSM-Notes-Ingestion (integrated in `check_ingestion_data_quality`)
 - [x] Integrate with existing `processCheckPlanetNotes.sh` from OSM-Notes-Ingestion (integrated in `checkPlanetNotes.sh` wrapper)
 - [x] Integrate with existing `analyzeDatabasePerformance.sh` from OSM-Notes-Ingestion (integrated in `check_ingestion_performance`)
-- [ ] Adapt scripts to use shared libraries
-- [ ] Update script references in OSM-Notes-Ingestion (if needed)
+- [x] Adapt scripts to use shared libraries (`docs/ADAPTING_SCRIPTS.md` - migration guide and examples)
+- [x] Update script references in OSM-Notes-Ingestion (if needed) (`docs/INTEGRATION_CHANGES.md` - recommended changes documentation)
 
 ### Monitoring Checks Implementation
 

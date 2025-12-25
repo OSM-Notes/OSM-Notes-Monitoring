@@ -211,6 +211,7 @@ For complete configuration reference, see:
 - **[Configuration Reference](./docs/CONFIGURATION_REFERENCE.md)**: All configuration options documented
 - **[Logging Guide](./docs/LOGGING.md)**: Logging setup, rotation, and best practices
 - **[Logging Best Practices](./docs/LOGGING_BEST_PRACTICES.md)**: Comprehensive logging guidelines and patterns
+- **[Adapting Scripts](./docs/ADAPTING_SCRIPTS.md)**: Guide for adapting existing scripts to use shared libraries
 
 ## Documentation
 
