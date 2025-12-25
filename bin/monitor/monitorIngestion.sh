@@ -58,6 +58,7 @@ Check Types:
     execution-status Check script execution status
     latency         Check processing latency
     error-rate      Check error rate from logs
+    disk-space      Check disk space usage
     all             Run all checks (default)
 
 Examples:
@@ -269,6 +270,115 @@ check_recent_error_spikes() {
         if [[ ${recent_error_rate} -gt ${spike_threshold} ]]; then
             log_warning "${COMPONENT}: Error spike detected in last hour: ${recent_error_rate}%"
             send_alert "WARNING" "${COMPONENT}" "Error spike detected: ${recent_error_rate}% in last hour (${recent_errors} errors)"
+        fi
+    fi
+    
+    return 0
+}
+
+##
+# Check disk space usage
+##
+check_disk_space() {
+    log_info "${COMPONENT}: Starting disk space check"
+    
+    # Check if ingestion repository exists
+    if [[ ! -d "${INGESTION_REPO_PATH}" ]]; then
+        log_error "${COMPONENT}: Ingestion repository not found: ${INGESTION_REPO_PATH}"
+        return 1
+    fi
+    
+    # Directories to check
+    local directories_to_check=(
+        "${INGESTION_REPO_PATH}"
+        "${INGESTION_REPO_PATH}/logs"
+        "${LOG_DIR}"
+        "${TMP_DIR}"
+    )
+    
+    local total_issues=0
+    
+    # Check each directory
+    for dir in "${directories_to_check[@]}"; do
+        if [[ ! -d "${dir}" ]]; then
+            log_debug "${COMPONENT}: Directory does not exist: ${dir}"
+            continue
+        fi
+        
+        # Get disk usage percentage
+        local usage_percent
+        usage_percent=$(df -h "${dir}" 2>/dev/null | tail -1 | awk '{print $5}' | sed 's/%//' || echo "0")
+        
+        if [[ -z "${usage_percent}" ]] || [[ "${usage_percent}" == "0" ]]; then
+            log_debug "${COMPONENT}: Could not determine disk usage for: ${dir}"
+            continue
+        fi
+        
+        # Get available space
+        local available_space
+        available_space=$(df -h "${dir}" 2>/dev/null | tail -1 | awk '{print $4}' || echo "unknown")
+        
+        # Get total space
+        local total_space
+        total_space=$(df -h "${dir}" 2>/dev/null | tail -1 | awk '{print $2}' || echo "unknown")
+        
+        # Get used space
+        local used_space
+        used_space=$(df -h "${dir}" 2>/dev/null | tail -1 | awk '{print $3}' || echo "unknown")
+        
+        log_info "${COMPONENT}: Disk usage for ${dir}: ${usage_percent}% (Used: ${used_space}, Available: ${available_space}, Total: ${total_space})"
+        
+        # Record metrics
+        local dir_name
+        dir_name=$(basename "${dir}")
+        record_metric "${COMPONENT}" "disk_usage_percent" "${usage_percent}" "component=ingestion,directory=${dir_name}"
+        
+        # Check against threshold
+        local disk_threshold="${INFRASTRUCTURE_DISK_THRESHOLD:-90}"
+        
+        if [[ ${usage_percent} -ge ${disk_threshold} ]]; then
+            log_warning "${COMPONENT}: Disk usage (${usage_percent}%) exceeds threshold (${disk_threshold}%) for ${dir}"
+            send_alert "WARNING" "${COMPONENT}" "High disk usage: ${usage_percent}% on ${dir} (threshold: ${disk_threshold}%, available: ${available_space})"
+            total_issues=$((total_issues + 1))
+        elif [[ ${usage_percent} -ge $((disk_threshold - 10)) ]]; then
+            log_warning "${COMPONENT}: Disk usage (${usage_percent}%) approaching threshold (${disk_threshold}%) for ${dir}"
+        fi
+    done
+    
+    # Check overall system disk usage
+    check_system_disk_usage
+    
+    if [[ ${total_issues} -gt 0 ]]; then
+        log_warning "${COMPONENT}: Disk space check found ${total_issues} issues"
+        return 1
+    fi
+    
+    log_info "${COMPONENT}: Disk space check passed"
+    return 0
+}
+
+##
+# Check system-wide disk usage
+##
+check_system_disk_usage() {
+    log_debug "${COMPONENT}: Checking system-wide disk usage"
+    
+    # Get root filesystem usage
+    local root_usage
+    root_usage=$(df -h / 2>/dev/null | tail -1 | awk '{print $5}' | sed 's/%//' || echo "0")
+    
+    if [[ -n "${root_usage}" ]] && [[ "${root_usage}" != "0" ]]; then
+        local root_available
+        root_available=$(df -h / 2>/dev/null | tail -1 | awk '{print $4}' || echo "unknown")
+        
+        log_debug "${COMPONENT}: Root filesystem usage: ${root_usage}% (Available: ${root_available})"
+        record_metric "${COMPONENT}" "disk_usage_percent" "${root_usage}" "component=ingestion,directory=root"
+        
+        local disk_threshold="${INFRASTRUCTURE_DISK_THRESHOLD:-90}"
+        
+        if [[ ${root_usage} -ge ${disk_threshold} ]]; then
+            log_warning "${COMPONENT}: Root filesystem usage (${root_usage}%) exceeds threshold (${disk_threshold}%)"
+            send_alert "WARNING" "${COMPONENT}" "High root filesystem usage: ${root_usage}% (available: ${root_available})"
         fi
     fi
     
@@ -803,6 +913,13 @@ run_all_checks() {
         checks_failed=$((checks_failed + 1))
     fi
     
+    # Disk space check
+    if check_disk_space; then
+        checks_passed=$((checks_passed + 1))
+    else
+        checks_failed=$((checks_failed + 1))
+    fi
+    
     log_info "${COMPONENT}: Monitoring checks completed - passed: ${checks_passed}, failed: ${checks_failed}"
     
     if [[ ${checks_failed} -gt 0 ]]; then
@@ -911,6 +1028,13 @@ main() {
             ;;
         error-rate)
             if check_error_rate; then
+                exit 0
+            else
+                exit 1
+            fi
+            ;;
+        disk-space)
+            if check_disk_space; then
                 exit 0
             else
                 exit 1

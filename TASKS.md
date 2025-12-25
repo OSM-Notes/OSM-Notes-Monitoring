@@ -89,7 +89,7 @@
 - [x] Data quality validation (implemented in `check_ingestion_data_quality()`, `check_data_completeness()`, `check_data_freshness()`)
 - [x] Database performance monitoring (implemented in `check_ingestion_performance()` with connection, query, and table size checks)
 - [x] Error rate tracking (implemented in `check_error_rate()` and `check_recent_error_spikes()`)
-- [ ] Disk space monitoring
+- [x] Disk space monitoring (implemented in `check_disk_space()` and `check_system_disk_usage()`)
 - [ ] API download status checks
 
 ### SQL Queries
