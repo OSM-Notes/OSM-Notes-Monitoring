@@ -238,6 +238,31 @@ Queries may need to be adjusted based on:
 - Indexes available
 - PostgreSQL version
 
+## Optimization
+
+### Index Creation
+
+Create recommended indexes for optimal query performance:
+
+```bash
+psql -d osm_notes -f sql/ingestion/create_indexes.sql
+```
+
+### Optimization Recommendations
+
+See `optimization_recommendations.md` for detailed optimization strategies, including:
+- Index recommendations
+- Query rewriting strategies
+- Materialized views
+- Partitioning strategies
+
+### Optimized Query Versions
+
+Optimized versions of queries are available in `optimized_queries/` directory:
+- `data_freshness_optimized.sql` - Optimized freshness queries
+
+These use indexes and query optimizations for better performance.
+
 ## Testing
 
 A test script is provided to validate all SQL queries:
