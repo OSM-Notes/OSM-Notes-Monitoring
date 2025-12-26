@@ -135,6 +135,18 @@ check_script_execution_status() {
     
     log_info "${COMPONENT}: Script execution status - Found: ${scripts_found}, Executable: ${scripts_executable}, Running: ${scripts_running}"
     
+    # Check against thresholds
+    local scripts_found_threshold="${INGESTION_SCRIPTS_FOUND_THRESHOLD:-3}"
+    if [[ ${scripts_found} -lt ${scripts_found_threshold} ]]; then
+        log_warning "${COMPONENT}: Scripts found (${scripts_found}) below threshold (${scripts_found_threshold})"
+        send_alert "WARNING" "${COMPONENT}" "Low number of scripts found: ${scripts_found} (threshold: ${scripts_found_threshold})"
+    fi
+    
+    if [[ ${scripts_executable} -lt ${scripts_found} ]]; then
+        log_warning "${COMPONENT}: Some scripts are not executable (${scripts_executable}/${scripts_found})"
+        send_alert "WARNING" "${COMPONENT}" "Scripts executable count (${scripts_executable}) is less than scripts found (${scripts_found})"
+    fi
+    
     # Check last execution time from log files
     check_last_execution_time
     
@@ -211,13 +223,33 @@ check_error_rate() {
     record_metric "${COMPONENT}" "warning_rate_percent" "${warning_rate}" "component=ingestion"
     record_metric "${COMPONENT}" "log_lines_total" "${total_lines}" "component=ingestion"
     
-    # Check against threshold
-    local max_error_rate="${INGESTION_MAX_ERROR_RATE:-5}"
+    # Check error count threshold
+    local error_count_threshold="${INGESTION_ERROR_COUNT_THRESHOLD:-1000}"
+    if [[ ${error_lines} -gt ${error_count_threshold} ]]; then
+        log_warning "${COMPONENT}: Error count (${error_lines}) exceeds threshold (${error_count_threshold})"
+        send_alert "WARNING" "${COMPONENT}" "High error count detected: ${error_lines} errors in 24h (threshold: ${error_count_threshold})"
+    fi
     
+    # Check warning count threshold
+    local warning_count_threshold="${INGESTION_WARNING_COUNT_THRESHOLD:-2000}"
+    if [[ ${warning_lines} -gt ${warning_count_threshold} ]]; then
+        log_warning "${COMPONENT}: Warning count (${warning_lines}) exceeds threshold (${warning_count_threshold})"
+        send_alert "INFO" "${COMPONENT}" "High warning count detected: ${warning_lines} warnings in 24h (threshold: ${warning_count_threshold})"
+    fi
+    
+    # Check error rate threshold
+    local max_error_rate="${INGESTION_MAX_ERROR_RATE:-5}"
     if [[ ${error_rate} -gt ${max_error_rate} ]]; then
         log_warning "${COMPONENT}: Error rate (${error_rate}%) exceeds threshold (${max_error_rate}%)"
         send_alert "WARNING" "${COMPONENT}" "High error rate detected: ${error_rate}% (threshold: ${max_error_rate}%, errors: ${error_lines}/${total_lines})"
         return 1
+    fi
+    
+    # Check warning rate threshold
+    local warning_rate_threshold="${INGESTION_WARNING_RATE_THRESHOLD:-15}"
+    if [[ ${warning_rate} -gt ${warning_rate_threshold} ]]; then
+        log_warning "${COMPONENT}: Warning rate (${warning_rate}%) exceeds threshold (${warning_rate_threshold}%)"
+        send_alert "WARNING" "${COMPONENT}" "High warning rate detected: ${warning_rate}% (threshold: ${warning_rate_threshold}%, warnings: ${warning_lines}/${total_lines})"
     fi
     
     # Check for recent error spikes (errors in last hour)
@@ -418,10 +450,11 @@ check_last_execution_time() {
     
     record_metric "${COMPONENT}" "last_log_age_hours" "${age_hours}" "component=ingestion"
     
-    # Alert if log is too old (more than 24 hours)
-    if [[ ${age_hours} -gt 24 ]]; then
-        log_warning "${COMPONENT}: Log file is older than 24 hours (${age_hours} hours)"
-        send_alert "WARNING" "${COMPONENT}" "No recent activity detected: last log is ${age_hours} hours old"
+    # Alert if log is too old
+    local log_age_threshold="${INGESTION_LAST_LOG_AGE_THRESHOLD:-24}"
+    if [[ ${age_hours} -gt ${log_age_threshold} ]]; then
+        log_warning "${COMPONENT}: Log file is older than threshold (${age_hours} hours, threshold: ${log_age_threshold} hours)"
+        send_alert "WARNING" "${COMPONENT}" "No recent activity detected: last log is ${age_hours} hours old (threshold: ${log_age_threshold} hours)"
     fi
     
     return 0
@@ -689,9 +722,24 @@ check_ingestion_performance() {
             record_metric "${COMPONENT}" "performance_check_failures" "${fail_count}" "component=ingestion"
             record_metric "${COMPONENT}" "performance_check_warnings" "${warning_count}" "component=ingestion"
             
+            # Check performance check duration threshold
+            local perf_duration_threshold="${INGESTION_PERFORMANCE_CHECK_DURATION_THRESHOLD:-300}"
+            if [[ ${duration} -gt ${perf_duration_threshold} ]]; then
+                log_warning "${COMPONENT}: Performance check duration (${duration}s) exceeds threshold (${perf_duration_threshold}s)"
+                send_alert "WARNING" "${COMPONENT}" "Performance check took too long: ${duration}s (threshold: ${perf_duration_threshold}s)"
+            fi
+            
+            # Check performance check failures (any failure triggers alert)
             if [[ ${fail_count} -gt 0 ]]; then
                 log_warning "${COMPONENT}: Performance check found ${fail_count} failures"
                 send_alert "WARNING" "${COMPONENT}" "Performance check found ${fail_count} failures, ${warning_count} warnings"
+            fi
+            
+            # Check performance check warnings threshold
+            local perf_warnings_threshold="${INGESTION_PERFORMANCE_CHECK_WARNINGS_THRESHOLD:-10}"
+            if [[ ${warning_count} -gt ${perf_warnings_threshold} ]]; then
+                log_warning "${COMPONENT}: Performance check warnings (${warning_count}) exceeds threshold (${perf_warnings_threshold})"
+                send_alert "WARNING" "${COMPONENT}" "Performance check found ${warning_count} warnings (threshold: ${perf_warnings_threshold})"
             elif [[ ${warning_count} -gt 0 ]]; then
                 log_warning "${COMPONENT}: Performance check found ${warning_count} warnings"
             fi
@@ -784,10 +832,11 @@ check_data_freshness() {
             log_debug "${COMPONENT}: Data freshness: ${freshness_seconds} seconds, Recent updates: ${recent_updates}"
             record_metric "${COMPONENT}" "data_freshness_seconds" "${freshness_seconds}" "component=ingestion"
             
-            # Check against threshold (default: 1 hour)
-            local freshness_threshold=3600
+            # Check against threshold
+            local freshness_threshold="${INGESTION_DATA_FRESHNESS_THRESHOLD:-3600}"
             if (( $(echo "${freshness_seconds} > ${freshness_threshold}" | bc -l 2>/dev/null || echo "0") )); then
                 log_warning "${COMPONENT}: Data freshness (${freshness_seconds}s) exceeds threshold (${freshness_threshold}s)"
+                send_alert "WARNING" "${COMPONENT}" "Data freshness exceeded: ${freshness_seconds}s (threshold: ${freshness_threshold}s)"
             fi
         fi
         
@@ -840,6 +889,13 @@ check_ingestion_data_quality() {
             log_info "${COMPONENT}: notesCheckVerifier check passed (duration: ${duration}s)"
             record_metric "${COMPONENT}" "data_quality_check_status" "1" "component=ingestion,check=notesCheckVerifier"
             record_metric "${COMPONENT}" "data_quality_check_duration" "${duration}" "component=ingestion,check=notesCheckVerifier"
+            
+            # Check data quality check duration threshold
+            local quality_duration_threshold="${INGESTION_DATA_QUALITY_CHECK_DURATION_THRESHOLD:-600}"
+            if [[ ${duration} -gt ${quality_duration_threshold} ]]; then
+                log_warning "${COMPONENT}: Data quality check duration (${duration}s) exceeds threshold (${quality_duration_threshold}s)"
+                send_alert "WARNING" "${COMPONENT}" "Data quality check took too long: ${duration}s (threshold: ${quality_duration_threshold}s)"
+            fi
         else
             log_error "${COMPONENT}: notesCheckVerifier check failed (exit_code: ${exit_code}, duration: ${duration}s)"
             record_metric "${COMPONENT}" "data_quality_check_status" "0" "component=ingestion,check=notesCheckVerifier"
@@ -1100,11 +1156,11 @@ check_api_download_success_rate() {
     record_metric "${COMPONENT}" "api_download_total_count" "${total_downloads}" "component=ingestion"
     record_metric "${COMPONENT}" "api_download_successful_count" "${successful_downloads}" "component=ingestion"
     
-    # Check against threshold (default: 95%)
-    local success_threshold=95
+    # Check against threshold
+    local success_threshold="${INGESTION_API_DOWNLOAD_SUCCESS_RATE_THRESHOLD:-95}"
     if [[ ${success_rate} -lt ${success_threshold} ]] && [[ ${total_downloads} -gt 0 ]]; then
         log_warning "${COMPONENT}: API download success rate (${success_rate}%) below threshold (${success_threshold}%)"
-        send_alert "WARNING" "${COMPONENT}" "Low API download success rate: ${success_rate}% (${successful_downloads}/${total_downloads})"
+        send_alert "WARNING" "${COMPONENT}" "Low API download success rate: ${success_rate}% (threshold: ${success_threshold}%, ${successful_downloads}/${total_downloads})"
         return 1
     fi
     

@@ -82,6 +82,14 @@ run_planet_check() {
         log_info "${COMPONENT}: Planet Notes check passed (duration: ${duration}s)"
         record_metric "${COMPONENT}" "planet_check_status" "1" "component=ingestion,check=processCheckPlanetNotes"
         record_metric "${COMPONENT}" "planet_check_duration" "${duration}" "component=ingestion,check=processCheckPlanetNotes"
+        
+        # Check planet check duration threshold
+        local planet_duration_threshold="${INGESTION_PLANET_CHECK_DURATION_THRESHOLD:-600}"
+        if [[ ${duration} -gt ${planet_duration_threshold} ]]; then
+            log_warning "${COMPONENT}: Planet check duration (${duration}s) exceeds threshold (${planet_duration_threshold}s)"
+            send_alert "WARNING" "${COMPONENT}" "Planet Notes check took too long: ${duration}s (threshold: ${planet_duration_threshold}s)"
+        fi
+        
         return 0
     else
         log_error "${COMPONENT}: Planet Notes check failed (exit_code: ${exit_code}, duration: ${duration}s)"
