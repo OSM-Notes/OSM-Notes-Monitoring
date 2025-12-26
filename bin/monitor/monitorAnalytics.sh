@@ -240,14 +240,147 @@ check_etl_job_execution_status() {
 check_data_warehouse_freshness() {
     log_info "${COMPONENT}: Starting data warehouse freshness check"
     
-    # TODO: Implement data warehouse freshness check
-    # This should check:
-    # - Time since last data update
-    # - Data freshness by table/mart
-    # - Stale data detection
+    # Check database connection
+    if ! check_database_connection; then
+        log_warning "${COMPONENT}: Cannot check data warehouse freshness - database connection failed"
+        return 0
+    fi
     
-    log_debug "${COMPONENT}: Data warehouse freshness check not yet implemented"
+    # Check if analytics database is configured
+    local analytics_dbname="${ANALYTICS_DBNAME:-${DBNAME}}"
     
+    # Query to check last update time in data warehouse
+    # This checks common DWH tables for their last update timestamp
+    local freshness_query="
+        SELECT 
+            COALESCE(
+                MAX(EXTRACT(EPOCH FROM (NOW() - updated_at))),
+                MAX(EXTRACT(EPOCH FROM (NOW() - created_at))),
+                MAX(EXTRACT(EPOCH FROM (NOW() - last_updated))),
+                MAX(EXTRACT(EPOCH FROM (NOW() - timestamp)))
+            ) as freshness_seconds,
+            COUNT(*) FILTER (WHERE 
+                updated_at > NOW() - INTERVAL '1 hour' OR
+                created_at > NOW() - INTERVAL '1 hour' OR
+                last_updated > NOW() - INTERVAL '1 hour' OR
+                timestamp > NOW() - INTERVAL '1 hour'
+            ) as recent_updates
+        FROM (
+            SELECT updated_at, created_at, last_updated, timestamp
+            FROM notes
+            UNION ALL
+            SELECT updated_at, created_at, last_updated, timestamp
+            FROM note_comments
+            UNION ALL
+            SELECT updated_at, created_at, last_updated, timestamp
+            FROM note_comment_texts
+            LIMIT 1000
+        ) as all_tables
+        LIMIT 1;
+    "
+    
+    # Try to execute query
+    local result
+    result=$(execute_sql_query "${freshness_query}" "${analytics_dbname}" 2>/dev/null || echo "")
+    
+    if [[ -n "${result}" ]] && [[ "${result}" != "Error executing query:"* ]]; then
+        log_debug "${COMPONENT}: Data warehouse freshness check result: ${result}"
+        
+        # Parse result (format: freshness_seconds|recent_updates)
+        local freshness_seconds
+        freshness_seconds=$(echo "${result}" | cut -d'|' -f1 | tr -d '[:space:]' || echo "")
+        local recent_updates
+        recent_updates=$(echo "${result}" | cut -d'|' -f2 | tr -d '[:space:]' || echo "")
+        
+        if [[ -n "${freshness_seconds}" ]] && [[ "${freshness_seconds}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+            # Convert to integer seconds
+            local freshness_int
+            freshness_int=$(printf "%.0f" "${freshness_seconds}" 2>/dev/null || echo "${freshness_seconds}")
+            
+            record_metric "${COMPONENT}" "data_warehouse_freshness_seconds" "${freshness_int}" "component=analytics"
+            
+            # Check against threshold
+            local freshness_threshold="${ANALYTICS_DATA_FRESHNESS_THRESHOLD:-3600}"
+            if [[ ${freshness_int} -gt ${freshness_threshold} ]]; then
+                log_warning "${COMPONENT}: Data warehouse freshness (${freshness_int}s) exceeds threshold (${freshness_threshold}s)"
+                send_alert "WARNING" "${COMPONENT}" "Data warehouse freshness exceeded: ${freshness_int}s (threshold: ${freshness_threshold}s)"
+            fi
+        fi
+        
+        if [[ -n "${recent_updates}" ]] && [[ "${recent_updates}" =~ ^[0-9]+$ ]]; then
+            record_metric "${COMPONENT}" "data_warehouse_recent_updates_count" "${recent_updates}" "component=analytics,period=1hour"
+        fi
+    else
+        # Fallback: Check by table modification time or log file age
+        log_debug "${COMPONENT}: Using fallback method for data warehouse freshness check"
+        
+        # Try to get table modification times from PostgreSQL
+        local table_freshness_query="
+            SELECT 
+                schemaname,
+                tablename,
+                EXTRACT(EPOCH FROM (NOW() - last_vacuum)) as freshness_seconds
+            FROM pg_stat_user_tables
+            WHERE schemaname = 'public'
+            ORDER BY last_vacuum DESC NULLS LAST
+            LIMIT 1;
+        "
+        
+        local table_result
+        table_result=$(execute_sql_query "${table_freshness_query}" "${analytics_dbname}" 2>/dev/null || echo "")
+        
+        if [[ -n "${table_result}" ]] && [[ "${table_result}" != "Error executing query:"* ]]; then
+            local table_freshness
+            table_freshness=$(echo "${table_result}" | cut -d'|' -f3 | tr -d '[:space:]' || echo "")
+            
+            if [[ -n "${table_freshness}" ]] && [[ "${table_freshness}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+                local table_freshness_int
+                table_freshness_int=$(printf "%.0f" "${table_freshness}" 2>/dev/null || echo "${table_freshness}")
+                
+                record_metric "${COMPONENT}" "data_warehouse_freshness_seconds" "${table_freshness_int}" "component=analytics,source=pg_stat"
+                
+                local freshness_threshold="${ANALYTICS_DATA_FRESHNESS_THRESHOLD:-3600}"
+                if [[ ${table_freshness_int} -gt ${freshness_threshold} ]]; then
+                    log_warning "${COMPONENT}: Data warehouse freshness (from table stats) (${table_freshness_int}s) exceeds threshold (${freshness_threshold}s)"
+                    send_alert "WARNING" "${COMPONENT}" "Data warehouse freshness exceeded: ${table_freshness_int}s (threshold: ${freshness_threshold}s)"
+                fi
+            fi
+        else
+            # Last fallback: Use ETL log file age
+            local log_dir="${ANALYTICS_LOG_DIR:-${ANALYTICS_REPO_PATH}/logs}"
+            if [[ -d "${log_dir}" ]]; then
+                local latest_log
+                latest_log=$(find "${log_dir}" -name "*.log" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+                
+                if [[ -n "${latest_log}" ]] && [[ -f "${latest_log}" ]]; then
+                    local log_mtime
+                    if stat -c %Y "${latest_log}" > /dev/null 2>&1; then
+                        log_mtime=$(stat -c %Y "${latest_log}")
+                    elif stat -f %m "${latest_log}" > /dev/null 2>&1; then
+                        log_mtime=$(stat -f %m "${latest_log}")
+                    else
+                        log_mtime=0
+                    fi
+                    
+                    if [[ ${log_mtime} -gt 0 ]]; then
+                        local current_time
+                        current_time=$(date +%s)
+                        local freshness_seconds=$((current_time - log_mtime))
+                        
+                        record_metric "${COMPONENT}" "data_warehouse_freshness_seconds" "${freshness_seconds}" "component=analytics,source=log_age"
+                        
+                        local freshness_threshold="${ANALYTICS_DATA_FRESHNESS_THRESHOLD:-3600}"
+                        if [[ ${freshness_seconds} -gt ${freshness_threshold} ]]; then
+                            log_warning "${COMPONENT}: Data warehouse freshness (from log age) (${freshness_seconds}s) exceeds threshold (${freshness_threshold}s)"
+                            send_alert "WARNING" "${COMPONENT}" "Data warehouse freshness exceeded: ${freshness_seconds}s (threshold: ${freshness_threshold}s)"
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    fi
+    
+    log_info "${COMPONENT}: Data warehouse freshness check completed"
     return 0
 }
 
