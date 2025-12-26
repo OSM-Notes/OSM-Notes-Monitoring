@@ -53,6 +53,8 @@ ANALYTICS_ENABLED=true
 ANALYTICS_CHECK_TIMEOUT=600  # seconds
 ANALYTICS_ETL_TIMEOUT=3600   # seconds (1 hour)
 ANALYTICS_DATA_FRESHNESS_THRESHOLD=3600  # seconds (1 hour)
+ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD=2  # minimum number of ETL scripts that should be found
+ANALYTICS_ETL_LAST_EXECUTION_AGE_THRESHOLD=3600  # seconds (1 hour) - alert if no ETL execution for this long
 
 # WMS Monitoring
 WMS_ENABLED=true

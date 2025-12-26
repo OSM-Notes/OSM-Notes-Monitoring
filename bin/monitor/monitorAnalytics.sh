@@ -28,6 +28,9 @@ source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
 # shellcheck disable=SC1091
 source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 
+# Set default LOG_DIR if not set
+export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
+
 # Initialize logging
 init_logging "${LOG_DIR}/analytics.log" "monitorAnalytics"
 
@@ -83,14 +86,150 @@ EOF
 check_etl_job_execution_status() {
     log_info "${COMPONENT}: Starting ETL job execution status check"
     
-    # TODO: Implement ETL job execution status check
-    # This should check:
-    # - Last ETL execution timestamp
-    # - ETL job status (running, completed, failed)
-    # - ETL job duration
-    # - Records processed
+    # Check if analytics repository path is configured
+    if [[ -z "${ANALYTICS_REPO_PATH:-}" ]]; then
+        log_warning "${COMPONENT}: ANALYTICS_REPO_PATH not configured, skipping ETL job status check"
+        return 0
+    fi
     
-    log_debug "${COMPONENT}: ETL job execution status check not yet implemented"
+    # Expected ETL scripts/jobs
+    local etl_scripts=(
+        "etl_main.sh"
+        "etl_daily.sh"
+        "etl_hourly.sh"
+        "load_data.sh"
+        "transform_data.sh"
+    )
+    
+    local scripts_dir="${ANALYTICS_REPO_PATH}/bin"
+    local scripts_found=0
+    local scripts_executable=0
+    local scripts_running=0
+    local last_execution_timestamp=""
+    local last_execution_age_seconds=0
+    
+    # Check each ETL script
+    for script_name in "${etl_scripts[@]}"; do
+        local script_path="${scripts_dir}/${script_name}"
+        
+        # Check if script exists
+        if [[ ! -f "${script_path}" ]]; then
+            log_debug "${COMPONENT}: ETL script not found: ${script_name}"
+            continue
+        fi
+        
+        scripts_found=$((scripts_found + 1))
+        
+        # Check if script is executable
+        if [[ -x "${script_path}" ]]; then
+            scripts_executable=$((scripts_executable + 1))
+        else
+            log_warning "${COMPONENT}: ETL script exists but not executable: ${script_name}"
+        fi
+        
+        # Check if script process is running
+        local script_basename
+        script_basename=$(basename "${script_path}")
+        if pgrep -f "${script_basename}" > /dev/null 2>&1; then
+            scripts_running=$((scripts_running + 1))
+            log_info "${COMPONENT}: ETL script is running: ${script_name}"
+            
+            # Get process info
+            local pid
+            pid=$(pgrep -f "${script_basename}" | head -1)
+            local runtime
+            runtime=$(ps -o etime= -p "${pid}" 2>/dev/null | tr -d ' ' || echo "unknown")
+            log_debug "${COMPONENT}: ETL script ${script_name} PID: ${pid}, Runtime: ${runtime}"
+        fi
+    done
+    
+    # Record metrics
+    record_metric "${COMPONENT}" "etl_scripts_found" "${scripts_found}" "component=analytics"
+    record_metric "${COMPONENT}" "etl_scripts_executable" "${scripts_executable}" "component=analytics"
+    record_metric "${COMPONENT}" "etl_scripts_running" "${scripts_running}" "component=analytics"
+    
+    # Check for alerts
+    local scripts_found_threshold="${ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD:-2}"
+    if [[ ${scripts_found} -lt ${scripts_found_threshold} ]]; then
+        log_warning "${COMPONENT}: Low number of ETL scripts found: ${scripts_found} (threshold: ${scripts_found_threshold})"
+        send_alert "WARNING" "${COMPONENT}" "Low number of ETL scripts found: ${scripts_found} (threshold: ${scripts_found_threshold})"
+    fi
+    
+    if [[ ${scripts_executable} -lt ${scripts_found} ]]; then
+        log_warning "${COMPONENT}: Some ETL scripts are not executable: ${scripts_executable}/${scripts_found}"
+        send_alert "WARNING" "${COMPONENT}" "ETL scripts executable count (${scripts_executable}) is less than scripts found (${scripts_found})"
+    fi
+    
+    # Check last execution timestamp from logs
+    local log_dir="${ANALYTICS_LOG_DIR:-${ANALYTICS_REPO_PATH}/logs}"
+    if [[ -d "${log_dir}" ]]; then
+        # Find most recent log file
+        local latest_log
+        latest_log=$(find "${log_dir}" -name "*.log" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+        
+        if [[ -n "${latest_log}" ]] && [[ -f "${latest_log}" ]]; then
+            # Get last modification time
+            if command -v stat > /dev/null 2>&1; then
+                # Try to get modification time (works on Linux and macOS with different flags)
+                if stat -c %Y "${latest_log}" > /dev/null 2>&1; then
+                    # Linux
+                    last_execution_timestamp=$(stat -c %Y "${latest_log}")
+                elif stat -f %m "${latest_log}" > /dev/null 2>&1; then
+                    # macOS
+                    last_execution_timestamp=$(stat -f %m "${latest_log}")
+                fi
+                
+                if [[ -n "${last_execution_timestamp}" ]]; then
+                    local current_timestamp
+                    current_timestamp=$(date +%s)
+                    last_execution_age_seconds=$((current_timestamp - last_execution_timestamp))
+                    
+                    # Record metric
+                    record_metric "${COMPONENT}" "last_etl_execution_age_seconds" "${last_execution_age_seconds}" "component=analytics"
+                    
+                    # Check threshold
+                    local freshness_threshold="${ANALYTICS_DATA_FRESHNESS_THRESHOLD:-3600}"
+                    if [[ ${last_execution_age_seconds} -gt ${freshness_threshold} ]]; then
+                        log_warning "${COMPONENT}: Last ETL execution is ${last_execution_age_seconds}s old (threshold: ${freshness_threshold}s)"
+                        send_alert "WARNING" "${COMPONENT}" "Last ETL execution is ${last_execution_age_seconds}s old (threshold: ${freshness_threshold}s)"
+                    fi
+                fi
+            fi
+        else
+            log_debug "${COMPONENT}: No log files found in ${log_dir}"
+        fi
+    else
+        log_debug "${COMPONENT}: Log directory not found: ${log_dir}"
+    fi
+    
+    # Check for ETL job failures in logs (last 24 hours)
+    if [[ -d "${log_dir}" ]]; then
+        local error_count=0
+        local failure_count=0
+        
+        # Count errors and failures in recent logs
+        if find "${log_dir}" -name "*.log" -type f -mtime -1 -exec grep -l -i "error\|failed\|failure" {} \; 2>/dev/null | head -10 | while read -r logfile; do
+            local file_errors
+            file_errors=$(grep -ic "error" "${logfile}" 2>/dev/null || echo "0")
+            local file_failures
+            file_failures=$(grep -ic -E "failed|failure" "${logfile}" 2>/dev/null || echo "0")
+            error_count=$((error_count + file_errors))
+            failure_count=$((failure_count + file_failures))
+        done; then
+            # Record metrics
+            if [[ ${error_count} -gt 0 ]]; then
+                record_metric "${COMPONENT}" "etl_error_count" "${error_count}" "component=analytics,period=24h"
+            fi
+            if [[ ${failure_count} -gt 0 ]]; then
+                record_metric "${COMPONENT}" "etl_failure_count" "${failure_count}" "component=analytics,period=24h"
+                
+                # Alert on failures
+                send_alert "WARNING" "${COMPONENT}" "ETL job failures detected: ${failure_count} failures in last 24 hours"
+            fi
+        fi
+    fi
+    
+    log_info "${COMPONENT}: ETL job execution status check completed - scripts found: ${scripts_found}, running: ${scripts_running}"
     
     return 0
 }
