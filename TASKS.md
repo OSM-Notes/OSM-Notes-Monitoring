@@ -115,7 +115,7 @@
 
 - [x] Unit tests for ingestion monitoring checks (`tests/unit/monitor/test_monitorIngestion.sh` - comprehensive unit tests for monitoring functions)
 - [x] Integration tests with test database (`tests/integration/test_monitorIngestion_integration.sh` - integration tests for monitoring functions with database)
-- [ ] End-to-end tests with mock ingestion system
+- [x] End-to-end tests with mock ingestion system (`tests/e2e/test_monitoring_workflow.sh` - end-to-end tests with mock ingestion scripts)
 - [x] Alert delivery tests for ingestion (`tests/integration/test_alert_delivery.sh` - comprehensive alert delivery tests)
 - [ ] Performance tests for monitoring overhead
 
@@ -517,5 +517,5 @@
 
 **Last Updated:** 2025-12-26  
 **Current Phase:** Phase 2 - Ingestion Monitoring  
-**Next Task:** End-to-end tests with mock ingestion system
+**Next Task:** Performance tests for monitoring overhead
 
