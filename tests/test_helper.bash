@@ -192,3 +192,58 @@ clean_test_database() {
         > /dev/null 2>&1 || true
 }
 
+##
+# Assert file contains text
+# Usage: assert_file_contains filepath text
+##
+assert_file_contains() {
+    local filepath="${1}"
+    local text="${2}"
+    
+    if [[ ! -f "${filepath}" ]]; then
+        echo -e "${RED}File does not exist: ${filepath}${NC}" >&2
+        return 1
+    fi
+    
+    if ! grep -q "${text}" "${filepath}"; then
+        echo -e "${RED}File does not contain text: ${text}${NC}" >&2
+        echo -e "File: ${filepath}" >&2
+        return 1
+    fi
+}
+
+##
+# Assert file matches pattern
+# Usage: assert_file_matches filepath pattern
+##
+assert_file_matches() {
+    local filepath="${1}"
+    local pattern="${2}"
+    
+    if [[ ! -f "${filepath}" ]]; then
+        echo -e "${RED}File does not exist: ${filepath}${NC}" >&2
+        return 1
+    fi
+    
+    if ! grep -qE "${pattern}" "${filepath}"; then
+        echo -e "${RED}File does not match pattern: ${pattern}${NC}" >&2
+        echo -e "File: ${filepath}" >&2
+        return 1
+    fi
+}
+
+##
+# Refute file contains text (opposite of assert_file_contains)
+# Usage: refute_file_contains filepath text
+##
+refute_file_contains() {
+    local filepath="${1}"
+    local text="${2}"
+    
+    if [[ -f "${filepath}" ]] && grep -q "${text}" "${filepath}"; then
+        echo -e "${RED}File should not contain text: ${text}${NC}" >&2
+        echo -e "File: ${filepath}" >&2
+        return 1
+    fi
+}
+
