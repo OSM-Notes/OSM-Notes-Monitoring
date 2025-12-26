@@ -123,7 +123,7 @@
 
 - [x] Create ingestion monitoring guide (`docs/INGESTION_MONITORING_GUIDE.md` - comprehensive guide for monitoring ingestion component)
 - [x] Create alert runbook for ingestion (`docs/INGESTION_ALERT_RUNBOOK.md` - comprehensive runbook with investigation steps and resolution procedures, already completed in line 112)
-- [ ] Create troubleshooting guide for ingestion
+- [x] Create troubleshooting guide for ingestion (`docs/INGESTION_TROUBLESHOOTING_GUIDE.md` - comprehensive troubleshooting guide with diagnostic procedures and recovery steps)
 - [x] Document all metrics for ingestion (`docs/INGESTION_METRICS.md` - comprehensive definition of all ingestion-specific metrics)
 
 ---
@@ -517,5 +517,5 @@
 
 **Last Updated:** 2025-12-26  
 **Current Phase:** Phase 2 - Ingestion Monitoring  
-**Next Task:** Create troubleshooting guide for ingestion
+**Next Task:** Phase 2 documentation complete. Proceed to Phase 3: Analytics Monitoring
 
