@@ -268,7 +268,9 @@ run_all_checks() {
 ##
 main() {
     local check_type="all"
+    # shellcheck disable=SC2034
     local verbose=false
+    # shellcheck disable=SC2034
     local dry_run=false
     
     # Parse command line arguments
@@ -279,10 +281,12 @@ main() {
                 shift 2
                 ;;
             -v|--verbose)
+                # shellcheck disable=SC2034
                 verbose=true
                 shift
                 ;;
             -d|--dry-run)
+                # shellcheck disable=SC2034
                 dry_run=true
                 export DRY_RUN=true
                 shift
