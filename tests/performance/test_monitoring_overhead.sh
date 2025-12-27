@@ -10,6 +10,10 @@
 # shellcheck disable=SC2030,SC2031
 # SC2030/SC2031: Variables modified in subshells are expected in BATS tests
 
+# Test configuration (set before loading test_helper to allow override)
+export TEST_COMPONENT="INGESTION"
+export TEST_DB_NAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
+
 load "${BATS_TEST_DIRNAME}/../test_helper.bash"
 
 # Source libraries
@@ -26,9 +30,6 @@ source "${BATS_TEST_DIRNAME}/../../bin/lib/metricsFunctions.sh"
 # shellcheck disable=SC1091
 source "${BATS_TEST_DIRNAME}/../../bin/monitor/monitorIngestion.sh"
 
-# Test configuration
-export TEST_COMPONENT="INGESTION"
-TEST_DB_NAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
 PERFORMANCE_ITERATIONS="${PERFORMANCE_ITERATIONS:-10}"
 PERFORMANCE_THRESHOLD_MS="${PERFORMANCE_THRESHOLD_MS:-1000}"
 
