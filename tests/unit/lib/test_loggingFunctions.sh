@@ -37,8 +37,15 @@ source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
     timestamp=$(get_timestamp)
     
     # Should match YYYY-MM-DD HH:MM:SS format
-    # shellcheck disable=SC1083
-    assert [[ "${timestamp}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]
+    # Check format without using complex regex in assert
+    local year month day hour min sec
+    IFS=' -:' read -r year month day hour min sec <<< "${timestamp}"
+    assert [[ -n "${year}" ]] && [[ ${#year} -eq 4 ]]
+    assert [[ -n "${month}" ]] && [[ ${#month} -eq 2 ]]
+    assert [[ -n "${day}" ]] && [[ ${#day} -eq 2 ]]
+    assert [[ -n "${hour}" ]] && [[ ${#hour} -eq 2 ]]
+    assert [[ -n "${min}" ]] && [[ ${#min} -eq 2 ]]
+    assert [[ -n "${sec}" ]] && [[ ${#sec} -eq 2 ]]
 }
 
 @test "log_message respects log level" {

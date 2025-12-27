@@ -35,7 +35,11 @@ export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 init_logging "${LOG_DIR}/analytics.log" "monitorAnalytics"
 
 # Component name
-readonly COMPONENT="ANALYTICS"
+# Component name (allow override in test mode)
+if [[ -z "${COMPONENT:-}" ]] || [[ "${TEST_MODE:-false}" == "true" ]]; then
+    COMPONENT="${COMPONENT:-ANALYTICS}"
+fi
+readonly COMPONENT
 
 ##
 # Show usage

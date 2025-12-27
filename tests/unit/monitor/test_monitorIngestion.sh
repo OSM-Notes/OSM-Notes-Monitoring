@@ -72,12 +72,13 @@ setup() {
     init_alerting
     
     # Source monitorIngestion.sh functions
+    # Set component name BEFORE sourcing (to allow override)
+    export TEST_MODE=true
+    export COMPONENT="INGESTION"
+    
     # We'll source it but need to handle the main execution
     # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/monitor/monitorIngestion.sh" 2>/dev/null || true
-    
-    # Set component name
-    export COMPONENT="INGESTION"
 }
 
 teardown() {

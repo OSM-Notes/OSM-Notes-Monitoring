@@ -45,11 +45,42 @@ if ! command -v assert_failure > /dev/null 2>&1; then
 fi
 
 if ! command -v assert > /dev/null 2>&1; then
-    # Minimal assert implementation
+    # Minimal assert implementation that handles [[ ]] correctly
     assert() {
-        if ! "$@"; then
-            echo "Assertion failed: $*" >&2
-            return 1
+        # Check if first argument is [[
+        if [[ "${1:-}" == "[[" ]]; then
+            # Build condition string preserving all arguments
+            shift  # Remove [[
+            local condition_parts=()
+            while [[ $# -gt 0 ]]; do
+                if [[ "$1" == "]]" ]]; then
+                    break
+                fi
+                condition_parts+=("$1")
+                shift
+            done
+            # Join with spaces and evaluate
+            # Use printf %q to properly quote each part, then join
+            local eval_str=""
+            for part in "${condition_parts[@]}"; do
+                if [[ -z "${eval_str}" ]]; then
+                    eval_str="${part}"
+                else
+                    eval_str="${eval_str} ${part}"
+                fi
+            done
+            # Evaluate the condition
+            # shellcheck disable=SC2086
+            if ! eval "[[ ${eval_str} ]]"; then
+                echo "Assertion failed: [[ ${eval_str} ]]" >&2
+                return 1
+            fi
+        else
+            # For other commands, execute normally
+            if ! "$@"; then
+                echo "Assertion failed: $*" >&2
+                return 1
+            fi
         fi
     }
 fi
@@ -105,13 +136,31 @@ assert_success() {
 
 ##
 # Assert that a command fails
-# Usage: assert_failure command [args...]
+# Usage: assert_failure [command [args...]]
+# When used after 'run', checks that $status != 0
 ##
 assert_failure() {
+    # If used after 'run', check $status variable (BATS convention)
+    if [[ -n "${status:-}" ]]; then
+        if [[ ${status} -eq 0 ]]; then
+            echo -e "${RED}Command succeeded but should have failed (exit code: ${status})${NC}" >&2
+            return 1
+        fi
+        return 0
+    fi
+    
+    # If no arguments, assume checking last command
+    if [[ $# -eq 0 ]]; then
+        echo -e "${RED}assert_failure: No command to check and \$status not set. Use 'run' command first.${NC}" >&2
+        return 1
+    fi
+    
+    # If command is provided, execute it and check it fails
     if "$@"; then
         echo -e "${RED}Command succeeded but should have failed: $*${NC}" >&2
         return 1
     fi
+    return 0
 }
 
 ##

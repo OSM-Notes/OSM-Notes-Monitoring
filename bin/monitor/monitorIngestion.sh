@@ -32,7 +32,11 @@ source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 init_logging "${LOG_DIR}/ingestion.log" "monitorIngestion"
 
 # Component name
-readonly COMPONENT="INGESTION"
+# Component name (allow override in test mode)
+if [[ -z "${COMPONENT:-}" ]] || [[ "${TEST_MODE:-false}" == "true" ]]; then
+    COMPONENT="${COMPONENT:-INGESTION}"
+fi
+readonly COMPONENT
 
 ##
 # Show usage
