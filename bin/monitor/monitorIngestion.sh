@@ -1239,8 +1239,18 @@ check_api_download_success_rate() {
     
     # Check against threshold
     local success_threshold="${INGESTION_API_DOWNLOAD_SUCCESS_RATE_THRESHOLD:-95}"
+    
+    # Debug in test mode
+    if [[ "${TEST_MODE:-false}" == "true" ]]; then
+        echo "DEBUG: success_rate=${success_rate}, success_threshold=${success_threshold}, total_downloads=${total_downloads}" >&2
+        echo "DEBUG: Will check if ${success_rate} -lt ${success_threshold} && ${total_downloads} -gt 0" >&2
+    fi
+    
     if [[ ${success_rate} -lt ${success_threshold} ]] && [[ ${total_downloads} -gt 0 ]]; then
         log_warning "${COMPONENT}: API download success rate (${success_rate}%) below threshold (${success_threshold}%)"
+        if [[ "${TEST_MODE:-false}" == "true" ]]; then
+            echo "DEBUG: Calling send_alert for low success rate" >&2
+        fi
         send_alert "${COMPONENT}" "WARNING" "api_download_success_rate" "Low API download success rate: ${success_rate}% (threshold: ${success_threshold}%, ${successful_downloads}/${total_downloads})"
         return 1
     fi
