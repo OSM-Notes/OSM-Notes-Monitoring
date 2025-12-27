@@ -3,11 +3,11 @@
 # Unit Tests: configFunctions.sh
 #
 
-load "$(dirname "$0")/../../test_helper.bash"
+load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
 # Source the library
 # shellcheck disable=SC1091
-source "$(dirname "$0")/../../../bin/lib/configFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/configFunctions.sh"
 
 @test "get_project_root returns valid path" {
     local project_root

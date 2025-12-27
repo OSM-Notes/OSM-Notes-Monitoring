@@ -8,7 +8,7 @@ load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
 # Source the library
 # shellcheck disable=SC1091
-source "$(dirname "$0")/../../../bin/lib/configFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/configFunctions.sh"
 
 @test "load_main_config loads properties.sh" {
     local project_root

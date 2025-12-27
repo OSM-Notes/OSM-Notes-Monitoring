@@ -3,11 +3,11 @@
 # Unit Tests: loggingFunctions.sh
 #
 
-load "$(dirname "$0")/../../test_helper.bash"
+load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
 # Source the library
 # shellcheck disable=SC1091
-source "$(dirname "$0")/../../../bin/lib/loggingFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
 
 @test "log_info writes to log file" {
     local test_log_file="${TEST_ROOT}/tests/tmp/test.log"

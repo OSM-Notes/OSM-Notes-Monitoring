@@ -8,9 +8,9 @@ load "${BATS_TEST_DIRNAME}/../test_helper.bash"
 
 # Source libraries
 # shellcheck disable=SC1091
-source "$(dirname "$0")/../../bin/lib/configFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../bin/lib/configFunctions.sh"
 # shellcheck disable=SC1091
-source "$(dirname "$0")/../../bin/lib/loggingFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../bin/lib/loggingFunctions.sh"
 
 @test "configuration files exist" {
     local project_root
@@ -78,7 +78,7 @@ source "$(dirname "$0")/../../bin/lib/loggingFunctions.sh"
     
     # Source config functions
     # shellcheck disable=SC1091
-    source "$(dirname "$0")/../../bin/lib/configFunctions.sh"
+    source "${BATS_TEST_DIRNAME}/../../bin/lib/configFunctions.sh"
     
     # Test validation (may fail if DB doesn't exist, that's OK)
     run validate_main_config || true
