@@ -16,6 +16,10 @@ export TEST_DB_NAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
 
 load "${BATS_TEST_DIRNAME}/../test_helper.bash"
 
+# Set LOG_DIR before loading monitorIngestion.sh
+export LOG_DIR="${LOG_DIR:-${BATS_TEST_DIRNAME}/../tmp/logs}"
+mkdir -p "${LOG_DIR}"
+
 # Source libraries
 # shellcheck disable=SC1091
 source "${BATS_TEST_DIRNAME}/../../bin/lib/loggingFunctions.sh"

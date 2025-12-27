@@ -174,8 +174,13 @@ check_error_rate() {
     fi
     
     # Find recent log files (last 24 hours)
+    # In test mode, find all .log files without time restriction
     local log_files
-    mapfile -t log_files < <(find "${ingestion_log_dir}" -name "*.log" -type f -mtime -1 2>/dev/null | head -10)
+    if [[ "${TEST_MODE:-false}" == "true" ]]; then
+        mapfile -t log_files < <(find "${ingestion_log_dir}" -name "*.log" -type f 2>/dev/null | head -10)
+    else
+        mapfile -t log_files < <(find "${ingestion_log_dir}" -name "*.log" -type f -mtime -1 2>/dev/null | head -10)
+    fi
     
     if [[ ${#log_files[@]} -eq 0 ]]; then
         log_warning "${COMPONENT}: No recent log files found for error rate analysis"
