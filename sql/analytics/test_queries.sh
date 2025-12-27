@@ -34,7 +34,7 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
 # Test database (can be overridden)
-TEST_DBNAME="${TEST_DBNAME:-osm_notes_analytics}"
+TEST_DBNAME="${TEST_DBNAME:-osm_notes_monitoring_test}"
 TESTS_PASSED=0
 TESTS_FAILED=0
 
@@ -59,7 +59,7 @@ Tests all SQL queries with sample data or validates syntax.
 Usage: $0 [OPTIONS]
 
 Options:
-    -d, --database DBNAME    Test database name (default: osm_notes_analytics)
+    -d, --database DBNAME    Test database name (default: osm_notes_monitoring_test)
     -s, --syntax-only        Only validate syntax, don't execute
     -v, --verbose            Verbose output
     -h, --help               Show this help message
@@ -146,7 +146,7 @@ test_sql_file() {
     
     # Count queries in file
     local query_count
-    query_count=$(grep -c "^-- Query [0-9]:" "${sql_file}" || echo "0")
+    query_count=$(grep -cE "^-- Query [0-9]+:" "${sql_file}" || echo "0")
     
     if [[ ${query_count} -eq 0 ]]; then
         print_message "${YELLOW}" "  ⚠ No queries found in file (may be a single query file)"

@@ -34,7 +34,7 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
 # Test database (can be overridden)
-TEST_DBNAME="${TEST_DBNAME:-osm_notes}"
+TEST_DBNAME="${TEST_DBNAME:-osm_notes_monitoring_test}"
 TESTS_PASSED=0
 TESTS_FAILED=0
 
@@ -59,7 +59,7 @@ Tests all SQL queries with sample data or validates syntax.
 Usage: $0 [OPTIONS]
 
 Options:
-    -d, --database DBNAME    Test database name (default: osm_notes)
+    -d, --database DBNAME    Test database name (default: osm_notes_monitoring_test)
     -s, --syntax-only        Only validate syntax, don't execute
     -v, --verbose            Verbose output
     -h, --help               Show this help message
