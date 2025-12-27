@@ -249,6 +249,8 @@ INFO: Info 3
 INFO: Info 4"
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${3}" == *"High error rate detected"* ]]; then
@@ -283,6 +285,8 @@ INFO: Info 4"
     create_test_log "test.log" "${error_log}"
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${3}" == *"High error count"* ]]; then
@@ -424,6 +428,8 @@ INFO: Info 4"
     rm -rf "${TEST_INGESTION_DIR}"
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${2}" == "CRITICAL" ]]; then
@@ -617,6 +623,8 @@ INFO: Info 4"
     export -f record_metric
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${3}" == *"High processing latency"* ]]; then
@@ -663,6 +671,8 @@ INFO: 200 OK"
     create_test_log "old_api.log" "INFO: Old download" "25"
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${3}" == *"No recent API download activity"* ]]; then
@@ -726,6 +736,8 @@ ERROR: 500 Error"
     done
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${3}" == *"Low API download success rate"* ]]; then
@@ -806,6 +818,8 @@ ERROR: 500 Error"
     export -f record_metric
     
     local alert_sent=false
+    # Unset the original function to allow mocking
+    unset -f send_alert 2>/dev/null || true
     # shellcheck disable=SC2317
     send_alert() {
         if [[ "${3}" == *"Data quality below threshold"* ]]; then
