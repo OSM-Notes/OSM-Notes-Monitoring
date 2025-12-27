@@ -58,6 +58,8 @@ ANALYTICS_ETL_LAST_EXECUTION_AGE_THRESHOLD=3600  # seconds (1 hour) - alert if n
 ANALYTICS_ETL_DURATION_THRESHOLD=3600  # seconds (1 hour) - alert if a single ETL job runs longer than this
 ANALYTICS_ETL_AVG_DURATION_THRESHOLD=1800  # seconds (30 minutes) - alert if average ETL duration exceeds this
 ANALYTICS_ETL_MAX_DURATION_THRESHOLD=7200  # seconds (2 hours) - alert if maximum ETL duration exceeds this
+ANALYTICS_DATA_MART_UPDATE_AGE_THRESHOLD=3600  # seconds (1 hour) - alert if a data mart hasn't been updated for this long
+ANALYTICS_DATA_MART_AVG_UPDATE_AGE_THRESHOLD=1800  # seconds (30 minutes) - alert if average data mart update age exceeds this
 
 # WMS Monitoring
 WMS_ENABLED=true

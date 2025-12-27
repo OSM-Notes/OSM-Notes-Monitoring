@@ -634,13 +634,194 @@ check_etl_processing_duration() {
 check_data_mart_update_status() {
     log_info "${COMPONENT}: Starting data mart update status check"
     
-    # TODO: Implement data mart update status check
-    # This should check:
-    # - Data mart update timestamps
-    # - Update success/failure status
-    # - Update frequency
+    # Check database connection
+    if ! check_database_connection; then
+        log_warning "${COMPONENT}: Cannot check data mart update status - database connection failed"
+        return 0
+    fi
     
-    log_debug "${COMPONENT}: Data mart update status check not yet implemented"
+    # Check if analytics database is configured
+    local analytics_dbname="${ANALYTICS_DBNAME:-${DBNAME}}"
+    
+    # Query to check data mart update status
+    # This checks common data mart tables for their last update timestamp and status
+    local mart_status_query="
+        SELECT 
+            'data_mart' as mart_name,
+            COALESCE(
+                MAX(EXTRACT(EPOCH FROM (NOW() - updated_at))),
+                MAX(EXTRACT(EPOCH FROM (NOW() - last_updated))),
+                MAX(EXTRACT(EPOCH FROM (NOW() - timestamp)))
+            ) as last_update_age_seconds,
+            COUNT(*) FILTER (WHERE 
+                updated_at > NOW() - INTERVAL '1 hour' OR
+                last_updated > NOW() - INTERVAL '1 hour' OR
+                timestamp > NOW() - INTERVAL '1 hour'
+            ) as recent_updates_count,
+            COUNT(*) as total_records
+        FROM (
+            SELECT updated_at, last_updated, timestamp
+            FROM notes_summary
+            UNION ALL
+            SELECT updated_at, last_updated, timestamp
+            FROM notes_statistics
+            UNION ALL
+            SELECT updated_at, last_updated, timestamp
+            FROM notes_aggregated
+            LIMIT 1000
+        ) as mart_tables
+        LIMIT 1;
+    "
+    
+    # Try to execute query
+    local result
+    result=$(execute_sql_query "${mart_status_query}" "${analytics_dbname}" 2>/dev/null || echo "")
+    
+    local marts_checked=0
+    local marts_stale=0
+    local marts_failed=0
+    local total_update_age=0
+    local max_update_age=0
+    
+    if [[ -n "${result}" ]] && [[ "${result}" != "Error executing query:"* ]]; then
+        log_debug "${COMPONENT}: Data mart status check result: ${result}"
+        
+        # Parse result (format: mart_name|last_update_age_seconds|recent_updates_count|total_records)
+        local update_age
+        update_age=$(echo "${result}" | cut -d'|' -f2 | tr -d '[:space:]' || echo "")
+        local recent_updates
+        recent_updates=$(echo "${result}" | cut -d'|' -f3 | tr -d '[:space:]' || echo "")
+        local total_records
+        total_records=$(echo "${result}" | cut -d'|' -f4 | tr -d '[:space:]' || echo "")
+        
+        if [[ -n "${update_age}" ]] && [[ "${update_age}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+            local update_age_int
+            update_age_int=$(printf "%.0f" "${update_age}" 2>/dev/null || echo "${update_age}")
+            
+            marts_checked=$((marts_checked + 1))
+            total_update_age=$((total_update_age + update_age_int))
+            
+            if [[ ${update_age_int} -gt ${max_update_age} ]]; then
+                max_update_age=${update_age_int}
+            fi
+            
+            # Record metric for this data mart
+            record_metric "${COMPONENT}" "data_mart_update_age_seconds" "${update_age_int}" "component=analytics,mart=data_mart"
+            
+            # Check against threshold
+            local update_age_threshold="${ANALYTICS_DATA_MART_UPDATE_AGE_THRESHOLD:-3600}"
+            if [[ ${update_age_int} -gt ${update_age_threshold} ]]; then
+                marts_stale=$((marts_stale + 1))
+                log_warning "${COMPONENT}: Data mart update age (${update_age_int}s) exceeds threshold (${update_age_threshold}s)"
+                send_alert "WARNING" "${COMPONENT}" "Data mart update age exceeded: ${update_age_int}s (threshold: ${update_age_threshold}s)"
+            fi
+            
+            # Check if there are no recent updates
+            if [[ -n "${recent_updates}" ]] && [[ "${recent_updates}" =~ ^[0-9]+$ ]] && [[ ${recent_updates} -eq 0 ]]; then
+                log_warning "${COMPONENT}: No recent updates in data mart (last ${update_age_int}s)"
+            fi
+            
+            # Record recent updates count
+            if [[ -n "${recent_updates}" ]] && [[ "${recent_updates}" =~ ^[0-9]+$ ]]; then
+                record_metric "${COMPONENT}" "data_mart_recent_updates_count" "${recent_updates}" "component=analytics,mart=data_mart,period=1hour"
+            fi
+            
+            # Record total records
+            if [[ -n "${total_records}" ]] && [[ "${total_records}" =~ ^[0-9]+$ ]]; then
+                record_metric "${COMPONENT}" "data_mart_total_records" "${total_records}" "component=analytics,mart=data_mart"
+            fi
+        fi
+    else
+        # Fallback: Check data mart update logs or status files
+        log_debug "${COMPONENT}: Using fallback method for data mart update status check"
+        
+        local log_dir="${ANALYTICS_LOG_DIR:-${ANALYTICS_REPO_PATH}/logs}"
+        if [[ -d "${log_dir}" ]]; then
+            # Look for data mart update logs
+            local mart_logs
+            mart_logs=$(find "${log_dir}" -name "*mart*.log" -o -name "*update*.log" -type f -mtime -1 2>/dev/null | head -10)
+            
+            if [[ -n "${mart_logs}" ]]; then
+                while IFS= read -r logfile; do
+                    if [[ ! -f "${logfile}" ]]; then
+                        continue
+                    fi
+                    
+                    # Check for failure indicators
+                    local failure_count
+                    failure_count=$(grep -ic "error\|failed\|failure" "${logfile}" 2>/dev/null || echo "0")
+                    
+                    if [[ ${failure_count} -gt 0 ]]; then
+                        marts_failed=$((marts_failed + 1))
+                        log_warning "${COMPONENT}: Data mart update failures detected in ${logfile}"
+                    fi
+                    
+                    # Get log file modification time as proxy for last update
+                    local log_mtime
+                    if stat -c %Y "${logfile}" > /dev/null 2>&1; then
+                        log_mtime=$(stat -c %Y "${logfile}")
+                    elif stat -f %m "${logfile}" > /dev/null 2>&1; then
+                        log_mtime=$(stat -f %m "${logfile}")
+                    else
+                        log_mtime=0
+                    fi
+                    
+                    if [[ ${log_mtime} -gt 0 ]]; then
+                        local current_time
+                        current_time=$(date +%s)
+                        local update_age=$((current_time - log_mtime))
+                        
+                        marts_checked=$((marts_checked + 1))
+                        total_update_age=$((total_update_age + update_age))
+                        
+                        if [[ ${update_age} -gt ${max_update_age} ]]; then
+                            max_update_age=${update_age}
+                        fi
+                        
+                        record_metric "${COMPONENT}" "data_mart_update_age_seconds" "${update_age}" "component=analytics,source=log_age"
+                        
+                        local update_age_threshold="${ANALYTICS_DATA_MART_UPDATE_AGE_THRESHOLD:-3600}"
+                        if [[ ${update_age} -gt ${update_age_threshold} ]]; then
+                            marts_stale=$((marts_stale + 1))
+                            log_warning "${COMPONENT}: Data mart update age (from log) (${update_age}s) exceeds threshold (${update_age_threshold}s)"
+                            send_alert "WARNING" "${COMPONENT}" "Data mart update age exceeded: ${update_age}s (threshold: ${update_age_threshold}s)"
+                        fi
+                    fi
+                done <<< "${mart_logs}"
+            fi
+        fi
+    fi
+    
+    # Calculate average update age
+    local avg_update_age=0
+    if [[ ${marts_checked} -gt 0 ]]; then
+        avg_update_age=$((total_update_age / marts_checked))
+    fi
+    
+    # Record aggregate metrics
+    if [[ ${marts_checked} -gt 0 ]]; then
+        record_metric "${COMPONENT}" "data_mart_count" "${marts_checked}" "component=analytics"
+        record_metric "${COMPONENT}" "data_mart_avg_update_age_seconds" "${avg_update_age}" "component=analytics"
+        record_metric "${COMPONENT}" "data_mart_max_update_age_seconds" "${max_update_age}" "component=analytics"
+    fi
+    
+    if [[ ${marts_stale} -gt 0 ]]; then
+        record_metric "${COMPONENT}" "data_mart_stale_count" "${marts_stale}" "component=analytics"
+    fi
+    
+    if [[ ${marts_failed} -gt 0 ]]; then
+        record_metric "${COMPONENT}" "data_mart_failed_count" "${marts_failed}" "component=analytics"
+        send_alert "ERROR" "${COMPONENT}" "Data mart update failures detected: ${marts_failed} mart(s) have update failures"
+    fi
+    
+    # Check average update age threshold
+    local avg_update_age_threshold="${ANALYTICS_DATA_MART_AVG_UPDATE_AGE_THRESHOLD:-1800}"
+    if [[ ${avg_update_age} -gt ${avg_update_age_threshold} ]]; then
+        log_warning "${COMPONENT}: Average data mart update age (${avg_update_age}s) exceeds threshold (${avg_update_age_threshold}s)"
+        send_alert "WARNING" "${COMPONENT}" "Average data mart update age exceeded: ${avg_update_age}s (threshold: ${avg_update_age_threshold}s)"
+    fi
+    
+    log_info "${COMPONENT}: Data mart update status check completed - Marts checked: ${marts_checked}, Stale: ${marts_stale}, Failed: ${marts_failed}, Avg age: ${avg_update_age}s"
     
     return 0
 }
