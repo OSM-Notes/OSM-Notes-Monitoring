@@ -367,6 +367,7 @@
 - [ ] Set up PostgreSQL data source
 - [ ] Configure authentication
 - [ ] Set up dashboard provisioning
+- [x] Document Grafana architecture (created `docs/GRAFANA_ARCHITECTURE.md`)
 - [ ] Document Grafana setup
 
 ### Grafana Dashboards
@@ -401,9 +402,10 @@
 
 ### Documentation
 
-- [ ] Create dashboard guide
-- [ ] Create dashboard customization guide
-- [ ] Create Grafana setup guide
+- [x] Create dashboard guide (created `docs/DASHBOARD_GUIDE.md`)
+- [x] Create dashboard customization guide (created `docs/DASHBOARD_CUSTOMIZATION_GUIDE.md`)
+- [x] Create Grafana setup guide (created `docs/GRAFANA_SETUP_GUIDE.md`)
+- [x] Document Grafana architecture (created `docs/GRAFANA_ARCHITECTURE.md`)
 
 ---
 
