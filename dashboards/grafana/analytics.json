@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Analytics Monitoring",
+    "tags": ["osm", "monitoring", "analytics"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Analytics Health Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "SELECT status FROM component_health WHERE component = 'analytics'",
+          "format": "table",
+          "rawSql": true,
+          "refId": "A"
+        }]
+      },
+      {
+        "id": 2,
+        "title": "Key Metrics",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+        "targets": [{
+          "expr": "SELECT timestamp, metric_value FROM metrics WHERE component = 'analytics' AND timestamp > NOW() - INTERVAL '24 hours' ORDER BY timestamp DESC LIMIT 100",
+          "format": "time_series",
+          "rawSql": true,
+          "refId": "A"
+        }]
+      }
+    ],
+    "time": {"from": "now-24h", "to": "now"}
+  }
+}

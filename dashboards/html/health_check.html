@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Check - OSM Notes Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .nav-links {
+            margin-top: 15px;
+        }
+        
+        .nav-links a {
+            color: #3498db;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .health-status {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .status-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        
+        .status-icon.healthy {
+            color: #27ae60;
+        }
+        
+        .status-icon.degraded {
+            color: #f39c12;
+        }
+        
+        .status-icon.down {
+            color: #e74c3c;
+        }
+        
+        .status-icon.unknown {
+            color: #95a5a6;
+        }
+        
+        .status-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .status-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .component-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 4px solid #3498db;
+        }
+        
+        .component-card.healthy {
+            border-top-color: #27ae60;
+        }
+        
+        .component-card.degraded {
+            border-top-color: #f39c12;
+        }
+        
+        .component-card.down {
+            border-top-color: #e74c3c;
+        }
+        
+        .component-card.unknown {
+            border-top-color: #95a5a6;
+        }
+        
+        .component-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .component-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .component-status.healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .component-status.degraded {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .component-status.down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .component-status.unknown {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .component-time {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+        
+        .quick-stats {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>System Health Check</h1>
+            <div class="nav-links">
+                <a href="overview.html">Overview</a>
+                <a href="component_status.html">Component Status</a>
+            </div>
+        </header>
+        
+        <div id="healthStatus" class="health-status">
+            <div class="loading">Checking system health...</div>
+        </div>
+        
+        <div id="componentsGrid" class="components-grid">
+            <!-- Components will be loaded here -->
+        </div>
+        
+        <div class="quick-stats">
+            <h2 style="margin-bottom: 15px; color: #2c3e50;">Quick Stats</h2>
+            <div id="statsGrid" class="stats-grid">
+                <!-- Stats will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const components = ['ingestion', 'analytics', 'wms', 'api', 'infrastructure', 'data'];
+        
+        async function loadHealthCheck() {
+            try {
+                // Load component health
+                const healthResponse = await fetch('component_health.json');
+                const healthData = await healthResponse.json();
+                
+                // Calculate overall health
+                const overallHealth = calculateOverallHealth(healthData);
+                
+                // Update health status
+                updateHealthStatus(overallHealth);
+                
+                // Update components grid
+                updateComponentsGrid(healthData);
+                
+                // Update quick stats
+                updateQuickStats(healthData);
+            } catch (error) {
+                console.error('Error loading health check:', error);
+                document.getElementById('healthStatus').innerHTML = `
+                    <div class="status-icon unknown">⚠️</div>
+                    <div class="status-text">Unable to Check Health</div>
+                    <div class="status-description">Error loading health data. Please check that the dashboard data files exist.</div>
+                `;
+            }
+        }
+        
+        function calculateOverallHealth(healthData) {
+            let healthyCount = 0;
+            let degradedCount = 0;
+            let downCount = 0;
+            let unknownCount = 0;
+            
+            components.forEach(component => {
+                const status = healthData[component]?.status || 'unknown';
+                switch (status) {
+                    case 'healthy':
+                        healthyCount++;
+                        break;
+                    case 'degraded':
+                        degradedCount++;
+                        break;
+                    case 'down':
+                        downCount++;
+                        break;
+                    default:
+                        unknownCount++;
+                }
+            });
+            
+            if (downCount > 0) {
+                return { status: 'down', count: downCount, total: components.length };
+            }
+            if (degradedCount > 0) {
+                return { status: 'degraded', count: degradedCount, total: components.length };
+            }
+            if (unknownCount === components.length) {
+                return { status: 'unknown', count: unknownCount, total: components.length };
+            }
+            return { status: 'healthy', count: healthyCount, total: components.length };
+        }
+        
+        function updateHealthStatus(overallHealth) {
+            const statusEl = document.getElementById('healthStatus');
+            const icons = {
+                healthy: '✅',
+                degraded: '⚠️',
+                down: '❌',
+                unknown: '❓'
+            };
+            
+            const descriptions = {
+                healthy: 'All systems operational',
+                degraded: 'Some components are experiencing issues',
+                down: 'Critical components are down',
+                unknown: 'Unable to determine system health'
+            };
+            
+            statusEl.innerHTML = `
+                <div class="status-icon ${overallHealth.status}">${icons[overallHealth.status]}</div>
+                <div class="status-text">System Status: ${overallHealth.status.toUpperCase()}</div>
+                <div class="status-description">${descriptions[overallHealth.status]}</div>
+                <div class="status-description">${overallHealth.count} of ${overallHealth.total} components ${overallHealth.status}</div>
+                <button class="refresh-btn" onclick="loadHealthCheck()">Refresh</button>
+            `;
+        }
+        
+        function updateComponentsGrid(healthData) {
+            const grid = document.getElementById('componentsGrid');
+            
+            grid.innerHTML = components.map(component => {
+                const health = healthData[component] || { status: 'unknown', last_check: null };
+                const lastCheck = health.last_check ? new Date(health.last_check).toLocaleString() : 'Never';
+                
+                return `
+                    <div class="component-card ${health.status}">
+                        <div class="component-name">${component.charAt(0).toUpperCase() + component.slice(1)}</div>
+                        <span class="component-status ${health.status}">${health.status}</span>
+                        <div class="component-time">Last check: ${lastCheck}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateQuickStats(healthData) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            let healthyCount = 0;
+            let degradedCount = 0;
+            let downCount = 0;
+            let totalChecks = 0;
+            
+            components.forEach(component => {
+                const health = healthData[component];
+                if (health) {
+                    totalChecks++;
+                    switch (health.status) {
+                        case 'healthy':
+                            healthyCount++;
+                            break;
+                        case 'degraded':
+                            degradedCount++;
+                            break;
+                        case 'down':
+                            downCount++;
+                            break;
+                    }
+                }
+            });
+            
+            statsGrid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value" style="color: #27ae60;">${healthyCount}</div>
+                    <div class="stat-label">Healthy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" style="color: #f39c12;">${degradedCount}</div>
+                    <div class="stat-label">Degraded</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" style="color: #e74c3c;">${downCount}</div>
+                    <div class="stat-label">Down</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${totalChecks}</div>
+                    <div class="stat-label">Total Checks</div>
+                </div>
+            `;
+        }
+        
+        // Load health check on page load
+        loadHealthCheck();
+        
+        // Auto-refresh every minute
+        setInterval(loadHealthCheck, 60000);
+    </script>
+</body>
+</html>
