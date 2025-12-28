@@ -177,3 +177,4 @@ get_alert_id() {
         -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo ""
 }
 
+

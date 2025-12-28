@@ -46,4 +46,3 @@ ALERT_RULES_FILE="${PROJECT_ROOT}/config/alert_rules.conf"
 
 # Alert Templates Directory (optional)
 ALERT_TEMPLATES_DIR="${PROJECT_ROOT}/config/alert_templates"
-

@@ -169,3 +169,4 @@ count_alerts() {
         -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "0"
 }
 
+

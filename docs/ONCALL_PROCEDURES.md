@@ -214,3 +214,4 @@ psql -d osm_notes_monitoring -c "UPDATE alerts SET metadata = metadata || '{\"re
 - **Alert Manager**: `bin/alerts/alertManager.sh` - Alert management script
 - **Escalation**: `bin/alerts/escalation.sh` - Escalation script
 
+
