@@ -363,12 +363,13 @@
 
 ### Grafana Setup
 
-- [ ] Install and configure Grafana
-- [ ] Set up PostgreSQL data source
-- [ ] Configure authentication
-- [ ] Set up dashboard provisioning
+- [x] Install and configure Grafana (created `scripts/setup_grafana.sh`)
+- [x] Set up PostgreSQL data source (created `scripts/setup_grafana_datasource.sh`)
+- [x] Configure authentication (created `scripts/setup_grafana_auth.sh`)
+- [x] Set up dashboard provisioning (created `scripts/setup_grafana_provisioning.sh`)
 - [x] Document Grafana architecture (created `docs/GRAFANA_ARCHITECTURE.md`)
-- [ ] Document Grafana setup
+- [x] Document Grafana setup (created `docs/GRAFANA_SETUP_GUIDE.md`)
+- [x] Create complete setup script (created `scripts/setup_grafana_all.sh`)
 
 ### Grafana Dashboards
 
