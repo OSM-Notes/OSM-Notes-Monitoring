@@ -7,6 +7,7 @@ This directory contains SQL scripts for database initialization, migrations, and
 ```
 sql/
 ├── init.sql                    # Database initialization script (run first)
+├── optimize_queries.sql        # Query performance optimization (run after init.sql)
 ├── ingestion/                  # Ingestion monitoring queries
 ├── analytics/                  # Analytics monitoring queries
 ├── wms/                        # WMS monitoring queries
@@ -27,6 +28,11 @@ createdb osm_notes_monitoring
 2. Run the initialization script:
 ```bash
 psql -d osm_notes_monitoring -f sql/init.sql
+```
+
+3. Apply query performance optimizations (recommended):
+```bash
+psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
 
 ### Testing the Schema
@@ -71,6 +77,38 @@ psql -d osm_notes_monitoring_test -f sql/init.sql
 - **`cleanup_old_alerts(retention_days)`**: Remove old resolved alerts
 - **`cleanup_expired_ip_blocks()`**: Remove expired temporary blocks
 - **`cleanup_old_security_events(retention_days)`**: Remove old security events
+
+## Query Performance Optimization
+
+### Apply Optimizations
+
+After initial setup, apply query performance optimizations:
+
+```bash
+psql -d osm_notes_monitoring -f sql/optimize_queries.sql
+```
+
+This script:
+- Creates additional indexes for frequently executed queries
+- Updates table statistics for better query planning
+- Provides monitoring queries for performance analysis
+
+### Analyze Query Performance
+
+Use the performance analysis script:
+
+```bash
+./scripts/analyze_query_performance.sh
+```
+
+This script:
+- Analyzes index usage and identifies unused indexes
+- Checks for table bloat
+- Identifies sequential scans
+- Tests query execution times
+- Generates optimization recommendations
+
+For detailed information, see [Query Performance Optimization Guide](../docs/QUERY_PERFORMANCE_OPTIMIZATION.md).
 
 ## Maintenance
 

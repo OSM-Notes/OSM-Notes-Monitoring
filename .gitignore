@@ -79,3 +79,6 @@ __pycache__/
 docs/_build/
 docs/.doctrees/
 
+# Performance analysis reports
+reports/
+query_performance_analysis_*.txt

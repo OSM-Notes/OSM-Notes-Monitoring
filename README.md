@@ -59,6 +59,9 @@ createdb osm_notes_monitoring
 
 # Run initialization scripts
 psql -d osm_notes_monitoring -f sql/init.sql
+
+# Apply query performance optimizations (recommended)
+psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
 
 4. Configure alerts:
@@ -76,6 +79,7 @@ For detailed architecture documentation, see:
 - [Monitoring Resumen Ejecutivo](./docs/Monitoring_Resumen_Ejecutivo.md) (Spanish)
 - [Existing Monitoring Components](./docs/Existing_Monitoring_Components.md): Integration with OSM-Notes-Ingestion monitoring scripts
 - [Grafana Architecture](./docs/GRAFANA_ARCHITECTURE.md): Dual Grafana deployment (API + Monitoring)
+- [Query Performance Optimization](./docs/QUERY_PERFORMANCE_OPTIMIZATION.md): SQL query optimization guide
 
 ## Features
 
