@@ -278,7 +278,7 @@ main() {
 OUTPUT_FILE=""
 TIME_RANGE=""
 COMPONENT=""
-OUTPUT_FORMAT="json"
+OUTPUT_FORMAT=""  # Initialize as empty, set default after parsing
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
@@ -320,6 +320,9 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Set default OUTPUT_FORMAT if not provided
+OUTPUT_FORMAT="${OUTPUT_FORMAT:-json}"
 
 # Run main if script is executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

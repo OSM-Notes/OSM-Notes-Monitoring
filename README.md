@@ -82,6 +82,7 @@ For detailed architecture documentation, see:
 - [Query Performance Optimization](./docs/QUERY_PERFORMANCE_OPTIMIZATION.md): SQL query optimization guide
 - [Security Audit Guide](./docs/SECURITY_AUDIT_GUIDE.md): Code-level security checks
 - [Vulnerability Scanning Guide](./docs/VULNERABILITY_SCANNING_GUIDE.md): Automated vulnerability detection
+- [Penetration Testing Guide](./docs/PENETRATION_TESTING_GUIDE.md): Security penetration testing procedures
 
 ## Features
 
