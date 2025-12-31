@@ -85,6 +85,73 @@ if ! command -v assert > /dev/null 2>&1; then
     }
 fi
 
+# Minimal assert_output implementation
+if ! command -v assert_output > /dev/null 2>&1; then
+    assert_output() {
+        local expected="${1}"
+        local actual="${output:-}"
+        local partial=false
+        
+        # Check for --partial flag
+        if [[ "${1:-}" == "--partial" ]]; then
+            partial=true
+            expected="${2}"
+        fi
+        
+        if [[ "${partial}" == "true" ]]; then
+            if [[ "${actual}" != *"${expected}"* ]]; then
+                echo "Assertion failed: output does not contain '${expected}'" >&2
+                echo "Actual output: ${actual}" >&2
+                return 1
+            fi
+        else
+            if [[ "${actual}" != "${expected}" ]]; then
+                echo "Assertion failed: expected '${expected}', got '${actual}'" >&2
+                return 1
+            fi
+        fi
+    }
+fi
+
+# Minimal refute_output implementation
+if ! command -v refute_output > /dev/null 2>&1; then
+    refute_output() {
+        local not_expected="${1}"
+        local actual="${output:-}"
+        local partial=false
+        
+        # Check for --partial flag
+        if [[ "${1:-}" == "--partial" ]]; then
+            partial=true
+            not_expected="${2}"
+        fi
+        
+        if [[ "${partial}" == "true" ]]; then
+            if [[ "${actual}" == *"${not_expected}"* ]]; then
+                echo "Assertion failed: output contains '${not_expected}'" >&2
+                echo "Actual output: ${actual}" >&2
+                return 1
+            fi
+        else
+            if [[ "${actual}" == "${not_expected}" ]]; then
+                echo "Assertion failed: output equals '${not_expected}'" >&2
+                return 1
+            fi
+        fi
+    }
+fi
+
+# Minimal assert_file_exist implementation
+if ! command -v assert_file_exist > /dev/null 2>&1; then
+    assert_file_exist() {
+        local file="${1}"
+        if [[ ! -f "${file}" ]]; then
+            echo "Assertion failed: file '${file}' does not exist" >&2
+            return 1
+        fi
+    }
+fi
+
 # Test configuration
 readonly TEST_DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")" && pwd)"
 readonly TEST_ROOT="$(dirname "${TEST_DIR}")"

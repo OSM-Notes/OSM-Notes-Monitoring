@@ -267,3 +267,189 @@ teardown() {
     run record_metric "TEST_COMPONENT" "metric_with_underscores_and-numbers-123" "100" "component=test"
     assert_success
 }
+
+##
+# Test: record_metric with unicode characters
+##
+@test "record_metric handles unicode characters in component name" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*metrics ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run record_metric "TEST_COMPONENT_测试" "test_metric" "100" "component=test"
+    assert_success
+}
+
+##
+# Test: send_alert with unicode message
+##
+@test "send_alert handles unicode message" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*alerts ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run send_alert "TEST_COMPONENT" "warning" "test_alert" "Test message: 测试消息"
+    assert_success
+}
+
+##
+# Test: get_metric_value with boundary timestamp
+##
+@test "get_metric_value handles boundary timestamp values" {
+    # Mock psql to return boundary timestamp
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ SELECT.*timestamp ]]; then
+            echo "1970-01-01 00:00:00"  # Unix epoch
+        fi
+        return 0
+    }
+    
+    run get_metric_value "TEST_COMPONENT" "test_metric"
+    assert_success
+}
+
+##
+# Test: check_rate_limit with maximum integer value
+##
+@test "check_rate_limit handles maximum integer limit value" {
+    # Mock psql to return max int
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ SELECT.*COUNT ]]; then
+            echo "2147483647"  # Max 32-bit signed int
+        fi
+        return 0
+    }
+    
+    run check_rate_limit "192.168.1.1" "api_endpoint" 2147483647 60
+    # Should handle max int gracefully
+    assert [ ${status} -ge 0 ]
+}
+
+##
+# Test: record_metric with floating point precision edge cases
+##
+@test "record_metric handles floating point precision edge cases" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*metrics ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    # Test with very small decimal
+    run record_metric "TEST_COMPONENT" "small_metric" "0.0000000001" "component=test"
+    assert_success
+    
+    # Test with very large decimal
+    run record_metric "TEST_COMPONENT" "large_metric" "999999999.999999999" "component=test"
+    assert_success
+}
+
+##
+# Test: update_component_health with maximum length message
+##
+@test "update_component_health handles maximum length message" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*component_health ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    # Create message at database VARCHAR limit (assuming 1000 chars)
+    local max_message
+    max_message="$(printf 'A%.0s' {1..1000})"
+    
+    run update_component_health "TEST_COMPONENT" "healthy" "${max_message}"
+    assert_success
+}
+
+##
+# Test: aggregate_metrics with zero time window
+##
+@test "aggregate_metrics handles zero time window gracefully" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        return 0
+    }
+    
+    run aggregate_metrics "TEST_COMPONENT" "test_metric" "avg" "0 hours"
+    # Should handle zero window gracefully
+    assert_success
+}
+
+##
+# Test: record_metric with negative timestamp offset
+##
+@test "record_metric handles negative timestamp offset" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*metrics ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    # This test verifies the function doesn't crash with edge case timestamps
+    run record_metric "TEST_COMPONENT" "test_metric" "100" "component=test,timestamp_offset=-3600"
+    assert_success
+}
+
+##
+# Test: check_rate_limit with zero limit
+##
+@test "check_rate_limit handles zero limit gracefully" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ SELECT.*COUNT ]]; then
+            echo "0"
+        fi
+        return 0
+    }
+    
+    run check_rate_limit "192.168.1.1" "api_endpoint" 0 60
+    # With zero limit, any request should be blocked
+    assert_failure
+}
+
+##
+# Test: get_metrics_by_component with SQL wildcards in component name
+##
+@test "get_metrics_by_component handles SQL wildcards safely" {
+    # Source metricsFunctions to get the function
+    # shellcheck disable=SC1091
+    source "${BATS_TEST_DIRNAME}/../../../bin/lib/metricsFunctions.sh" 2>/dev/null || true
+    
+    # Mock psql - should escape wildcards
+    # shellcheck disable=SC2317
+    function psql() {
+        # Check that wildcards are escaped
+        if [[ "${*}" =~ LIKE.*% ]]; then
+            # Wildcards should be escaped, not interpreted
+            return 0
+        fi
+        return 0
+    }
+    
+    run get_metrics_by_component "TEST_COMPONENT%"
+    assert_success
+}

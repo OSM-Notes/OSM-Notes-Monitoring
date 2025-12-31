@@ -10,19 +10,24 @@
 export TEST_COMPONENT="ALERTS"
 export TEST_DB_NAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
 
-load "${BATS_TEST_DIRNAME}/../test_helper.bash"
+# Set LOG_DIR before loading anything to avoid permission issues
+TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../../tmp/logs"
+mkdir -p "${TEST_LOG_DIR}"
+export LOG_DIR="${TEST_LOG_DIR}"
+
+load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
 # Source libraries
 # shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../bin/lib/loggingFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
 # shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../bin/lib/monitoringFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/monitoringFunctions.sh"
 # shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../bin/lib/configFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/configFunctions.sh"
 # shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../bin/lib/alertFunctions.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/alertFunctions.sh"
 # shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../bin/alerts/alertManager.sh"
+source "${BATS_TEST_DIRNAME}/../../../bin/alerts/alertManager.sh"
 
 setup() {
     # Set test environment
@@ -40,12 +45,9 @@ setup() {
     export SLACK_ENABLED="false"
     export ALERT_DEDUPLICATION_ENABLED="false"
     
-    # Initialize logging
-    TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../../tmp/logs"
-    mkdir -p "${TEST_LOG_DIR}"
-    export LOG_FILE="${TEST_LOG_DIR}/test_alertManager.log"
+    # Ensure LOG_DIR is set
     export LOG_DIR="${TEST_LOG_DIR}"
-    init_logging "${LOG_FILE}" "test_alertManager"
+    export LOG_FILE="${TEST_LOG_DIR}/test_alertManager.log"
     
     # Initialize alerting
     init_alerting
@@ -265,6 +267,217 @@ get_alert_id() {
         -d "${TEST_DB_NAME}" \
         -t -A \
         -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo ""
+}
+
+##
+# Test: List alerts handles empty result set
+##
+@test "List alerts handles empty result set gracefully" {
+    # List alerts when none exist
+    run list_alerts "" "active"
+    assert_success
+    # Should not error, just return empty result
+}
+
+##
+# Test: Show alert handles non-existent alert ID
+##
+@test "Show alert handles non-existent alert ID gracefully" {
+    # Try to show non-existent alert
+    run show_alert "00000000-0000-0000-0000-000000000000"
+    assert_success  # Should not error, just return empty
+}
+
+##
+# Test: Acknowledge alert handles already acknowledged alert
+##
+@test "Acknowledge alert handles already acknowledged alert" {
+    # Create and acknowledge test alert
+    send_alert "INGESTION" "warning" "test_type" "Test message"
+    
+    local alert_id
+    alert_id=$(get_alert_id "INGESTION" "test_type" "Test message")
+    
+    if [[ -n "${alert_id}" ]]; then
+        acknowledge_alert "${alert_id}" "test_user"
+        
+        # Try to acknowledge again
+        run acknowledge_alert "${alert_id}" "test_user"
+        assert_failure  # Should fail as already acknowledged
+    else
+        skip "Could not retrieve alert ID"
+    fi
+}
+
+##
+# Test: Resolve alert handles already resolved alert
+##
+@test "Resolve alert handles already resolved alert" {
+    # Create and resolve test alert
+    send_alert "INGESTION" "warning" "test_type" "Test message"
+    
+    local alert_id
+    alert_id=$(get_alert_id "INGESTION" "test_type" "Test message")
+    
+    if [[ -n "${alert_id}" ]]; then
+        resolve_alert "${alert_id}" "test_user"
+        
+        # Try to resolve again
+        run resolve_alert "${alert_id}" "test_user"
+        assert_failure  # Should fail as already resolved
+    else
+        skip "Could not retrieve alert ID"
+    fi
+}
+
+##
+# Test: Aggregate alerts handles empty component
+##
+@test "Aggregate alerts handles empty component" {
+    # Aggregate with empty component
+    run aggregate_alerts "" "60"
+    assert_success
+}
+
+##
+# Test: Show history handles invalid component
+##
+@test "Show history handles invalid component gracefully" {
+    # Show history for non-existent component
+    run show_history "NONEXISTENT_COMPONENT" "7"
+    assert_success  # Should not error, just return empty
+}
+
+##
+# Test: Show stats handles empty database
+##
+@test "Show stats handles empty database gracefully" {
+    # Clean database first
+    clean_test_database
+    
+    # Show stats
+    run show_stats ""
+    assert_success  # Should not error, just return empty stats
+}
+
+##
+# Test: Cleanup alerts handles zero days gracefully
+##
+@test "Cleanup alerts handles zero days gracefully" {
+    # Cleanup with zero days
+    run cleanup_alerts "0"
+    assert_success
+}
+
+##
+# Test: List alerts handles invalid status
+##
+@test "List alerts handles invalid status gracefully" {
+    # List with invalid status
+    run list_alerts "" "invalid_status"
+    assert_success  # Should handle gracefully
+}
+
+##
+# Test: Show alert handles invalid UUID format
+##
+@test "Show alert handles invalid UUID format gracefully" {
+    # Try to show alert with invalid UUID
+    run show_alert "invalid-uuid"
+    assert_success  # Should handle gracefully (may fail SQL but not crash)
+}
+
+##
+# Test: Acknowledge alert handles database error
+##
+@test "Acknowledge alert handles database error gracefully" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    function psql() {
+        return 1
+    }
+    export -f psql
+    
+    run acknowledge_alert "00000000-0000-0000-0000-000000000000" "test_user"
+    assert_failure
+}
+
+##
+# Test: Resolve alert handles database error
+##
+@test "Resolve alert handles database error gracefully" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    function psql() {
+        return 1
+    }
+    export -f psql
+    
+    run resolve_alert "00000000-0000-0000-0000-000000000000" "test_user"
+    assert_failure
+}
+
+##
+# Test: Aggregate alerts handles very large window
+##
+@test "Aggregate alerts handles very large window gracefully" {
+    # Aggregate with very large window (1 year)
+    run aggregate_alerts "INGESTION" "525600"  # 365 days in minutes
+    assert_success
+}
+
+##
+# Test: Show history handles very large days parameter
+##
+@test "Show history handles very large days parameter gracefully" {
+    # Show history with very large days
+    run show_history "INGESTION" "3650"  # 10 years
+    assert_success
+}
+
+##
+# Test: Main function handles unknown action
+##
+@test "Main function handles unknown action gracefully" {
+    run main "unknown_action"
+    assert_failure
+    assert_output --partial "Unknown action"
+}
+
+##
+# Test: Main function handles missing action
+##
+@test "Main function handles missing action gracefully" {
+    run main ""
+    assert_failure
+    assert_output --partial "Action required"
+}
+
+##
+# Test: Main function handles missing alert ID for show
+##
+@test "Main function handles missing alert ID for show" {
+    run main "show"
+    assert_failure
+    assert_output --partial "Alert ID required"
+}
+
+##
+# Test: Main function handles missing alert ID for acknowledge
+##
+@test "Main function handles missing alert ID for acknowledge" {
+    run main "acknowledge"
+    assert_failure
+    assert_output --partial "Alert ID required"
+}
+
+##
+# Test: Main function handles missing component for history
+##
+@test "Main function handles missing component for history" {
+    run main "history"
+    assert_failure
+    assert_output --partial "Component required"
 }
 
 

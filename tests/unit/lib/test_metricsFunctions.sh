@@ -181,3 +181,127 @@ teardown() {
     assert_success
     assert [[ "${output}" == "50" ]]
 }
+
+@test "aggregate_metrics calculates sum correctly" {
+    # Mock psql to return sum value
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ SUM.*metric_value ]]; then
+            echo "1000"
+            return 0
+        fi
+        return 1
+    }
+    
+    run aggregate_metrics "TEST_COMPONENT" "test_metric" "sum" "24 hours"
+    assert_success
+    assert [[ "${output}" == "1000" ]]
+}
+
+@test "aggregate_metrics handles invalid aggregation type" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        return 1
+    }
+    
+    run aggregate_metrics "TEST_COMPONENT" "test_metric" "invalid" "24 hours"
+    assert_failure
+}
+
+@test "get_latest_metric_value retrieves most recent metric" {
+    # Mock psql to return latest metric
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ ORDER.*BY.*timestamp ]]; then
+            echo "150"
+            return 0
+        fi
+        return 1
+    }
+    
+    run get_latest_metric_value "TEST_COMPONENT" "test_metric"
+    assert_success
+    assert [ "${output}" = "150" ]
+}
+
+@test "get_metrics_summary retrieves summary for component" {
+    # Mock psql to return summary
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ SELECT.*COUNT ]]; then
+            echo "10"
+            return 0
+        fi
+        return 1
+    }
+    
+    run get_metrics_summary "TEST_COMPONENT" "24"
+    assert_success
+    assert [[ "${output}" =~ 10 ]]
+}
+
+@test "cleanup_old_metrics removes old metrics" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ DELETE.*metrics ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run cleanup_old_metrics "90"
+    assert_success
+}
+
+@test "record_metric handles empty metadata" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*metrics ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run record_metric "TEST_COMPONENT" "test_metric" "100" ""
+    assert_success
+}
+
+@test "record_metric handles special characters in metadata" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*metrics ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run record_metric "TEST_COMPONENT" "test_metric" "100" "key=value&other=test"
+    assert_success
+}
+
+@test "get_metric_value handles database error" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    function psql() {
+        return 1
+    }
+    
+    run get_metric_value "TEST_COMPONENT" "test_metric"
+    assert_failure
+}
+
+@test "get_metrics_by_component handles empty result" {
+    # Mock psql to return empty
+    # shellcheck disable=SC2317
+    function psql() {
+        return 0
+    }
+    
+    run get_metrics_by_component "TEST_COMPONENT"
+    assert_success
+    assert [[ -z "${output}" ]]
+}

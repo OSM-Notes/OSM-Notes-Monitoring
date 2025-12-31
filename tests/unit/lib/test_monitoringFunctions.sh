@@ -186,3 +186,123 @@ teardown() {
     run check_database_server_health
     assert_failure
 }
+
+@test "execute_sql_query executes query successfully" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ -c.*SELECT ]]; then
+            echo "result1"
+            echo "result2"
+            return 0
+        fi
+        return 1
+    }
+    
+    run execute_sql_query "SELECT * FROM test_table"
+    assert_success
+    assert [[ "${output}" =~ result1 ]]
+}
+
+@test "execute_sql_query handles query error" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    function psql() {
+        echo "Error: relation does not exist" >&2
+        return 1
+    }
+    
+    run execute_sql_query "SELECT * FROM nonexistent_table"
+    assert_failure
+    assert [[ "${output}" =~ Error ]]
+}
+
+@test "execute_sql_file executes SQL file" {
+    local test_sql_file="${BATS_TEST_DIRNAME}/../../tmp/test.sql"
+    echo "SELECT 1;" > "${test_sql_file}"
+    
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ -f.*test.sql ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run execute_sql_file "${test_sql_file}"
+    assert_success
+    
+    rm -f "${test_sql_file}"
+}
+
+@test "execute_sql_file handles missing file" {
+    run execute_sql_file "/nonexistent/file.sql"
+    assert_failure
+}
+
+@test "update_component_health handles empty message" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ INSERT.*component_health ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run update_component_health "TEST_COMPONENT" "healthy" ""
+    assert_success
+}
+
+@test "get_component_health handles component not found" {
+    # Mock psql to return empty
+    # shellcheck disable=SC2317
+    function psql() {
+        return 0
+    }
+    
+    run get_component_health "NONEXISTENT_COMPONENT"
+    assert_success
+    # May return empty or default value
+}
+
+@test "check_database_connection uses custom database name" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ -d.*custom_db ]]; then
+            return 0
+        fi
+        return 1
+    }
+    
+    run check_database_connection "custom_db"
+    assert_success
+}
+
+@test "execute_sql_query uses custom database name" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ -d.*custom_db ]]; then
+            echo "result"
+            return 0
+        fi
+        return 1
+    }
+    
+    run execute_sql_query "SELECT 1" "custom_db"
+    assert_success
+}
+
+@test "update_component_health handles unknown status" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    function psql() {
+        return 1
+    }
+    
+    run update_component_health "TEST_COMPONENT" "unknown" "Test"
+    assert_failure
+}

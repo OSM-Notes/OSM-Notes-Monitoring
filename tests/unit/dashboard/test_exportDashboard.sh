@@ -24,6 +24,7 @@ setup() {
     TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../../tmp/logs"
     mkdir -p "${TEST_LOG_DIR}"
     export LOG_FILE="${TEST_LOG_DIR}/test_exportDashboard.log"
+    export LOG_DIR="${TEST_LOG_DIR}"  # Set LOG_DIR to avoid permission issues
     init_logging "${LOG_FILE}" "test_exportDashboard"
     
     # Create test dashboard directories
@@ -115,6 +116,7 @@ teardown() {
 ##
 @test "exportDashboard.sh includes metrics data with --include-data" {
     # Mock generateMetrics.sh
+    # shellcheck disable=SC2317
     function generateMetrics.sh() {
         echo '{"test":"metrics"}'
     }
@@ -133,4 +135,77 @@ teardown() {
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" grafana "${TEST_OUTPUT_DIR}"
     # Should handle gracefully
     assert_success
+}
+
+@test "exportDashboard.sh handles --verbose flag" {
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --verbose grafana "${TEST_OUTPUT_DIR}"
+    assert_success
+}
+
+@test "exportDashboard.sh handles --quiet flag" {
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --quiet grafana "${TEST_OUTPUT_DIR}"
+    assert_success
+}
+
+@test "exportDashboard.sh handles --config flag" {
+    local test_config="${BATS_TEST_DIRNAME}/../../../tmp/test_exportDashboard_config.conf"
+    echo "TEST_CONFIG_VAR=test_value" > "${test_config}"
+    
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --config "${test_config}" grafana "${TEST_OUTPUT_DIR}"
+    assert_success
+    
+    rm -f "${test_config}"
+}
+
+@test "exportDashboard.sh handles --dashboard flag" {
+    local custom_dir
+    custom_dir=$(mktemp -d)
+    mkdir -p "${custom_dir}/grafana"
+    echo '{"custom":"dashboard"}' > "${custom_dir}/grafana/custom.json"
+    
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --dashboard "${custom_dir}" grafana "${TEST_OUTPUT_DIR}"
+    assert_success
+    
+    rm -rf "${custom_dir}"
+}
+
+@test "exportDashboard.sh exports single JSON file" {
+    local output_file="${TEST_OUTPUT_DIR}/single.json"
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" grafana "${output_file}"
+    assert_success
+    # Should create archive or file
+    assert_file_exists "${output_file}.tar.gz" || assert_file_exists "${output_file}"
+}
+
+@test "exportDashboard.sh handles export format tar" {
+    local output_file="${TEST_OUTPUT_DIR}/backup_tar"
+    export EXPORT_FORMAT="tar"
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" grafana "${output_file}"
+    assert_success
+    assert_file_exists "${output_file}.tar.gz"
+}
+
+@test "exportDashboard.sh handles invalid dashboard type" {
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" invalid "${TEST_OUTPUT_DIR}"
+    assert_failure
+    assert [[ "${output}" =~ Unknown ]] || [[ "${output}" =~ invalid ]]
+}
+
+@test "exportDashboard.sh handles empty output directory" {
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" grafana ""
+    # Should use default directory
+    assert_success
+}
+
+@test "exportDashboard.sh includes data when --include-data is used" {
+    # Mock generateMetrics.sh
+    # shellcheck disable=SC2317
+    function generateMetrics.sh() {
+        echo '{"test":"metrics"}'
+    }
+    
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --include-data grafana "${TEST_OUTPUT_DIR}"
+    assert_success
+    # Should create metrics directory
+    assert_dir_exists "${TEST_OUTPUT_DIR}/metrics" || assert_dir_exists "${TEST_OUTPUT_DIR}/grafana/metrics"
 }

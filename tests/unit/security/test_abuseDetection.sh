@@ -22,6 +22,8 @@ setup() {
     # Set test paths
     export LOG_DIR="${TEST_LOG_DIR}"
     export TMP_DIR="${BATS_TEST_DIRNAME}/../../tmp"
+    # Ensure LOG_DIR is set before sourcing scripts
+    export PROJECT_ROOT="${BATS_TEST_DIRNAME}/../../.."
     
     # Set test configuration
     export ABUSE_DETECTION_ENABLED="true"
@@ -542,3 +544,261 @@ teardown() {
     assert_failure
 }
 
+@test "analyze_patterns handles database errors gracefully" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    psql() {
+        return 1
+    }
+    export -f psql
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run analysis
+    run analyze_patterns "192.168.1.100"
+    
+    # Should handle gracefully (return normal when DB fails)
+    assert_failure
+}
+
+@test "detect_anomalies handles empty baseline gracefully" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql to return empty baseline
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"AVG(hourly_count)"* ]]; then
+            echo ""  # Empty baseline
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run anomaly detection
+    run detect_anomalies "192.168.1.100"
+    
+    # Should handle gracefully
+    assert_failure
+}
+
+@test "analyze_behavior detects high user agent diversity" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql to return high user agent diversity
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"COUNT(DISTINCT endpoint)"* ]]; then
+            echo "5"  # Below threshold
+        elif [[ "${*}" == *"COUNT(DISTINCT user_agent)"* ]]; then
+            echo "15"  # Over threshold of 10
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Track if suspicious behavior detected
+    local behavior_file="${TMP_DIR}/.abuse_detected"
+    rm -f "${behavior_file}"
+    
+    # shellcheck disable=SC2317
+    record_security_event() {
+        if [[ "${1}" == "abuse" ]] && [[ "${4}" == *"behavioral"* ]]; then
+            touch "${behavior_file}"
+        fi
+        return 0
+    }
+    export -f record_security_event
+    
+    # Run behavior analysis
+    run analyze_behavior "192.168.1.100" || true
+    
+    # Should detect suspicious behavior
+    assert_success
+    assert_file_exists "${behavior_file}"
+}
+
+@test "automatic_response escalates duration for repeat offenders" {
+    # Mock block_ip
+    local block_file="${TMP_DIR}/.ip_blocked"
+    rm -f "${block_file}"
+    
+    # shellcheck disable=SC2317
+    block_ip() {
+        touch "${block_file}"
+        return 0
+    }
+    export -f block_ip
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Mock psql for violation count (3+ violations = 24 hour block)
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"SELECT COUNT(*)"* ]]; then
+            echo "3"  # 3 previous violations
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock auto_block_ip to capture duration
+    local captured_duration=""
+    # shellcheck disable=SC2317
+    auto_block_ip() {
+        captured_duration="${3}"  # Duration is 3rd argument
+        return 0
+    }
+    export -f auto_block_ip
+    
+    # Run automatic response
+    run automatic_response "192.168.1.100" "pattern" "Abuse detected"
+    
+    # Should escalate duration
+    assert_success
+    assert [ "${captured_duration}" = "1440" ]  # 24 hours for 3+ violations
+}
+
+@test "check_ip_for_abuse handles disabled detection" {
+    export ABUSE_DETECTION_ENABLED="false"
+    
+    # Run check
+    run check_ip_for_abuse "192.168.1.100"
+    
+    # Should return normal when disabled
+    assert_success
+}
+
+@test "analyze_all handles empty IP list" {
+    export ABUSE_DETECTION_ENABLED="true"
+    
+    # Mock psql to return empty list
+    # shellcheck disable=SC2317
+    psql() {
+        return 0  # Empty result
+    }
+    export -f psql
+    
+    # Run analyze all
+    run analyze_all
+    
+    # Should succeed with no IPs
+    assert_success
+}
+
+@test "get_abuse_stats handles database errors" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    psql() {
+        return 1
+    }
+    export -f psql
+    
+    # Run stats
+    run get_abuse_stats
+    
+    # Should handle gracefully
+    assert_success
+}
+
+@test "show_patterns handles database errors" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    psql() {
+        return 1
+    }
+    export -f psql
+    
+    # Run patterns
+    run show_patterns
+    
+    # Should handle gracefully
+    assert_success
+}
+
+@test "main function shows usage for unknown action" {
+    # Run main with unknown action
+    run main "unknown" || true
+    
+    # Should fail and show usage
+    assert_failure
+}
+
+@test "main function handles stats action" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "test stats"
+        return 0
+    }
+    export -f psql
+    
+    # Run main with stats action
+    run main "stats"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles patterns action" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "test patterns"
+        return 0
+    }
+    export -f psql
+    
+    # Run main with patterns action
+    run main "patterns"
+    
+    # Should succeed
+    assert_success
+}
