@@ -224,12 +224,35 @@ For complete configuration reference, see:
 
 ## Documentation
 
+### Getting Started
+
+- **[Quick Start Guide](./docs/QUICK_START_GUIDE.md)**: Get up and running in 15 minutes
+- **[User Guide](./docs/USER_GUIDE.md)**: Comprehensive user documentation
+- **[Setup Guide](./docs/Monitoring_SETUP_Guide.md)**: Detailed setup instructions
+- **[Documentation Index](./docs/DOCUMENTATION_INDEX.md)**: Complete index of all documentation
+
+### Configuration and Usage
+
+- **[Configuration Reference](./docs/CONFIGURATION_REFERENCE.md)**: All configuration options
+- **[Dashboard Guide](./docs/DASHBOARD_GUIDE.md)**: Using dashboards
+- **[Alerting Guide](./docs/ALERTING_GUIDE.md)**: Alert system usage
+- **[Grafana Setup Guide](./docs/GRAFANA_SETUP_GUIDE.md)**: Grafana dashboard setup
+
+### Component Monitoring
+
+- **[Ingestion Monitoring Guide](./docs/INGESTION_MONITORING_GUIDE.md)**: Monitor ingestion component
+- **[Analytics Monitoring Guide](./docs/ANALYTICS_MONITORING_GUIDE.md)**: Monitor analytics/DWH component
+- **[WMS Monitoring Guide](./docs/WMS_MONITORING_GUIDE.md)**: Monitor WMS service
+- **[Infrastructure Monitoring Guide](./docs/INFRASTRUCTURE_MONITORING_GUIDE.md)**: Monitor infrastructure
+- **[API Security Guide](./docs/API_SECURITY_GUIDE.md)**: API security features
+
+### Architecture and Development
+
 - **[Task List](./TASKS.md)**: **Ordered implementation task list - follow this for development**
 - **[Architecture Proposal](./docs/Monitoring_Architecture_Proposal.md)**: Complete system architecture
 - **[API Security Design](./docs/API_Security_Design.md)**: Security and protection mechanisms
 - **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)**: Detailed implementation plan with testing and standards
 - **[Coding Standards](./docs/CODING_STANDARDS.md)**: Coding standards and best practices
-- **[Setup Guide](./docs/Monitoring_SETUP_Guide.md)**: Initial setup guide
 - **[Resumen Ejecutivo](./docs/Monitoring_Resumen_Ejecutivo.md)**: Executive summary (Spanish)
 - **[Existing Monitoring Components](./docs/Existing_Monitoring_Components.md)**: Integration with OSM-Notes-Ingestion monitoring scripts
 
