@@ -505,3 +505,100 @@ teardown() {
     assert_failure
 }
 
+
+@test "unblock_ip removes IP from temp_block and blacklist" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"DELETE FROM ip_management"* ]]; then
+            return 0
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock record_security_event
+    # shellcheck disable=SC2317
+    record_security_event() {
+        return 0
+    }
+    export -f record_security_event
+    
+    # Run unblock_ip
+    run unblock_ip "192.168.1.100"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "list_ips lists all IPs when type is all" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "IP Management List (all):"
+        echo "192.168.1.100|whitelist|Test|2025-01-01|NULL|admin"
+        return 0
+    }
+    export -f psql
+    
+    # Run list_ips
+    run list_ips "all"
+    
+    # Should succeed
+    assert_success
+    assert_output --partial "IP Management List (all)"
+}
+
+@test "check_ip_status shows whitelisted status" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 0  # Whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock is_ip_blacklisted
+    # shellcheck disable=SC2317
+    is_ip_blacklisted() {
+        return 1
+    }
+    export -f is_ip_blacklisted
+    
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "whitelist|Test|2025-01-01|NULL|admin"
+        return 0
+    }
+    export -f psql
+    
+    # Run check_ip_status
+    run check_ip_status "192.168.1.100"
+    
+    # Should show whitelisted status
+    assert_success
+    assert_output --partial "WHITELISTED"
+}
+
+@test "main function handles whitelist add action" {
+    # Mock whitelist_add
+    # shellcheck disable=SC2317
+    whitelist_add() {
+        return 0
+    }
+    export -f whitelist_add
+    
+    # Run main with whitelist add
+    run main "whitelist" "add" "192.168.1.100" "Test"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles unknown action" {
+    # Run main with unknown action
+    run main "unknown" || true
+    
+    # Should fail and show usage
+    assert_failure
+}

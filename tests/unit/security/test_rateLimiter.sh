@@ -599,3 +599,275 @@ teardown() {
     assert_success
 }
 
+
+@test "record_request records request successfully" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"INSERT INTO rate_limits"* ]]; then
+            return 0
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run record_request
+    run record_request "192.168.1.100" "/api/notes" "key123"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "record_request handles database errors" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    psql() {
+        return 1
+    }
+    export -f psql
+    
+    # Run record_request
+    run record_request "192.168.1.100" "/api/notes"
+    
+    # Should handle gracefully
+    assert_success
+}
+
+@test "get_rate_limit_stats shows statistics for IP" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "192.168.1.100|60|5|2025-01-01"
+        return 0
+    }
+    export -f psql
+    
+    # Run get_rate_limit_stats
+    run get_rate_limit_stats "192.168.1.100"
+    
+    # Should succeed
+    assert_success
+    assert_output --partial "Rate Limit Statistics"
+}
+
+@test "get_rate_limit_stats handles database errors" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    psql() {
+        return 1
+    }
+    export -f psql
+    
+    # Run get_rate_limit_stats
+    run get_rate_limit_stats "192.168.1.100"
+    
+    # Should handle gracefully
+    assert_success
+}
+
+@test "reset_rate_limit resets counters for IP" {
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"DELETE FROM rate_limits"* ]]; then
+            return 0
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Run reset_rate_limit
+    run reset_rate_limit "192.168.1.100"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "reset_rate_limit handles database errors" {
+    # Mock psql to fail
+    # shellcheck disable=SC2317
+    psql() {
+        return 1
+    }
+    export -f psql
+    
+    # Run reset_rate_limit
+    run reset_rate_limit "192.168.1.100"
+    
+    # Should handle gracefully
+    assert_success
+}
+
+@test "main function handles check action" {
+    # Mock check_rate_limit_sliding_window
+    # shellcheck disable=SC2317
+    check_rate_limit_sliding_window() {
+        return 0
+    }
+    export -f check_rate_limit_sliding_window
+    
+    # Run main with check action
+    run main "check" "192.168.1.100" "/api/notes"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles record action" {
+    # Mock record_request
+    # shellcheck disable=SC2317
+    record_request() {
+        return 0
+    }
+    export -f record_request
+    
+    # Run main with record action
+    run main "record" "192.168.1.100" "/api/notes"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles stats action" {
+    # Mock get_rate_limit_stats
+    # shellcheck disable=SC2317
+    get_rate_limit_stats() {
+        echo "Statistics"
+        return 0
+    }
+    export -f get_rate_limit_stats
+    
+    # Run main with stats action
+    run main "stats" "192.168.1.100"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles reset action" {
+    # Mock reset_rate_limit
+    # shellcheck disable=SC2317
+    reset_rate_limit() {
+        return 0
+    }
+    export -f reset_rate_limit
+    
+    # Run main with reset action
+    run main "reset" "192.168.1.100"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles unknown action" {
+    # Run main with unknown action
+    run main "unknown" || true
+    
+    # Should fail and show usage
+    assert_failure
+}
+
+@test "load_config loads from custom config file" {
+    # Create temporary config file
+    mkdir -p "${TMP_DIR}"
+    local test_config="${TMP_DIR}/test_config.conf"
+    echo "export RATE_LIMIT_PER_IP_PER_MINUTE=100" > "${test_config}"
+    
+    # Run load_config
+    run load_config "${test_config}"
+    
+    # Should succeed
+    assert_success
+    
+    # Cleanup
+    rm -f "${test_config}"
+}
+
+@test "load_config handles missing config file gracefully" {
+    # Run load_config with non-existent file
+    run load_config "${TMP_DIR}/nonexistent.conf"
+    
+    # Should succeed (uses defaults)
+    assert_success
+}
+
+@test "check_rate_limit_sliding_window uses API key limit when provided" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock is_ip_blacklisted
+    # shellcheck disable=SC2317
+    is_ip_blacklisted() {
+        return 1
+    }
+    export -f is_ip_blacklisted
+    
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "50"  # Below API key limit of 100
+        return 0
+    }
+    export -f psql
+    
+    # Mock record_security_event
+    # shellcheck disable=SC2317
+    record_security_event() {
+        return 0
+    }
+    export -f record_security_event
+    
+    # Run check with API key
+    run check_rate_limit_sliding_window "192.168.1.100" "/api/notes" "key123"
+    
+    # Should allow (uses API key limit)
+    assert_success
+}
+
+@test "check_rate_limit_sliding_window uses endpoint limit when provided" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock is_ip_blacklisted
+    # shellcheck disable=SC2317
+    is_ip_blacklisted() {
+        return 1
+    }
+    export -f is_ip_blacklisted
+    
+    # Mock psql
+    # shellcheck disable=SC2317
+    psql() {
+        echo "150"  # Below endpoint limit of 200
+        return 0
+    }
+    export -f psql
+    
+    # Mock record_security_event
+    # shellcheck disable=SC2317
+    record_security_event() {
+        return 0
+    }
+    export -f record_security_event
+    
+    # Run check with endpoint
+    run check_rate_limit_sliding_window "192.168.1.100" "/api/notes"
+    
+    # Should allow (uses endpoint limit)
+    assert_success
+}

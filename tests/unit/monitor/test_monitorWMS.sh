@@ -598,3 +598,257 @@ INFO: Request processed"
     assert_success
 }
 
+
+@test "main function handles all checks action" {
+    # Mock all check functions
+    # shellcheck disable=SC2317
+    check_wms_service_availability() {
+        return 0
+    }
+    export -f check_wms_service_availability
+    
+    # shellcheck disable=SC2317
+    check_http_health() {
+        return 0
+    }
+    export -f check_http_health
+    
+    # shellcheck disable=SC2317
+    check_response_time() {
+        return 0
+    }
+    export -f check_response_time
+    
+    # shellcheck disable=SC2317
+    check_error_rate() {
+        return 0
+    }
+    export -f check_error_rate
+    
+    # shellcheck disable=SC2317
+    check_tile_generation_performance() {
+        return 0
+    }
+    export -f check_tile_generation_performance
+    
+    # shellcheck disable=SC2317
+    check_cache_hit_rate() {
+        return 0
+    }
+    export -f check_cache_hit_rate
+    
+    # Run main with all checks
+    run main "all"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles specific check action" {
+    # Mock check_wms_service_availability
+    # shellcheck disable=SC2317
+    check_wms_service_availability() {
+        return 0
+    }
+    export -f check_wms_service_availability
+    
+    # Run main with specific check
+    run main "availability"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles unknown check action" {
+    # Run main with unknown check
+    run main "unknown" || true
+    
+    # Should fail
+    assert_failure
+}
+
+@test "load_config loads from custom config file" {
+    # Create temporary config file
+    mkdir -p "${TMP_DIR}"
+    local test_config="${TMP_DIR}/test_config.conf"
+    echo "export WMS_ENABLED=true" > "${test_config}"
+    echo "export WMS_BASE_URL=http://test.example.com" >> "${test_config}"
+    
+    # Run load_config
+    run load_config "${test_config}"
+    
+    # Should succeed
+    assert_success
+    
+    # Cleanup
+    rm -f "${test_config}"
+}
+
+@test "load_config handles missing config file gracefully" {
+    # Run load_config with non-existent file
+    run load_config "${TMP_DIR}/nonexistent.conf"
+    
+    # Should succeed (uses defaults)
+    assert_success
+}
+
+@test "check_http_health handles timeout" {
+    export WMS_HEALTH_CHECK_URL="http://localhost:8080/health"
+    export WMS_CHECK_TIMEOUT="1"
+    
+    # Mock curl to timeout
+    # shellcheck disable=SC2317
+    curl() {
+        return 124  # Timeout exit code
+    }
+    export -f curl
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Run check_http_health
+    run check_http_health
+    
+    # Should detect timeout
+    assert_failure
+}
+
+@test "check_response_time handles slow response" {
+    export WMS_RESPONSE_TIME_THRESHOLD="1000"
+    
+    # Mock curl to return slow response
+    # shellcheck disable=SC2317
+    curl() {
+        if [[ "${1}" == "-w" ]]; then
+            echo "2000"  # 2 seconds (over threshold)
+        fi
+        return 0
+    }
+    export -f curl
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run check_response_time
+    run check_response_time
+    
+    # Should detect slow response
+    assert_failure
+}
+
+@test "check_error_rate handles high error rate" {
+    export WMS_ERROR_RATE_THRESHOLD="5"
+    
+    # Mock psql to return high error rate
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"SELECT COUNT(*)"* ]] && [[ "${*}" == *"FILTER"* ]]; then
+            echo "10|100"  # 10 errors out of 100 requests = 10% (over 5% threshold)
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run check_error_rate
+    run check_error_rate
+    
+    # Should detect high error rate
+    assert_failure
+}
+
+@test "check_tile_generation_performance handles slow tile generation" {
+    export WMS_TILE_GENERATION_THRESHOLD="5000"
+    
+    # Mock psql to return slow tile generation
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"AVG"* ]] && [[ "${*}" == *"tile_generation_time"* ]]; then
+            echo "6000"  # 6 seconds (over 5 second threshold)
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run check_tile_generation_performance
+    run check_tile_generation_performance
+    
+    # Should detect slow tile generation
+    assert_failure
+}
+
+@test "check_cache_hit_rate handles low cache hit rate" {
+    export WMS_CACHE_HIT_RATE_THRESHOLD="80"
+    
+    # Mock psql to return low cache hit rate
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"SELECT"* ]] && [[ "${*}" == *"cache_hit"* ]]; then
+            echo "70|100"  # 70% cache hit rate (below 80% threshold)
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Run check_cache_hit_rate
+    run check_cache_hit_rate
+    
+    # Should detect low cache hit rate
+    assert_failure
+}

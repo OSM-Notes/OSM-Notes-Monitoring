@@ -129,12 +129,32 @@ teardown() {
     }
     export -f psql
     
+    # Mock check_geographic_filter
+    # shellcheck disable=SC2317
+    check_geographic_filter() {
+        return 1  # Not blocked by geo filter
+    }
+    export -f check_geographic_filter
+    
     # Mock record_metric
     # shellcheck disable=SC2317
     record_metric() {
         return 0
     }
     export -f record_metric
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Track if attack was detected
     local attack_file="${TMP_DIR}/.ddos_detected"
@@ -205,6 +225,19 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
     # Track if event was recorded
     local event_file="${TMP_DIR}/.ddos_detected"
     rm -f "${event_file}"
@@ -218,8 +251,8 @@ teardown() {
     }
     export -f record_security_event
     
-    # Run check
-    run check_concurrent_connections "" "500" || true
+    # Run check (requires IP as first argument)
+    run check_concurrent_connections "192.168.1.100" "500" || true
     
     # Should detect high connections
     assert_success
@@ -253,6 +286,19 @@ teardown() {
         return 0
     }
     export -f record_metric
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
     
     # Run auto block
     run auto_block_ip "192.168.1.100" "DDoS attack" "15"
@@ -289,6 +335,13 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock check_geographic_filter (called by detect_ddos_attack)
+    # shellcheck disable=SC2317
+    check_geographic_filter() {
+        return 1  # Not blocked by geo filter
+    }
+    export -f check_geographic_filter
+    
     # Mock record_security_event
     # shellcheck disable=SC2317
     record_security_event() {
@@ -296,7 +349,7 @@ teardown() {
     }
     export -f record_security_event
     
-    # Mock block_ip
+    # Mock block_ip (called by auto_block_ip)
     local block_file="${TMP_DIR}/.ip_blocked"
     rm -f "${block_file}"
     
@@ -313,6 +366,19 @@ teardown() {
         return 0
     }
     export -f send_alert
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Run check and block
     run check_and_block_ddos "" || true
@@ -336,17 +402,6 @@ teardown() {
     }
     export -f get_ip_country
     
-    # Mock block_ip
-    local block_file="${TMP_DIR}/.ip_blocked"
-    rm -f "${block_file}"
-    
-    # shellcheck disable=SC2317
-    block_ip() {
-        touch "${block_file}"
-        return 0
-    }
-    export -f block_ip
-    
     # Mock log functions
     # shellcheck disable=SC2317
     log_info() {
@@ -354,12 +409,17 @@ teardown() {
     }
     export -f log_info
     
-    # Run geographic filter check
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
+    # Run geographic filter check (this function only checks, doesn't block)
     run check_geographic_filter "192.168.1.100"
     
-    # Should block
+    # Should return success (indicating should be blocked)
     assert_success
-    assert_file_exists "${block_file}"
 }
 
 @test "check_geographic_filter allows IP from allowed country" {
@@ -456,13 +516,14 @@ teardown() {
 }
 
 @test "main function unblock action removes block" {
-    # Mock psql to track DELETE
-    local delete_called=false
+    # Mock psql to track DELETE using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]]; then
-            delete_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
@@ -475,12 +536,25 @@ teardown() {
     }
     export -f record_security_event
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
     # Run main with unblock action
     run main "unblock" "192.168.1.100"
     
-    # Should succeed
+    # Should succeed and call DELETE
     assert_success
-    assert_equal "true" "${delete_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "main function stats action shows statistics" {
@@ -499,7 +573,7 @@ teardown() {
     assert_success
 }
 
-@test "detect_ddos_attack handles geographic filter" {
+@test "detect_ddos_attack handles geographic filter - corrected" {
     export DDOS_GEO_FILTERING_ENABLED="true"
     export DDOS_BLOCKED_COUNTRIES="CN"
     
@@ -518,7 +592,7 @@ teardown() {
     }
     export -f get_ip_country
     
-    # Mock block_ip
+    # Mock block_ip (called by auto_block_ip)
     local block_file="${TMP_DIR}/.ip_blocked"
     rm -f "${block_file}"
     
@@ -529,12 +603,32 @@ teardown() {
     }
     export -f block_ip
     
+    # Mock send_alert (called by auto_block_ip)
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock record_metric (called by auto_block_ip)
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
     # Mock log functions
     # shellcheck disable=SC2317
     log_info() {
         return 0
     }
     export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Run detection
     run detect_ddos_attack "192.168.1.100" "60" "100" || true
@@ -543,4 +637,3 @@ teardown() {
     assert_success
     assert_file_exists "${block_file}"
 }
-

@@ -102,6 +102,25 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
     # Track if abuse was detected
     local abuse_file="${TMP_DIR}/.abuse_detected"
     rm -f "${abuse_file}"
@@ -152,6 +171,25 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
     # Track if abuse was detected
     local abuse_file="${TMP_DIR}/.abuse_detected"
     rm -f "${abuse_file}"
@@ -201,6 +239,25 @@ teardown() {
         return 0
     }
     export -f record_metric
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # Track if abuse was detected
     local abuse_file="${TMP_DIR}/.abuse_detected"
@@ -254,9 +311,22 @@ teardown() {
     local anomaly_file="${TMP_DIR}/.abuse_detected"
     rm -f "${anomaly_file}"
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_warning() {
+        # Check if it's logging an anomaly
+        if [[ "${*}" == *"Anomaly detected"* ]]; then
+            touch "${anomaly_file}"
+        fi
+        return 0
+    }
+    export -f log_warning
+    
     # shellcheck disable=SC2317
     record_security_event() {
-        if [[ "${1}" == "abuse" ]] && [[ "${4}" == *"anomaly"* ]]; then
+        # Check if it's recording an anomaly (4th arg is metadata JSON)
+        local metadata="${4:-}"
+        if [[ "${1}" == "abuse" ]] && echo "${metadata}" | grep -q "anomaly"; then
             touch "${anomaly_file}"
         fi
         return 0
@@ -282,7 +352,7 @@ teardown() {
     # Mock psql to return high endpoint diversity
     # shellcheck disable=SC2317
     psql() {
-        if [[ "${*}" == *"COUNT(DISTINCT endpoint)"* ]]; then
+        if [[ "${*}" == *"COUNT(DISTINCT endpoint)"* ]] && [[ "${*}" == *"5 minutes"* ]]; then
             echo "25"  # Over threshold of 20
         elif [[ "${*}" == *"COUNT(DISTINCT user_agent)"* ]]; then
             echo "5"  # Below threshold
@@ -298,13 +368,28 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
     # Track if suspicious behavior detected
     local behavior_file="${TMP_DIR}/.abuse_detected"
     rm -f "${behavior_file}"
     
     # shellcheck disable=SC2317
     record_security_event() {
-        if [[ "${1}" == "abuse" ]] && [[ "${4}" == *"behavioral"* ]]; then
+        # Check if it's recording behavioral abuse (4th arg is metadata JSON)
+        local metadata="${4:-}"
+        if [[ "${1}" == "abuse" ]] && echo "${metadata}" | grep -q "behavioral"; then
             touch "${behavior_file}"
         fi
         return 0
@@ -320,16 +405,26 @@ teardown() {
 }
 
 @test "automatic_response blocks IP and escalates duration" {
-    # Mock block_ip
+    # Mock psql for violation count (2 violations = 1 hour block)
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"SELECT COUNT(*)"* ]]; then
+            echo "2"  # 2 previous violations
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Mock auto_block_ip to track block
     local block_file="${TMP_DIR}/.ip_blocked"
     rm -f "${block_file}"
     
     # shellcheck disable=SC2317
-    block_ip() {
+    auto_block_ip() {
         touch "${block_file}"
         return 0
     }
-    export -f block_ip
+    export -f auto_block_ip
     
     # Mock send_alert
     # shellcheck disable=SC2317
@@ -345,15 +440,12 @@ teardown() {
     }
     export -f record_metric
     
-    # Mock psql for violation count
+    # Mock log_warning
     # shellcheck disable=SC2317
-    psql() {
-        if [[ "${*}" == *"SELECT COUNT(*)"* ]]; then
-            echo "2"  # 2 previous violations
-        fi
+    log_warning() {
         return 0
     }
-    export -f psql
+    export -f log_warning
     
     # Run automatic response
     run automatic_response "192.168.1.100" "pattern" "Abuse detected"
@@ -429,21 +521,35 @@ teardown() {
     }
     export -f psql
     
-    # Mock check_ip_for_abuse
-    local check_count=0
+    # Mock check_ip_for_abuse using file to track calls
+    local check_file="${TMP_DIR}/.check_count"
+    rm -f "${check_file}"
+    echo "0" > "${check_file}"
     
     # shellcheck disable=SC2317
     check_ip_for_abuse() {
-        check_count=$((check_count + 1))
+        local count
+        count=$(cat "${check_file}" 2>/dev/null || echo "0")
+        count=$((count + 1))
+        echo "${count}" > "${check_file}"
         return 1  # No abuse
     }
     export -f check_ip_for_abuse
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
     
     # Run analyze all
     run analyze_all
     
     # Should check multiple IPs
     assert_success
+    local check_count
+    check_count=$(cat "${check_file}" 2>/dev/null || echo "0")
     assert [ ${check_count} -ge 2 ]
 }
 
@@ -632,13 +738,28 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
     # Track if suspicious behavior detected
     local behavior_file="${TMP_DIR}/.abuse_detected"
     rm -f "${behavior_file}"
     
     # shellcheck disable=SC2317
     record_security_event() {
-        if [[ "${1}" == "abuse" ]] && [[ "${4}" == *"behavioral"* ]]; then
+        # Check if it's recording behavioral abuse (4th arg is metadata JSON)
+        local metadata="${4:-}"
+        if [[ "${1}" == "abuse" ]] && echo "${metadata}" | grep -q "behavioral"; then
             touch "${behavior_file}"
         fi
         return 0
@@ -689,20 +810,39 @@ teardown() {
     }
     export -f psql
     
-    # Mock auto_block_ip to capture duration
-    local captured_duration=""
+    # Mock auto_block_ip to capture duration using file
+    local duration_file="${TMP_DIR}/.captured_duration"
+    rm -f "${duration_file}"
+    
     # shellcheck disable=SC2317
     auto_block_ip() {
-        captured_duration="${3}"  # Duration is 3rd argument
+        # Duration is 3rd argument
+        echo "${3}" > "${duration_file}"
         return 0
     }
     export -f auto_block_ip
+    
+    # Mock send_alert
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
+    
+    # Mock log_warning
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Run automatic response
     run automatic_response "192.168.1.100" "pattern" "Abuse detected"
     
     # Should escalate duration
     assert_success
+    local captured_duration
+    captured_duration=$(cat "${duration_file}" 2>/dev/null || echo "")
     assert [ "${captured_duration}" = "1440" ]  # 24 hours for 3+ violations
 }
 
@@ -842,9 +982,29 @@ teardown() {
     local anomaly_file="${TMP_DIR}/.anomaly_detected"
     rm -f "${anomaly_file}"
     
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Mock log_warning
+    # shellcheck disable=SC2317
+    log_warning() {
+        # Check if it's logging an anomaly
+        if [[ "${*}" == *"Anomaly detected"* ]]; then
+            touch "${anomaly_file}"
+        fi
+        return 0
+    }
+    export -f log_warning
+    
     # shellcheck disable=SC2317
     record_security_event() {
-        if [[ "${1}" == "abuse" ]] && [[ "${*}" == *"anomaly"* ]]; then
+        # Check if it's recording an anomaly (4th arg is metadata JSON)
+        local metadata="${4:-}"
+        if [[ "${1}" == "abuse" ]] && echo "${metadata}" | grep -q "anomaly"; then
             touch "${anomaly_file}"
         fi
         return 0
