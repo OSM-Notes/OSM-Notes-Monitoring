@@ -131,13 +131,34 @@ teardown() {
     }
     export -f psql
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
     # Track if record_security_event was called
     local alert_file="${TMP_DIR}/.rate_limit_result"
     rm -f "${alert_file}"
     
     # shellcheck disable=SC2317
     record_security_event() {
-        if [[ "${1}" == "rate_limit" ]] && [[ "${4}" == *"exceeded"* ]]; then
+        # Check if it's recording rate limit exceeded (4th arg is metadata JSON)
+        local metadata="${4:-}"
+        if [[ "${1}" == "rate_limit" ]] && echo "${metadata}" | grep -q "exceeded"; then
             touch "${alert_file}"
         fi
         return 0
@@ -401,45 +422,73 @@ teardown() {
 }
 
 @test "reset_rate_limit deletes security events" {
-    local delete_called=false
+    # Mock psql to track DELETE calls using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
-    # Mock psql to track DELETE calls
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]] && [[ "${*}" == *"192.168.1.100"* ]]; then
-            delete_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
     export -f psql
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
     
     # Run reset
     run reset_rate_limit "192.168.1.100" ""
     
     # Should succeed and call DELETE
     assert_success
-    assert_equal "true" "${delete_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "reset_rate_limit handles endpoint parameter" {
-    local delete_called=false
+    # Mock psql to track DELETE calls with endpoint using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
-    # Mock psql to track DELETE calls with endpoint
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]] && [[ "${*}" == *"/api/notes"* ]]; then
-            delete_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
     export -f psql
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
     
     # Run reset with endpoint
     run reset_rate_limit "192.168.1.100" "/api/notes"
     
     # Should succeed and include endpoint in DELETE
     assert_success
-    assert_equal "true" "${delete_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "main function check action returns ALLOWED when within limit" {
@@ -469,6 +518,11 @@ teardown() {
 }
 
 @test "main function check action returns RATE_LIMITED when exceeded" {
+    # Set rate limit config
+    export RATE_LIMIT_WINDOW_SECONDS="60"
+    export RATE_LIMIT_MAX_REQUESTS="60"
+    export RATE_LIMIT_BURST_SIZE="10"
+    
     # Mock functions
     # shellcheck disable=SC2317
     is_ip_whitelisted() { return 1; }
@@ -484,7 +538,22 @@ teardown() {
     # shellcheck disable=SC2317
     record_security_event() { return 0; }
     
-    export -f is_ip_whitelisted is_ip_blacklisted psql record_security_event
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() { return 0; }
+    # shellcheck disable=SC2317
+    log_warning() { return 0; }
+    # shellcheck disable=SC2317
+    log_info() { return 0; }
+    # shellcheck disable=SC2317
+    log_error() { return 0; }
+    
+    export -f is_ip_whitelisted is_ip_blacklisted psql record_security_event log_debug log_warning log_info log_error
+    
+    # Mock usage function
+    # shellcheck disable=SC2317
+    usage() { return 0; }
+    export -f usage
     
     # Run main with check action
     run main "check" "192.168.1.100" "" "" || true
@@ -495,24 +564,32 @@ teardown() {
 }
 
 @test "main function record action calls record_request" {
-    local record_called=false
+    # Mock record_security_event to track calls using file
+    local record_file="${TMP_DIR}/.record_called"
+    rm -f "${record_file}"
     
-    # Mock record_security_event to track calls
     # shellcheck disable=SC2317
     record_security_event() {
         if [[ "${1}" == "rate_limit" ]] && [[ "${2}" == "192.168.1.100" ]]; then
-            record_called=true
+            touch "${record_file}"
         fi
         return 0
     }
     export -f record_security_event
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
     # Run main with record action
     run main "record" "192.168.1.100" "/api/notes" ""
     
-    # Should succeed
+    # Should succeed and call record_security_event
     assert_success
-    assert_equal "true" "${record_called}"
+    assert_file_exists "${record_file}"
 }
 
 @test "main function stats action calls get_rate_limit_stats" {
@@ -532,24 +609,38 @@ teardown() {
 }
 
 @test "main function reset action calls reset_rate_limit" {
-    local reset_called=false
+    # Mock psql to track DELETE using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
-    # Mock psql to track DELETE
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]]; then
-            reset_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
     export -f psql
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
     # Run main with reset action
     run main "reset" "192.168.1.100" ""
     
-    # Should succeed
+    # Should succeed and call DELETE
     assert_success
-    assert_equal "true" "${reset_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "main function shows usage for unknown action" {
@@ -641,7 +732,7 @@ teardown() {
 }
 
 @test "get_rate_limit_stats shows statistics for IP" {
-    # Mock psql
+    # Mock psql to return stats data
     # shellcheck disable=SC2317
     psql() {
         echo "192.168.1.100|60|5|2025-01-01"
@@ -649,12 +740,19 @@ teardown() {
     }
     export -f psql
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
     # Run get_rate_limit_stats
     run get_rate_limit_stats "192.168.1.100"
     
-    # Should succeed
+    # Should succeed and return data (function returns raw psql output)
     assert_success
-    assert_output --partial "Rate Limit Statistics"
+    assert_output --partial "192.168.1.100"
 }
 
 @test "get_rate_limit_stats handles database errors" {

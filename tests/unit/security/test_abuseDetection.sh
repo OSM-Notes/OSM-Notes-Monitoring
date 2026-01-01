@@ -550,7 +550,7 @@ teardown() {
     assert_success
     local check_count
     check_count=$(cat "${check_file}" 2>/dev/null || echo "0")
-    assert [ ${check_count} -ge 2 ]
+    assert [ "${check_count}" -ge 2 ]
 }
 
 @test "get_abuse_stats queries database" {

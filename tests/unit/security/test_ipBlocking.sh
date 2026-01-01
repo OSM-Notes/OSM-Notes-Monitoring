@@ -72,13 +72,14 @@ teardown() {
     }
     export -f is_valid_ip
     
-    # Mock psql to track INSERT
-    local insert_called=false
+    # Mock psql to track INSERT using file
+    local insert_file="${TMP_DIR}/.insert_called"
+    rm -f "${insert_file}"
     
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"INSERT INTO ip_management"* ]] && [[ "${*}" == *"whitelist"* ]]; then
-            insert_called=true
+            touch "${insert_file}"
         fi
         return 0
     }
@@ -91,12 +92,25 @@ teardown() {
     }
     export -f record_security_event
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
     # Run whitelist add
     run whitelist_add "192.168.1.100" "Test server"
     
-    # Should succeed
+    # Should succeed and call INSERT
     assert_success
-    assert_equal "true" "${insert_called}"
+    assert_file_exists "${insert_file}"
 }
 
 @test "whitelist_add rejects invalid IP" {
@@ -115,24 +129,32 @@ teardown() {
 }
 
 @test "whitelist_remove removes IP from whitelist" {
-    # Mock psql to track DELETE
-    local delete_called=false
+    # Mock psql to track DELETE using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]] && [[ "${*}" == *"whitelist"* ]]; then
-            delete_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
     export -f psql
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
     # Run whitelist remove
     run whitelist_remove "192.168.1.100"
     
-    # Should succeed
+    # Should succeed and call DELETE
     assert_success
-    assert_equal "true" "${delete_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "whitelist_list queries database" {
@@ -161,13 +183,14 @@ teardown() {
     }
     export -f is_valid_ip
     
-    # Mock psql to track INSERT
-    local insert_called=false
+    # Mock psql to track INSERT using file
+    local insert_file="${TMP_DIR}/.insert_called"
+    rm -f "${insert_file}"
     
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"INSERT INTO ip_management"* ]] && [[ "${*}" == *"blacklist"* ]]; then
-            insert_called=true
+            touch "${insert_file}"
         fi
         return 0
     }
@@ -179,23 +202,37 @@ teardown() {
         return 0
     }
     export -f record_security_event
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
     
     # Run blacklist add
     run blacklist_add "192.168.1.200" "Known attacker"
     
-    # Should succeed
+    # Should succeed and call INSERT
     assert_success
-    assert_equal "true" "${insert_called}"
+    assert_file_exists "${insert_file}"
 }
 
 @test "blacklist_remove removes IP from blacklist" {
-    # Mock psql to track DELETE
-    local delete_called=false
+    # Mock psql to track DELETE using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]] && [[ "${*}" == *"blacklist"* ]]; then
-            delete_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
@@ -208,12 +245,19 @@ teardown() {
     }
     export -f record_security_event
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
     # Run blacklist remove
     run blacklist_remove "192.168.1.200"
     
-    # Should succeed
+    # Should succeed and call DELETE
     assert_success
-    assert_equal "true" "${delete_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "block_ip_temporary blocks IP with expiration" {
@@ -246,13 +290,14 @@ teardown() {
 }
 
 @test "unblock_ip removes IP from blocks" {
-    # Mock psql to track DELETE
-    local delete_called=false
+    # Mock psql to track DELETE using file
+    local delete_file="${TMP_DIR}/.delete_called"
+    rm -f "${delete_file}"
     
     # shellcheck disable=SC2317
     psql() {
         if [[ "${*}" == *"DELETE"* ]]; then
-            delete_called=true
+            touch "${delete_file}"
         fi
         return 0
     }
@@ -265,12 +310,19 @@ teardown() {
     }
     export -f record_security_event
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
     # Run unblock
     run unblock_ip "192.168.1.100"
     
-    # Should succeed
+    # Should succeed and call DELETE
     assert_success
-    assert_equal "true" "${delete_called}"
+    assert_file_exists "${delete_file}"
 }
 
 @test "list_ips queries database" {
