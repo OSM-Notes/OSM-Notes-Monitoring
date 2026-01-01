@@ -220,6 +220,9 @@ run_sql_tests() {
     local sql_test_scripts=(
         "${PROJECT_ROOT}/sql/ingestion/test_queries.sh"
         "${PROJECT_ROOT}/sql/analytics/test_queries.sh"
+        "${PROJECT_ROOT}/sql/wms/test_queries.sh"
+        "${PROJECT_ROOT}/sql/infrastructure/test_queries.sh"
+        "${PROJECT_ROOT}/sql/data/test_queries.sh"
     )
     
     local failed=0

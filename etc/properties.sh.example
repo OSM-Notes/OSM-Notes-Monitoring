@@ -2,11 +2,35 @@
 # Copy this file to properties.sh and configure
 # Version: 2025-12-24
 
-# Database
+# Database Configuration
+# 
+# Monitoring Database (this project's own database)
+# - Development: osm_notes_monitoring
+# - Production: notes_monitoring
+# This database stores metrics, alerts, security events, and component health
 DBNAME="osm_notes_monitoring"
 DBHOST="localhost"
 DBPORT="5432"
 DBUSER="postgres"
+
+# Monitored Databases (databases from other projects that we monitor)
+# These are separate from the monitoring database above
+# 
+# Ingestion Database (OSM-Notes-Ingestion project)
+# - Development: osm_notes (or as configured in ingestion project)
+# - Production: notes
+INGESTION_DBNAME="${INGESTION_DBNAME:-notes}"
+INGESTION_DBHOST="${INGESTION_DBHOST:-${DBHOST}}"
+INGESTION_DBPORT="${INGESTION_DBPORT:-${DBPORT}}"
+INGESTION_DBUSER="${INGESTION_DBUSER:-${DBUSER}}"
+
+# Analytics/DWH Database (OSM-Notes-Analytics project)
+# - Development: osm_notes_dwh (or as configured in analytics project)
+# - Production: notes_dwh
+ANALYTICS_DBNAME="${ANALYTICS_DBNAME:-notes_dwh}"
+ANALYTICS_DBHOST="${ANALYTICS_DBHOST:-${DBHOST}}"
+ANALYTICS_DBPORT="${ANALYTICS_DBPORT:-${DBPORT}}"
+ANALYTICS_DBUSER="${ANALYTICS_DBUSER:-${DBUSER}}"
 
 # Alerting
 ADMIN_EMAIL="admin@example.com"

@@ -186,7 +186,7 @@
 - [x] Create `sql/wms/service_status.sql` (created with 5 queries for service status monitoring)
 - [x] Create `sql/wms/performance.sql` (created with 8 queries for performance analysis)
 - [x] Create `sql/wms/error_analysis.sql` (created with 8 queries for error analysis)
-- [ ] Test all SQL queries
+- [x] Test all SQL queries (created test scripts: `sql/wms/test_queries.sh`, `sql/infrastructure/test_queries.sh`, `sql/data/test_queries.sh`, updated `tests/run_all_tests.sh`)
 
 ### Metrics & Alerts
 

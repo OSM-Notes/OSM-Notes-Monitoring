@@ -94,7 +94,16 @@ cat > etc/properties.sh.example << 'EOF'
 # Copy this file to properties.sh and configure
 
 # Database
+# Monitoring Database (this project's own database)
+# Development: osm_notes_monitoring
+# Production: notes_monitoring
 DBNAME="osm_notes_monitoring"
+
+# Monitored Databases (databases from other projects)
+# Ingestion database (OSM-Notes-Ingestion)
+INGESTION_DBNAME="${INGESTION_DBNAME:-notes}"
+# Analytics database (OSM-Notes-Analytics)
+ANALYTICS_DBNAME="${ANALYTICS_DBNAME:-notes_dwh}"
 DBHOST="localhost"
 DBPORT="5432"
 DBUSER="postgres"

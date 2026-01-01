@@ -1,12 +1,31 @@
 # Database Schema Documentation
 
-> **Last Updated:** 2025-12-24  
-> **Database:** `osm_notes_monitoring`  
+> **Last Updated:** 2025-12-31  
+> **Database:** `osm_notes_monitoring` (development) / `notes_monitoring` (production)  
 > **Version:** 1.0.0
 
 ## Overview
 
 The OSM-Notes-Monitoring database stores monitoring metrics, alerts, security events, and component health status for the entire OSM Notes ecosystem.
+
+### Database Architecture
+
+This project uses **its own dedicated database** separate from the databases it monitors:
+
+- **Monitoring Database** (`osm_notes_monitoring` / `notes_monitoring`): Stores all monitoring data
+  - Metrics from all components
+  - Alerts and alert history
+  - Security events and IP management
+  - Component health status
+
+- **Monitored Databases** (read-only access):
+  - `notes` (OSM-Notes-Ingestion): Monitored for ingestion metrics
+  - `notes_dwh` (OSM-Notes-Analytics): Monitored for analytics/DWH metrics
+
+This separation ensures:
+- Monitoring data doesn't interfere with production databases
+- Independent scaling and maintenance
+- Clear separation of concerns
 
 ## Entity Relationship Diagram
 

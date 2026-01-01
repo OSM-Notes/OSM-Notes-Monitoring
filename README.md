@@ -54,7 +54,9 @@ cp etc/properties.sh.example etc/properties.sh
 
 3. Set up monitoring database:
 ```bash
-# Create monitoring database
+# Create monitoring database (this project's own database)
+# Development: osm_notes_monitoring
+# Production: notes_monitoring
 createdb osm_notes_monitoring
 
 # Run initialization scripts
@@ -63,6 +65,11 @@ psql -d osm_notes_monitoring -f sql/init.sql
 # Apply query performance optimizations (recommended)
 psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
+
+**Note:** This project requires:
+- **Its own database** (`osm_notes_monitoring` / `notes_monitoring`) to store metrics, alerts, and security events
+- **Access to monitored databases** (`notes` for ingestion, `notes_dwh` for analytics) to read data for monitoring
+- Configure `INGESTION_DBNAME` and `ANALYTICS_DBNAME` in `etc/properties.sh` if different from defaults
 
 4. Configure alerts:
 ```bash

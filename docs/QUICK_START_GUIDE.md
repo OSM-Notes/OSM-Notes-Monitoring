@@ -38,11 +38,20 @@ nano etc/properties.sh
 
 **Minimum Configuration:**
 ```bash
-# Database
+# Monitoring Database (this project's own database)
+# Development: osm_notes_monitoring
+# Production: notes_monitoring
 export DBNAME="osm_notes_monitoring"
 export DBHOST="localhost"
 export DBPORT="5432"
 export DBUSER="${USER}"  # Use your system user
+
+# Monitored Databases (databases from other projects)
+# These are separate from the monitoring database above
+# Ingestion database (OSM-Notes-Ingestion)
+export INGESTION_DBNAME="${INGESTION_DBNAME:-notes}"
+# Analytics database (OSM-Notes-Analytics)
+export ANALYTICS_DBNAME="${ANALYTICS_DBNAME:-notes_dwh}"
 
 # Logging
 export LOG_DIR="${HOME}/logs/osm-notes-monitoring"

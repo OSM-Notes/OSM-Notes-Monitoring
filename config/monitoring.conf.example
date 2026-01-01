@@ -1,11 +1,20 @@
 # Monitoring Configuration for OSM-Notes-Monitoring
-# Version: 2025-12-24
+# Version: 2025-12-31
 #
 # This file contains monitoring-specific settings.
 # Main system properties are in etc/properties.sh
 #
 # Copy this file to monitoring.conf and configure:
 #   cp config/monitoring.conf.example config/monitoring.conf
+#
+# Database Configuration:
+# - DBNAME in etc/properties.sh: Monitoring database (notes_monitoring in prod)
+# - INGESTION_DBNAME: Database from OSM-Notes-Ingestion (notes in prod)
+# - ANALYTICS_DBNAME: Database from OSM-Notes-Analytics (notes_dwh in prod)
+#
+# The monitoring system needs:
+# 1. Its own database (DBNAME) to store metrics, alerts, security events
+# 2. Access to monitored databases (INGESTION_DBNAME, ANALYTICS_DBNAME) to read data
 
 # Component-specific monitoring settings
 
