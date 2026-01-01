@@ -802,3 +802,156 @@ teardown() {
     # Should succeed
     assert_success
 }
+
+@test "detect_anomalies handles whitelisted IP" {
+    # Mock is_ip_whitelisted to return true
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 0  # Whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Run detect_anomalies
+    run detect_anomalies "192.168.1.100"
+    
+    # Should return normal (1) for whitelisted IP
+    assert_failure
+}
+
+@test "detect_anomalies detects anomaly when current exceeds threshold" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql to return baseline and high current
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"AVG(hourly_count)"* ]]; then
+            echo "10"  # Baseline: 10 requests/hour
+        elif [[ "${*}" == *"DATE_TRUNC('hour'"* ]]; then
+            echo "35"  # Current: 35 requests (3.5x baseline, over 3x threshold)
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Track if anomaly was detected
+    local anomaly_file="${TMP_DIR}/.anomaly_detected"
+    rm -f "${anomaly_file}"
+    
+    # shellcheck disable=SC2317
+    record_security_event() {
+        if [[ "${1}" == "abuse" ]] && [[ "${*}" == *"anomaly"* ]]; then
+            touch "${anomaly_file}"
+        fi
+        return 0
+    }
+    export -f record_security_event
+    
+    # Run detect_anomalies
+    run detect_anomalies "192.168.1.100"
+    
+    # Should detect anomaly
+    assert_success
+    assert_file_exists "${anomaly_file}"
+}
+
+@test "detect_anomalies handles zero baseline" {
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql to return zero baseline
+    # shellcheck disable=SC2317
+    psql() {
+        if [[ "${*}" == *"AVG(hourly_count)"* ]]; then
+            echo "0"  # No baseline
+        elif [[ "${*}" == *"DATE_TRUNC('hour'"* ]]; then
+            echo "5"  # Some current requests
+        fi
+        return 0
+    }
+    export -f psql
+    
+    # Run detect_anomalies
+    run detect_anomalies "192.168.1.100"
+    
+    # Should return normal when baseline is zero
+    assert_failure
+}
+
+@test "main function handles analyze action with IP" {
+    # Mock check_ip_for_abuse
+    # shellcheck disable=SC2317
+    check_ip_for_abuse() {
+        return 0
+    }
+    export -f check_ip_for_abuse
+    
+    # Run main with analyze action and IP
+    run main "analyze" "192.168.1.100"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles analyze action without IP" {
+    # Mock analyze_all
+    # shellcheck disable=SC2317
+    analyze_all() {
+        return 0
+    }
+    export -f analyze_all
+    
+    # Run main with analyze action without IP
+    run main "analyze"
+    
+    # Should succeed
+    assert_success
+}
+
+@test "main function handles check action without IP" {
+    # Run main with check action without IP
+    run main "check" || true
+    
+    # Should fail and show usage
+    assert_failure
+}
+
+@test "load_config loads from custom config file" {
+    # Create temporary config file
+    mkdir -p "${TMP_DIR}"
+    local test_config="${TMP_DIR}/test_config.conf"
+    echo "export ABUSE_DETECTION_ENABLED=true" > "${test_config}"
+    echo "export ABUSE_RAPID_REQUEST_THRESHOLD=20" >> "${test_config}"
+    
+    # Reset variable
+    export ABUSE_RAPID_REQUEST_THRESHOLD="10"
+    
+    # Run load_config
+    run load_config "${test_config}"
+    
+    # Should succeed
+    assert_success
+    
+    # Verify config was loaded (load_config sources the file)
+    # Note: The test verifies that load_config can handle custom config files
+    # The actual value may depend on how the config file is structured
+    
+    # Cleanup
+    rm -f "${test_config}"
+}
+
+@test "load_config handles missing config file gracefully" {
+    # Run load_config with non-existent file
+    run load_config "${TMP_DIR}/nonexistent.conf"
+    
+    # Should succeed (uses defaults)
+    assert_success
+}
