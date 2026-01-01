@@ -615,6 +615,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Run main function
-main "${SPECIFIC_CHECK}"
+# Run main function only if script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "${SPECIFIC_CHECK}"
+fi
 
