@@ -141,7 +141,7 @@ get_script_coverage_from_kcov() {
     local output_dir="${KCOV_OUTPUT}/all"
     
     # Get relative path from PROJECT_ROOT
-    local rel_path="${script_path#${PROJECT_ROOT}/}"
+    local rel_path="${script_path#"${PROJECT_ROOT}"/}"
     
     # kcov stores file coverage in index.json
     if [[ -f "${output_dir}/index.json" ]]; then
@@ -189,12 +189,20 @@ run_all_tests_with_bashcov() {
     
     print_message "${BLUE}" "Running all tests with bashcov (this may take a while)..."
     
+    # bashcov generates coverage.json in current directory
+    # Run from project root so coverage.json is generated there
+    cd "${PROJECT_ROOT}" || return 1
+    
     # Run bashcov on all tests at once
-    BASHCOV_OUTPUT_DIR="${output_dir}" \
     bashcov \
         --root "${PROJECT_ROOT}" \
         --skip-uncovered \
         bats "${PROJECT_ROOT}/tests" >/dev/null 2>&1 || true
+    
+    # Move coverage.json to output directory if it exists
+    if [[ -f "${PROJECT_ROOT}/coverage.json" ]]; then
+        mv "${PROJECT_ROOT}/coverage.json" "${output_dir}/coverage.json" 2>/dev/null || true
+    fi
     
     print_message "${GREEN}" "✓ Tests executed with bashcov"
 }
@@ -204,10 +212,10 @@ run_all_tests_with_bashcov() {
 ##
 get_script_coverage_from_bashcov() {
     local script_path="${1}"
-    local output_dir="${BASHCOV_OUTPUT}/all"
+    local resultset_file="${COVERAGE_DIR}/.resultset.json"
     
-    # bashcov stores coverage in coverage.json
-    if [[ -f "${output_dir}/coverage.json" ]]; then
+    # bashcov uses SimpleCov format: .resultset.json
+    if [[ -f "${resultset_file}" ]]; then
         local coverage
         coverage=$(python3 -c "
 import json
@@ -217,17 +225,29 @@ import os
 try:
     script_path = '${script_path}'
     script_basename = os.path.basename(script_path)
+    script_abs_path = os.path.abspath(script_path)
     
-    with open('${output_dir}/coverage.json', 'r') as f:
+    with open('${resultset_file}', 'r') as f:
         data = json.load(f)
     
-    # bashcov stores files in a dict with file paths as keys
-    if 'files' in data:
-        for file_path, file_data in data['files'].items():
-            if script_path in file_path or script_basename in file_path:
-                if 'percent_covered' in file_data:
-                    print(int(file_data['percent_covered']))
-                    sys.exit(0)
+    # SimpleCov structure: { 'command': { 'coverage': { 'file_path': [coverage_array] } } }
+    for cmd_name, cmd_data in data.items():
+        if 'coverage' in cmd_data:
+            files = cmd_data['coverage']
+            for file_path, coverage_data in files.items():
+                # Check if this file matches our script
+                file_basename = os.path.basename(file_path)
+                if (script_path in file_path or 
+                    script_abs_path in file_path or 
+                    script_basename == file_basename):
+                    # Calculate coverage percentage from array
+                    if isinstance(coverage_data, list):
+                        covered = sum(1 for x in coverage_data if x is not None and x > 0)
+                        total = len([x for x in coverage_data if x is not None])
+                        if total > 0:
+                            percent = int((covered / total) * 100)
+                            print(percent)
+                            sys.exit(0)
     
     # If not found, return 0
     print(0)
@@ -249,6 +269,8 @@ count_test_files_for_script() {
     script_name=$(basename "${script_path}" .sh)
     
     local test_count=0
+    # shellcheck disable=SC2034
+    # test_file is used in the loop to count files
     while IFS= read -r -d '' test_file; do
         test_count=$((test_count + 1))
     done < <(find "${PROJECT_ROOT}/tests" -name "*${script_name}*.sh" -type f -print0 2>/dev/null || true)
