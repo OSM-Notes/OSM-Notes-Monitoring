@@ -18,6 +18,8 @@ source "${BATS_TEST_DIRNAME}/../../../bin/lib/monitoringFunctions.sh"
 source "${BATS_TEST_DIRNAME}/../../../bin/lib/metricsFunctions.sh"
 # shellcheck disable=SC1091
 source "${BATS_TEST_DIRNAME}/../../../bin/lib/alertFunctions.sh"
+# shellcheck disable=SC1091
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/securityFunctions.sh"
 
 setup() {
     # Set test environment
@@ -139,7 +141,7 @@ teardown() {
     
     run execute_sql_query "SELECT * FROM INVALID TABLE"
     assert_failure
-    assert [[ "${output}" =~ Error ]]
+    assert_output --partial "Error"
 }
 
 ##
@@ -148,7 +150,7 @@ teardown() {
 @test "execute_sql_file handles missing file gracefully" {
     run execute_sql_file "/nonexistent/file.sql"
     assert_failure
-    assert [[ "${output}" =~ not.found ]]
+    assert_output --partial "not found"
 }
 
 ##
@@ -183,8 +185,23 @@ teardown() {
     function psql() {
         return 1
     }
+    export -f psql
     
-    run check_rate_limit "192.168.1.1" "api_endpoint" 100 60
+    # Mock is_ip_whitelisted and is_ip_blacklisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1
+    }
+    export -f is_ip_whitelisted
+    
+    # shellcheck disable=SC2317
+    function is_ip_blacklisted() {
+        return 1
+    }
+    export -f is_ip_blacklisted
+    
+    # check_rate_limit signature: ip window_seconds max_requests
+    run check_rate_limit "192.168.1.1" 60 100
     # Should handle gracefully (may fail open or closed based on implementation)
     # Important: doesn't crash
 }
@@ -226,14 +243,16 @@ teardown() {
 ##
 # Test: log_security_event handles invalid event type
 ##
-@test "log_security_event handles invalid event type gracefully" {
+@test "record_security_event handles invalid event type gracefully" {
     # Mock psql
     # shellcheck disable=SC2317
     function psql() {
         return 1
     }
+    export -f psql
     
-    run log_security_event "" "192.168.1.1" "Test"
+    # record_security_event signature: event_type ip_address endpoint metadata
+    run record_security_event "" "192.168.1.1" "Test"
     # Should handle missing event type
     assert_failure
 }
@@ -344,6 +363,14 @@ teardown() {
     # Create file with invalid encoding
     local invalid_file="${BATS_TEST_DIRNAME}/../../tmp/invalid_encoding.sql"
     printf '\xFF\xFE' > "${invalid_file}"  # Invalid UTF-8
+    
+    # Mock psql to simulate encoding error
+    # shellcheck disable=SC2317
+    function psql() {
+        echo "ERROR: invalid byte sequence for encoding \"UTF8\"" >&2
+        return 1
+    }
+    export -f psql
     
     run execute_sql_file "${invalid_file}"
     assert_failure

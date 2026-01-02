@@ -3,8 +3,9 @@
 # Unit Tests: ipBlocking.sh
 # Tests IP blocking management functionality
 #
-# shellcheck disable=SC2030,SC2031
+# shellcheck disable=SC2030,SC2031,SC1091
 # SC2030/SC2031: Variables modified in subshells are expected in BATS tests
+# SC1091: Not following source files is expected in BATS tests
 
 load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
@@ -28,6 +29,17 @@ setup() {
     export DBHOST="localhost"
     export DBPORT="5432"
     export DBUSER="test_user"
+    
+    # Mock functions BEFORE sourcing to avoid errors
+    # shellcheck disable=SC2317
+    load_config() { return 0; }
+    export -f load_config
+    # shellcheck disable=SC2317
+    init_alerting() { return 0; }
+    export -f init_alerting
+    # shellcheck disable=SC2317
+    psql() { return 0; }
+    export -f psql
     
     # Source libraries
     # shellcheck disable=SC1091
@@ -53,8 +65,15 @@ setup() {
     init_alerting
     
     # Source ipBlocking.sh functions
-    # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+    
+    # Export all functions from ipBlocking.sh if they exist
+    for func in main blacklist_add blacklist_remove block_ip_temporary unblock_ip list_ips check_ip_status cleanup_expired; do
+        if declare -f "${func}" > /dev/null 2>&1; then
+            # shellcheck disable=SC2163
+            export -f "${func}"
+        fi
+    done
 }
 
 teardown() {
@@ -216,6 +235,14 @@ teardown() {
     }
     export -f log_error
     
+    # Ensure function is available (re-source if needed)
+    if ! declare -f blacklist_add > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f blacklist_add > /dev/null 2>&1; then
+            export -f blacklist_add
+        fi
+    fi
+    
     # Run blacklist add
     run blacklist_add "192.168.1.200" "Known attacker"
     
@@ -252,6 +279,14 @@ teardown() {
     }
     export -f log_info
     
+    # Ensure function is available (re-source if needed)
+    if ! declare -f blacklist_remove > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f blacklist_remove > /dev/null 2>&1; then
+            export -f blacklist_remove
+        fi
+    fi
+    
     # Run blacklist remove
     run blacklist_remove "192.168.1.200"
     
@@ -280,6 +315,14 @@ teardown() {
         return 0
     }
     export -f block_ip
+    
+    # Ensure function is available (re-source if needed)
+    if ! declare -f block_ip_temporary > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f block_ip_temporary > /dev/null 2>&1; then
+            export -f block_ip_temporary
+        fi
+    fi
     
     # Run temporary block
     run block_ip_temporary "192.168.1.100" "60" "Test block"
@@ -336,6 +379,14 @@ teardown() {
     }
     export -f psql
     
+    # Ensure function is available (re-source if needed)
+    if ! declare -f list_ips > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f list_ips > /dev/null 2>&1; then
+            export -f list_ips
+        fi
+    fi
+    
     # Run list
     run list_ips "temp_block"
     
@@ -370,6 +421,14 @@ teardown() {
         return 0
     }
     export -f psql
+    
+    # Ensure function is available (re-source if needed)
+    if ! declare -f check_ip_status > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f check_ip_status > /dev/null 2>&1; then
+            export -f check_ip_status
+        fi
+    fi
     
     # Run status check
     run check_ip_status "192.168.1.100"
@@ -550,6 +609,14 @@ teardown() {
     }
     export -f is_valid_ip
     
+    # Ensure function is available (re-source if needed)
+    if ! declare -f block_ip_temporary > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f block_ip_temporary > /dev/null 2>&1; then
+            export -f block_ip_temporary
+        fi
+    fi
+    
     # Run block with invalid IP
     run block_ip_temporary "invalid.ip" "60" "Test"
     
@@ -576,6 +643,14 @@ teardown() {
     }
     export -f record_security_event
     
+    # Ensure function is available (re-source if needed)
+    if ! declare -f unblock_ip > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f unblock_ip > /dev/null 2>&1; then
+            export -f unblock_ip
+        fi
+    fi
+    
     # Run unblock_ip
     run unblock_ip "192.168.1.100"
     
@@ -592,6 +667,14 @@ teardown() {
         return 0
     }
     export -f psql
+    
+    # Ensure function is available (re-source if needed)
+    if ! declare -f list_ips > /dev/null 2>&1; then
+        source "${BATS_TEST_DIRNAME}/../../../bin/security/ipBlocking.sh" 2>/dev/null || true
+        if declare -f list_ips > /dev/null 2>&1; then
+            export -f list_ips
+        fi
+    fi
     
     # Run list_ips
     run list_ips "all"

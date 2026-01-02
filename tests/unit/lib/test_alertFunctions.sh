@@ -283,8 +283,19 @@ teardown() {
 # Test: init_alerting - initializes alerting system
 ##
 @test "init_alerting initializes alerting with defaults" {
-    # Clear any existing config
-    unset ADMIN_EMAIL SEND_ALERT_EMAIL SLACK_ENABLED
+    # Clear any existing config and backup config file if it exists
+    unset ADMIN_EMAIL SEND_ALERT_EMAIL SLACK_ENABLED SLACK_WEBHOOK_URL
+    
+    # Temporarily rename config file to prevent it from being loaded
+    # Use BATS_TEST_DIRNAME to find project root
+    local project_root
+    project_root="$(dirname "$(dirname "$(dirname "${BATS_TEST_DIRNAME}")")")"
+    local config_file="${project_root}/config/alerts.conf"
+    local backup_file="${config_file}.backup"
+    
+    if [[ -f "${config_file}" ]]; then
+        mv "${config_file}" "${backup_file}"
+    fi
     
     # Run init_alerting directly (not via run) to set variables in current shell
     init_alerting
@@ -296,6 +307,11 @@ teardown() {
     assert [ "${SEND_ALERT_EMAIL:-false}" = "false" ]
     # shellcheck disable=SC2031
     assert [ "${SLACK_ENABLED:-false}" = "false" ]
+    
+    # Restore config file if it existed
+    if [[ -f "${backup_file}" ]]; then
+        mv "${backup_file}" "${config_file}"
+    fi
 }
 
 ##

@@ -47,6 +47,35 @@ setup() {
     export SLACK_ENABLED="false"
     export ADMIN_EMAIL="test@example.com"
     
+    # Define mocks BEFORE sourcing libraries
+    # Mock psql first, as it's a low-level dependency
+    # shellcheck disable=SC2317
+    psql() {
+        return 0
+    }
+    export -f psql
+    
+    # Mock database functions to avoid password prompts
+    # shellcheck disable=SC2317
+    check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
+    # shellcheck disable=SC2317
+    execute_sql_query() {
+        echo "0"
+        return 0
+    }
+    export -f execute_sql_query
+    
+    # Mock store_alert to avoid database calls
+    # shellcheck disable=SC2317
+    store_alert() {
+        return 0
+    }
+    export -f store_alert
+    
     # Initialize logging
     TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../../../tmp/logs"
     mkdir -p "${TEST_LOG_DIR}"
@@ -56,6 +85,12 @@ setup() {
     
     # Initialize alerting
     init_alerting
+    
+    # Re-export mocks after sourcing to ensure they override library functions
+    export -f psql
+    export -f check_database_connection
+    export -f execute_sql_query
+    export -f store_alert
 }
 
 @test "sendAlert.sh shows usage with --help" {
@@ -386,14 +421,14 @@ MUTT_EOF
 
 @test "main handles empty component name" {
     run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --no-email "" "critical" "test" "Test message"
-    assert_success
-    # Empty component should still work (validation happens in send_alert)
+    assert_failure
+    # Empty component should fail (validation in enhanced_send_alert)
 }
 
 @test "main handles empty message" {
     run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --no-email "INGESTION" "critical" "test" ""
-    assert_success
-    # Empty message should still work
+    assert_failure
+    # Empty message should fail (validation in enhanced_send_alert)
 }
 
 @test "format_html escapes HTML special characters in message" {

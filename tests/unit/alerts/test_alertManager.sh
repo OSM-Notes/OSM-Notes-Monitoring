@@ -60,12 +60,14 @@ setup() {
     
     # Mock psql for database operations
     # Track alert states for more realistic behavior
-    # shellcheck disable=SC2030,SC2031
-    export MOCK_ALERT_STATUS="active"
+    # Use a file to persist state across function calls
+    export MOCK_STATUS_FILE="${TEST_LOG_DIR}/.mock_alert_status"
+    echo "active" > "${MOCK_STATUS_FILE}"
     
     # shellcheck disable=SC2317
     function psql() {
         local query="${*}"
+        local args="${*}"
         
         # Handle INSERT operations (for store_alert)
         if [[ "${query}" =~ INSERT.*alerts ]]; then
@@ -75,10 +77,20 @@ setup() {
         
         # Handle SELECT operations
         if [[ "${query}" =~ SELECT.*FROM.alerts ]]; then
+            # Read current mock status from file
+            local current_status
+            current_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
+            
+            # Check if it's a -t -A query (tab-separated, no headers)
+            local is_tab_format=false
+            if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+                is_tab_format=true
+            fi
+            
             # SELECT status queries (for checking alert status)
             if [[ "${query}" =~ SELECT.*status.*WHERE.*id ]]; then
                 # Return current mock status
-                echo "${MOCK_ALERT_STATUS:-active}"
+                echo "${current_status}"
                 return 0
             fi
             # SELECT id queries (for get_alert_id helper)
@@ -86,27 +98,58 @@ setup() {
                 echo "00000000-0000-0000-0000-000000000001"
                 return 0
             fi
-            # SELECT * queries (for show_alert, list_alerts)
-            # Format: id|component|alert_level|alert_type|message|status|created_at|resolved_at
-            # Check if it's a list query (no WHERE id=)
-            if [[ "${query}" =~ WHERE.*component.*=.*INGESTION ]]; then
-                # Return formatted table for list_alerts
-                echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
-                echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
-                echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${MOCK_ALERT_STATUS:-active} | 2025-12-28 10:00:00 |"
-            elif [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000000 ]]; then
+            # SELECT queries for list_alerts or show_history with component filter
+            # list_alerts uses: SELECT id, component, alert_level, alert_type, message, status, created_at, resolved_at FROM alerts WHERE component = 'INGESTION'...
+            # show_history uses: SELECT id, alert_level, alert_type, message, status, created_at, resolved_at FROM alerts WHERE component = 'INGESTION'...
+            if [[ "${query}" =~ WHERE.*component.*=.*INGESTION ]] || [[ "${query}" =~ component.*=.*INGESTION ]] || [[ "${query}" =~ AND.component.*=.*INGESTION ]]; then
+                # Check if it's show_history (no component column in SELECT)
+                if [[ "${query}" =~ SELECT.*id.*alert_level.*alert_type.*message.*status ]] && [[ ! "${query}" =~ SELECT.*component ]]; then
+                    # show_history format (no component column)
+                    if [[ "${is_tab_format}" == "true" ]]; then
+                        echo "00000000-0000-0000-0000-000000000001|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                    else
+                        echo " id | alert_level | alert_type | message | status | created_at | resolved_at"
+                        echo "----+-------------+------------+---------+--------+------------+-------------"
+                        echo " 00000000-0000-0000-0000-000000000001 | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                    fi
+                else
+                    # list_alerts format (with component column)
+                    if [[ "${is_tab_format}" == "true" ]]; then
+                        echo "00000000-0000-0000-0000-000000000001|INGESTION|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                    else
+                        echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
+                        echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
+                        echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                    fi
+                fi
+                return 0
+            fi
+            # Check for non-existent alert ID
+            if [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000000 ]]; then
                 # Non-existent alert ID
                 return 0  # Return empty
-            elif [[ "${query}" =~ WHERE.*id.*= ]]; then
-                # Single alert query (show_alert)
-                echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
-                echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
-                echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${MOCK_ALERT_STATUS:-active} | 2025-12-28 10:00:00 |"
+            fi
+            # Check for single alert query (show_alert - WHERE id=)
+            if [[ "${query}" =~ WHERE.*id.*= ]]; then
+                if [[ "${is_tab_format}" == "true" ]]; then
+                    # Return tab-separated format
+                    echo "00000000-0000-0000-0000-000000000001|INGESTION|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                else
+                    # Return formatted table
+                    echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
+                    echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
+                    echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                fi
+                return 0
+            fi
+            # Default list query - return formatted table
+            if [[ "${is_tab_format}" == "true" ]]; then
+                echo "00000000-0000-0000-0000-000000000001|INGESTION|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                echo "00000000-0000-0000-0000-000000000002|ANALYTICS|critical|test_type|Test message 2|active|2025-12-28 10:00:00|"
             else
-                # Default list query - return formatted table
                 echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
                 echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
-                echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${MOCK_ALERT_STATUS:-active} | 2025-12-28 10:00:00 |"
+                echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
                 echo " 00000000-0000-0000-0000-000000000002 | ANALYTICS | critical | test_type | Test message 2 | active | 2025-12-28 10:00:00 |"
             fi
             return 0
@@ -114,21 +157,49 @@ setup() {
         
         # Handle UPDATE operations (for acknowledge/resolve)
         if [[ "${query}" =~ UPDATE.*alerts ]]; then
+            # Read current mock status from file
+            local current_status
+            current_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
+            
             # Check if it's a valid UUID
             if [[ "${query}" =~ 00000000-0000-0000-0000-000000000000 ]] || [[ "${query}" =~ invalid-uuid ]]; then
                 # Invalid UUID - return empty (no rows updated)
                 return 0
             fi
-            # Update mock status based on UPDATE query
+            # Check if updating to acknowledged
             if [[ "${query}" =~ status.*=.*acknowledged ]]; then
-                # shellcheck disable=SC2030,SC2031
-                export MOCK_ALERT_STATUS="acknowledged"
-            elif [[ "${query}" =~ status.*=.*resolved ]]; then
-                # shellcheck disable=SC2030,SC2031
-                export MOCK_ALERT_STATUS="resolved"
+                # acknowledge_alert only updates if status = 'active'
+                # Check if alert is already acknowledged or resolved
+                if [[ "${current_status}" == "acknowledged" ]] || [[ "${current_status}" == "resolved" ]]; then
+                    # Already acknowledged/resolved - return empty (no rows updated)
+                    return 0
+                fi
+                # Update mock status in file
+                echo "acknowledged" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
+                # Return alert ID (RETURNING id) - only if using -t -A format
+                if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+                    echo "00000000-0000-0000-0000-000000000001"
+                fi
+                return 0
             fi
-            # Valid UUID - return alert ID
-            echo "00000000-0000-0000-0000-000000000001"
+            # Check if updating to resolved
+            if [[ "${query}" =~ status.*=.*resolved ]]; then
+                # resolve_alert only updates if status IN ('active', 'acknowledged')
+                # Check if alert is already resolved
+                if [[ "${current_status}" == "resolved" ]]; then
+                    # Already resolved - return empty (no rows updated)
+                    return 0
+                fi
+                # Update mock status in file
+                echo "resolved" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
+                # Return alert ID (RETURNING id) - only if using -t -A format
+                if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+                    echo "00000000-0000-0000-0000-000000000001"
+                fi
+                return 0
+            fi
+            # Other UPDATE - return success
+            echo "UPDATE 1"
             return 0
         fi
         
@@ -140,8 +211,10 @@ setup() {
         
         # Handle TRUNCATE (for clean_test_database)
         if [[ "${query}" =~ TRUNCATE ]]; then
-            # shellcheck disable=SC2030,SC2031
-            export MOCK_ALERT_STATUS="active"
+            # Reset mock status file if it exists, otherwise just return success
+            if [[ -n "${MOCK_STATUS_FILE:-}" ]] && [[ -n "${TEST_LOG_DIR:-}" ]]; then
+                echo "active" > "${MOCK_STATUS_FILE}" 2>/dev/null || true
+            fi
             return 0
         fi
         
@@ -164,6 +237,9 @@ setup() {
 }
 
 teardown() {
+    # Ensure TEST_LOG_DIR is set for clean_test_database
+    export TEST_LOG_DIR="${TEST_LOG_DIR:-${BATS_TEST_DIRNAME}/../../tmp/logs}"
+    
     # Clean up test alerts
     clean_test_database
     
@@ -242,13 +318,24 @@ teardown() {
         # Verify status
         local status_query="SELECT status FROM alerts WHERE id = '${alert_id}'::uuid;"
         local status
-        status=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${DBHOST:-localhost}" \
-            -p "${DBPORT:-5432}" \
-            -U "${DBUSER:-postgres}" \
-            -d "${TEST_DB_NAME}" \
-            -t -A \
-            -c "${status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            status=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${DBHOST:-localhost}" \
+                -p "${DBPORT:-5432}" \
+                -U "${DBUSER:-postgres}" \
+                -d "${TEST_DB_NAME}" \
+                -t -A \
+                -c "${status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        else
+            status=$(psql \
+                -h "${DBHOST:-localhost}" \
+                -p "${DBPORT:-5432}" \
+                -U "${DBUSER:-postgres}" \
+                -d "${TEST_DB_NAME}" \
+                -t -A \
+                -c "${status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        fi
         
         assert [ "${status}" = "acknowledged" ]
     else
@@ -275,13 +362,24 @@ teardown() {
         # Verify status
         local status_query="SELECT status FROM alerts WHERE id = '${alert_id}'::uuid;"
         local status
-        status=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${DBHOST:-localhost}" \
-            -p "${DBPORT:-5432}" \
-            -U "${DBUSER:-postgres}" \
-            -d "${TEST_DB_NAME}" \
-            -t -A \
-            -c "${status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            status=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${DBHOST:-localhost}" \
+                -p "${DBPORT:-5432}" \
+                -U "${DBUSER:-postgres}" \
+                -d "${TEST_DB_NAME}" \
+                -t -A \
+                -c "${status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        else
+            status=$(psql \
+                -h "${DBHOST:-localhost}" \
+                -p "${DBPORT:-5432}" \
+                -U "${DBUSER:-postgres}" \
+                -d "${TEST_DB_NAME}" \
+                -t -A \
+                -c "${status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        fi
         
         assert [ "${status}" = "resolved" ]
     else
@@ -367,13 +465,24 @@ get_alert_id() {
                  ORDER BY created_at DESC 
                  LIMIT 1;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${DBHOST:-localhost}" \
-        -p "${DBPORT:-5432}" \
-        -U "${DBUSER:-postgres}" \
-        -d "${TEST_DB_NAME}" \
-        -t -A \
-        -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo ""
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${DBHOST:-localhost}" \
+            -p "${DBPORT:-5432}" \
+            -U "${DBUSER:-postgres}" \
+            -d "${TEST_DB_NAME}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo ""
+    else
+        psql \
+            -h "${DBHOST:-localhost}" \
+            -p "${DBPORT:-5432}" \
+            -U "${DBUSER:-postgres}" \
+            -d "${TEST_DB_NAME}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo ""
+    fi
 }
 
 ##
@@ -752,16 +861,140 @@ EOF
     send_alert "INGESTION" "warning" "test_type" "Test message"
     
     # Mock psql to return formatted table for main function
+    # Save reference to original mock from setup
+    export MOCK_STATUS_FILE="${TEST_LOG_DIR}/.mock_alert_status"
+    
     # shellcheck disable=SC2317
     function psql() {
-        if [[ "${*}" =~ SELECT.*FROM.alerts ]] && [[ "${*}" =~ WHERE.*component.*=.*INGESTION ]]; then
+        local query="${*}"
+        local args="${*}"
+        
+        # Handle the specific query for list_alerts with component filter
+        if [[ "${query}" =~ SELECT.*FROM.alerts ]] && [[ "${query}" =~ WHERE.*component.*=.*INGESTION ]]; then
             echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
             echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
             echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | active | 2025-12-28 10:00:00 |"
             return 0
         fi
-        # Call original mock for other queries
-        psql "$@"
+        
+        # Handle INSERT operations (for store_alert)
+        if [[ "${query}" =~ INSERT.*alerts ]]; then
+            echo "INSERT 0 1"
+            return 0
+        fi
+        
+        # Handle SELECT operations
+        if [[ "${query}" =~ SELECT.*FROM.alerts ]]; then
+            local current_status
+            current_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
+            local is_tab_format=false
+            if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+                is_tab_format=true
+            fi
+            
+            if [[ "${query}" =~ SELECT.*status.*WHERE.*id ]]; then
+                echo "${current_status}"
+                return 0
+            fi
+            if [[ "${query}" =~ SELECT.*id.*WHERE.*component ]]; then
+                echo "00000000-0000-0000-0000-000000000001"
+                return 0
+            fi
+            if [[ "${query}" =~ WHERE.*component.*=.*INGESTION ]] || [[ "${query}" =~ component.*=.*INGESTION ]]; then
+                if [[ "${is_tab_format}" == "true" ]]; then
+                    if [[ "${query}" =~ SELECT.*id.*alert_level.*alert_type.*message.*status ]]; then
+                        echo "00000000-0000-0000-0000-000000000001|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                    else
+                        echo "00000000-0000-0000-0000-000000000001|INGESTION|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                    fi
+                else
+                    if [[ "${query}" =~ SELECT.*id.*alert_level.*alert_type.*message.*status ]]; then
+                        echo " id | alert_level | alert_type | message | status | created_at | resolved_at"
+                        echo "----+-------------+------------+---------+--------+------------+-------------"
+                        echo " 00000000-0000-0000-0000-000000000001 | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                    else
+                        echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
+                        echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
+                        echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                    fi
+                fi
+                return 0
+            fi
+            if [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000000 ]]; then
+                return 0
+            fi
+            if [[ "${query}" =~ WHERE.*id.*= ]]; then
+                if [[ "${is_tab_format}" == "true" ]]; then
+                    echo "00000000-0000-0000-0000-000000000001|INGESTION|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                else
+                    echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
+                    echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
+                    echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                fi
+                return 0
+            fi
+            if [[ "${is_tab_format}" == "true" ]]; then
+                echo "00000000-0000-0000-0000-000000000001|INGESTION|warning|test_type|Test message|${current_status}|2025-12-28 10:00:00|"
+                echo "00000000-0000-0000-0000-000000000002|ANALYTICS|critical|test_type|Test message 2|active|2025-12-28 10:00:00|"
+            else
+                echo " id | component | alert_level | alert_type | message | status | created_at | resolved_at"
+                echo "----+-----------+-------------+------------+---------+--------+------------+-------------"
+                echo " 00000000-0000-0000-0000-000000000001 | INGESTION | warning | test_type | Test message | ${current_status} | 2025-12-28 10:00:00 |"
+                echo " 00000000-0000-0000-0000-000000000002 | ANALYTICS | critical | test_type | Test message 2 | active | 2025-12-28 10:00:00 |"
+            fi
+            return 0
+        fi
+        
+        # Handle UPDATE operations
+        if [[ "${query}" =~ UPDATE.*alerts ]]; then
+            local current_status
+            current_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
+            if [[ "${query}" =~ 00000000-0000-0000-0000-000000000000 ]] || [[ "${query}" =~ invalid-uuid ]]; then
+                return 0
+            fi
+            if [[ "${query}" =~ status.*=.*acknowledged ]]; then
+                if [[ "${current_status}" == "acknowledged" ]] || [[ "${current_status}" == "resolved" ]]; then
+                    return 0
+                fi
+                echo "acknowledged" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
+                if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+                    echo "00000000-0000-0000-0000-000000000001"
+                fi
+                return 0
+            fi
+            if [[ "${query}" =~ status.*=.*resolved ]]; then
+                if [[ "${current_status}" == "resolved" ]]; then
+                    return 0
+                fi
+                echo "resolved" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
+                if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+                    echo "00000000-0000-0000-0000-000000000001"
+                fi
+                return 0
+            fi
+            echo "UPDATE 1"
+            return 0
+        fi
+        
+        # Handle DELETE operations
+        if [[ "${query}" =~ DELETE.*alerts ]]; then
+            echo "DELETE 1"
+            return 0
+        fi
+        
+        # Handle TRUNCATE
+        if [[ "${query}" =~ TRUNCATE ]]; then
+            echo "active" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
+            return 0
+        fi
+        
+        # Handle COUNT queries
+        if [[ "${query}" =~ SELECT.*COUNT ]]; then
+            echo "2"
+            return 0
+        fi
+        
+        return 0
     }
     export -f psql
     
@@ -819,17 +1052,18 @@ EOF
         run acknowledge_alert "${alert_id}" "test_user"
         assert_success
         
-        # Verify status is acknowledged
-        # shellcheck disable=SC2030,SC2031
-        assert [ "${MOCK_ALERT_STATUS}" = "acknowledged" ]
+        # Verify status is acknowledged (read from file)
+        local mock_status
+        mock_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
+        assert [ "${mock_status}" = "acknowledged" ]
         
         # Resolve from acknowledged state
         run resolve_alert "${alert_id}" "test_user"
         assert_success
         
-        # Verify status is resolved (check mock status directly)
-        # shellcheck disable=SC2030,SC2031
-        assert [ "${MOCK_ALERT_STATUS}" = "resolved" ]
+        # Verify status is resolved (read from file)
+        mock_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
+        assert [ "${mock_status}" = "resolved" ]
     else
         skip "Could not retrieve alert ID"
     fi

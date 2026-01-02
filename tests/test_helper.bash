@@ -202,13 +202,36 @@ teardown() {
 
 ##
 # Assert that a command succeeds
-# Usage: assert_success command [args...]
+# Usage: assert_success [message]
+# When used after 'run', checks that $status == 0
+# When used with arguments, executes the command
 ##
 assert_success() {
+    # If used after 'run', check $status variable (BATS convention)
+    if [[ -n "${status:-}" ]]; then
+        if [[ ${status} -ne 0 ]]; then
+            local message="${1:-Command failed}"
+            echo -e "${RED}${message} (exit code: ${status})${NC}" >&2
+            if [[ -n "${output:-}" ]]; then
+                echo -e "${RED}Output: ${output}${NC}" >&2
+            fi
+            return 1
+        fi
+        return 0
+    fi
+    
+    # If no arguments, assume checking last command
+    if [[ $# -eq 0 ]]; then
+        echo -e "${RED}assert_success: No command to check and \$status not set. Use 'run' command first.${NC}" >&2
+        return 1
+    fi
+    
+    # If command is provided, execute it and check it succeeds
     if ! "$@"; then
         echo -e "${RED}Command failed: $*${NC}" >&2
         return 1
     fi
+    return 0
 }
 
 ##

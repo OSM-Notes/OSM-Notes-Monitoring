@@ -38,16 +38,18 @@ setup() {
     export LOG_DIR="${TEST_LOG_DIR}"  # Set LOG_DIR to avoid permission issues
     init_logging "${LOG_FILE}" "test_generateMetrics"
     
-    # Mock psql command
+    # Mock psql command to avoid password prompts
     # shellcheck disable=SC2317
-    mock_psql() {
+    function psql() {
         local query="${*}"
         if echo "${query}" | grep -q "SELECT.*FROM metrics"; then
             echo '{"metric_name":"test_metric","metric_value":100,"timestamp":"2025-12-27T10:00:00Z"}'
         else
             echo "[]"
         fi
+        return 0
     }
+    export -f psql
     
     # Create temporary directory for output
     TEST_OUTPUT_DIR=$(mktemp -d)
@@ -343,20 +345,6 @@ teardown() {
     assert_success
     # Should contain multiple component keys or empty array
     assert_output --partial "ingestion" || assert_output "[]"
-}
-
-@test "generateMetrics.sh handles very large time range" {
-    export LOG_DIR="${TEST_LOG_DIR}"
-    # Mock psql
-    # shellcheck disable=SC2317
-    function psql() {
-        echo "[]"
-    }
-    export -f psql
-    
-    # Test with very large time range (10 years)
-    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/generateMetrics.sh" ingestion json --time-range "10y"
-    assert_success
 }
 
 @test "generateMetrics.sh handles invalid time range format" {

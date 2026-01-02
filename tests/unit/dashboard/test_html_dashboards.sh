@@ -188,7 +188,11 @@ teardown() {
     # Check for refresh buttons or auto-refresh
     for html_file in "${TEST_DASHBOARD_DIR}"/*.html; do
         run grep -q "refresh\|Refresh\|setInterval" "${html_file}"
-        assert_success "Missing refresh functionality in $(basename "${html_file}")"
+        if [[ ${status} -ne 0 ]]; then
+            echo "Missing refresh functionality in $(basename "${html_file}")" >&2
+            return 1
+        fi
+        assert_success
     done
 }
 
@@ -197,8 +201,12 @@ teardown() {
 ##
 @test "HTML dashboards have proper CSS styling" {
     for html_file in "${TEST_DASHBOARD_DIR}"/*.html; do
-        # Check for style tag or inline styles
-        run grep -q "<style\|style=" "${html_file}"
-        assert_success "Missing CSS styling in $(basename "${html_file}")"
+        # Check for style tag, inline styles, or link to stylesheet
+        run grep -qiE "<style|style=|\.css|<link.*stylesheet" "${html_file}"
+        if [[ ${status} -ne 0 ]]; then
+            echo "Missing CSS styling in $(basename "${html_file}")" >&2
+            return 1
+        fi
+        assert_success
     done
 }

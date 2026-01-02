@@ -3,8 +3,9 @@
 # Unit Tests: rateLimiter.sh
 # Tests rate limiting functionality
 #
-# shellcheck disable=SC2030,SC2031
+# shellcheck disable=SC2030,SC2031,SC1091
 # SC2030/SC2031: Variables modified in subshells are expected in BATS tests
+# SC1091: Not following source files is expected in BATS tests
 
 load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
@@ -38,6 +39,17 @@ setup() {
     export DBPORT="5432"
     export DBUSER="test_user"
     
+    # Mock functions BEFORE sourcing to avoid errors
+    # shellcheck disable=SC2317
+    load_config() { return 0; }
+    export -f load_config
+    # shellcheck disable=SC2317
+    init_alerting() { return 0; }
+    export -f init_alerting
+    # shellcheck disable=SC2317
+    psql() { return 0; }
+    export -f psql
+    
     # Source libraries
     # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
@@ -57,8 +69,15 @@ setup() {
     init_security
     
     # Source rateLimiter.sh functions
-    # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/security/rateLimiter.sh" 2>/dev/null || true
+    
+    # Export all functions from rateLimiter.sh if they exist
+    for func in main reset_rate_limit record_request check_rate_limit_sliding_window get_rate_limit_stats; do
+        if declare -f "${func}" > /dev/null 2>&1; then
+            # shellcheck disable=SC2163
+            export -f "${func}"
+        fi
+    done
 }
 
 teardown() {
@@ -717,17 +736,17 @@ teardown() {
 }
 
 @test "record_request handles database errors" {
-    # Mock psql to fail
+    # Mock record_security_event to fail (simulating database error)
     # shellcheck disable=SC2317
-    psql() {
+    record_security_event() {
         return 1
     }
-    export -f psql
+    export -f record_security_event
     
     # Run record_request
     run record_request "192.168.1.100" "/api/notes"
     
-    # Should handle gracefully
+    # Should handle gracefully (record_request doesn't check return value)
     assert_success
 }
 
@@ -796,11 +815,18 @@ teardown() {
     }
     export -f psql
     
+    # Mock log_error to avoid output
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
     # Run reset_rate_limit
     run reset_rate_limit "192.168.1.100"
     
-    # Should handle gracefully
-    assert_success
+    # Should fail when database error occurs
+    assert_failure
 }
 
 @test "main function handles check action" {

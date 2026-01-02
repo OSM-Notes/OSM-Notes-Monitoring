@@ -18,6 +18,8 @@ source "${BATS_TEST_DIRNAME}/../../../bin/lib/monitoringFunctions.sh"
 source "${BATS_TEST_DIRNAME}/../../../bin/lib/metricsFunctions.sh"
 # shellcheck disable=SC1091
 source "${BATS_TEST_DIRNAME}/../../../bin/lib/alertFunctions.sh"
+# shellcheck disable=SC1091
+source "${BATS_TEST_DIRNAME}/../../../bin/lib/securityFunctions.sh"
 
 setup() {
     # Set test environment
@@ -161,7 +163,7 @@ teardown() {
     
     run get_metric_value "TEST_COMPONENT" "nonexistent_metric_12345"
     assert_success
-    assert [[ -z "${output}" ]]
+    assert_output ""
 }
 
 ##
@@ -178,8 +180,17 @@ teardown() {
         return 1
     }
     
+    # Mock is_ip_whitelisted and is_ip_blacklisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() { return 1; }
+    export -f is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_blacklisted() { return 1; }
+    export -f is_ip_blacklisted
+    
     # At exact limit (100), should fail (exceeded)
-    run check_rate_limit "192.168.1.1" "api_endpoint" 100 60
+    # check_rate_limit signature: ip window_seconds max_requests
+    run check_rate_limit "192.168.1.1" 60 100
     assert_failure
 }
 
@@ -197,7 +208,16 @@ teardown() {
         return 1
     }
     
-    run check_rate_limit "192.168.1.1" "api_endpoint" 100 60
+    # Mock is_ip_whitelisted and is_ip_blacklisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() { return 1; }
+    export -f is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_blacklisted() { return 1; }
+    export -f is_ip_blacklisted
+    
+    # check_rate_limit signature: ip window_seconds max_requests
+    run check_rate_limit "192.168.1.1" 60 100
     assert_success
 }
 
@@ -235,19 +255,19 @@ teardown() {
     
     run aggregate_metrics "TEST_COMPONENT" "test_metric" "avg" "24 hours"
     assert_success
-    assert [[ "${output}" == "100" ]]
+    assert_output "100"
 }
 
 ##
 # Test: validate_ip_address with boundary IP values
 ##
-@test "validate_ip_address handles boundary IP values" {
+@test "is_valid_ip handles boundary IP values" {
     # Test minimum IP
-    run validate_ip_address "0.0.0.0"
+    run is_valid_ip "0.0.0.0"
     assert_success
     
     # Test maximum IP
-    run validate_ip_address "255.255.255.255"
+    run is_valid_ip "255.255.255.255"
     assert_success
 }
 
@@ -332,7 +352,16 @@ teardown() {
         return 0
     }
     
-    run check_rate_limit "192.168.1.1" "api_endpoint" 2147483647 60
+    # Mock is_ip_whitelisted and is_ip_blacklisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() { return 1; }
+    export -f is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_blacklisted() { return 1; }
+    export -f is_ip_blacklisted
+    
+    # check_rate_limit signature: ip window_seconds max_requests
+    run check_rate_limit "192.168.1.1" 60 2147483647
     # Should handle max int gracefully
     assert [ ${status} -ge 0 ]
 }
@@ -426,7 +455,16 @@ teardown() {
         return 0
     }
     
-    run check_rate_limit "192.168.1.1" "api_endpoint" 0 60
+    # Mock is_ip_whitelisted and is_ip_blacklisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() { return 1; }
+    export -f is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_blacklisted() { return 1; }
+    export -f is_ip_blacklisted
+    
+    # check_rate_limit signature: ip window_seconds max_requests
+    run check_rate_limit "192.168.1.1" 60 0
     # With zero limit, any request should be blocked
     assert_failure
 }

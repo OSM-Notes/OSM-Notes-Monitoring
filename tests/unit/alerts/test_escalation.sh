@@ -19,17 +19,7 @@ export LOG_DIR="${TEST_LOG_DIR}"
 
 load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
-# Source libraries
-# shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
-# shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../../bin/lib/monitoringFunctions.sh"
-# shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../../bin/lib/configFunctions.sh"
-# shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../../bin/lib/alertFunctions.sh"
-# shellcheck disable=SC1091
-source "${BATS_TEST_DIRNAME}/../../../bin/alerts/escalation.sh"
+# Libraries will be sourced in setup() after mocks are defined
 
 setup() {
     # Set test environment
@@ -69,7 +59,132 @@ setup() {
     export LOG_DIR="${TEST_LOG_DIR}"
     export LOG_FILE="${TEST_LOG_DIR}/test_escalation.log"
     
-    # Initialize alerting
+    # Define mocks BEFORE sourcing libraries
+    # Mock psql first, as it's a low-level dependency
+    # shellcheck disable=SC2317
+    psql() {
+        local query="${*}"
+        local args="${*}"
+        
+        # Check if it's a -t -A query (tab-separated, no headers)
+        local is_tab_format=false
+        if [[ "${args}" =~ -t.*-A ]] || [[ "${args}" =~ -A.*-t ]]; then
+            is_tab_format=true
+        fi
+        
+        # Handle INSERT operations
+        if [[ "${query}" =~ INSERT.*alerts ]]; then
+            if [[ "${is_tab_format}" == "true" ]]; then
+                echo "00000000-0000-0000-0000-000000000001"
+            else
+                echo "INSERT 0 1"
+            fi
+            return 0
+        fi
+        # Handle SELECT operations for metadata (escalation_level)
+        if [[ "${query}" =~ SELECT.*metadata.*escalation_level ]] || [[ "${query}" =~ metadata.*-.*escalation_level ]]; then
+            if [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000000 ]]; then
+                # Non-existent alert ID - return empty
+                return 0
+            fi
+            # Return escalation level
+            if [[ "${is_tab_format}" == "true" ]]; then
+                echo "1"
+            else
+                echo "1"
+            fi
+            return 0
+        fi
+        # Handle SELECT operations
+        if [[ "${query}" =~ SELECT.*FROM.alerts ]]; then
+            if [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000000 ]]; then
+                # Non-existent alert ID - return empty
+                return 0
+            fi
+            if [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000001 ]]; then
+                if [[ "${is_tab_format}" == "true" ]]; then
+                    echo "00000000-0000-0000-0000-000000000001|INGESTION|critical|test_type|Test message|active|2025-12-28 10:00:00|{\"escalation_level\":1}"
+                else
+                    echo "00000000-0000-0000-0000-000000000001|INGESTION|critical|test_type|Test message|active|2025-12-28 10:00:00|{\"escalation_level\":1}"
+                fi
+            elif [[ "${query}" =~ RETURNING.id ]]; then
+                if [[ "${is_tab_format}" == "true" ]]; then
+                    echo "00000000-0000-0000-0000-000000000001"
+                else
+                    echo "UPDATE 1"
+                fi
+            else
+                if [[ "${is_tab_format}" == "true" ]]; then
+                    echo "00000000-0000-0000-0000-000000000001|INGESTION|critical|test_type|Test message|active|2025-12-28 10:00:00|{}"
+                else
+                    echo "00000000-0000-0000-0000-000000000001|INGESTION|critical|test_type|Test message|active|2025-12-28 10:00:00|{}"
+                fi
+            fi
+            return 0
+        fi
+        # Handle UPDATE operations
+        if [[ "${query}" =~ UPDATE.*alerts ]]; then
+            if [[ "${query}" =~ WHERE.*id.*=.*00000000-0000-0000-0000-000000000000 ]]; then
+                # Non-existent alert ID - return empty (no rows updated)
+                return 0
+            fi
+            if [[ "${is_tab_format}" == "true" ]] && [[ "${query}" =~ RETURNING.id ]]; then
+                echo "00000000-0000-0000-0000-000000000001"
+            else
+                echo "UPDATE 1"
+            fi
+            return 0
+        fi
+        # Handle TRUNCATE (for clean_test_database)
+        if [[ "${query}" =~ TRUNCATE ]]; then
+            return 0
+        fi
+        # Default: return success
+        return 0
+    }
+    export -f psql
+    
+    # Mock check_database_connection
+    # shellcheck disable=SC2317
+    check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
+    # Mock execute_sql_query
+    # shellcheck disable=SC2317
+    execute_sql_query() {
+        echo "0"
+        return 0
+    }
+    export -f execute_sql_query
+    
+    # Mock store_alert
+    # shellcheck disable=SC2317
+    store_alert() {
+        return 0
+    }
+    export -f store_alert
+    
+    # Source libraries (after mocks are defined)
+    # shellcheck disable=SC1091
+    source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
+    # shellcheck disable=SC1091
+    source "${BATS_TEST_DIRNAME}/../../../bin/lib/monitoringFunctions.sh"
+    # shellcheck disable=SC1091
+    source "${BATS_TEST_DIRNAME}/../../../bin/lib/configFunctions.sh"
+    # shellcheck disable=SC1091
+    source "${BATS_TEST_DIRNAME}/../../../bin/lib/alertFunctions.sh"
+    # shellcheck disable=SC1091
+    source "${BATS_TEST_DIRNAME}/../../../bin/alerts/escalation.sh"
+    
+    # Re-export mocks after sourcing to ensure they override library functions
+    export -f psql
+    export -f check_database_connection
+    export -f execute_sql_query
+    export -f store_alert
+    
+    # Initialize alerting (now conditional in escalation.sh)
     init_alerting
     
     # Clean test database
@@ -77,6 +192,9 @@ setup() {
 }
 
 teardown() {
+    # Ensure TEST_LOG_DIR is set for clean_test_database
+    export TEST_LOG_DIR="${TEST_LOG_DIR:-${BATS_TEST_DIRNAME}/../../tmp/logs}"
+    
     # Clean up test alerts
     clean_test_database
     
@@ -132,13 +250,24 @@ teardown() {
         dbuser="${current_user}"
     fi
     
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Extract UUID from output (psql returns UUID on a line by itself with -t -A)
     # Use -o flag to only output matching part, not the whole line
@@ -147,13 +276,24 @@ teardown() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     # Verify we got a valid UUID (36 characters)
@@ -171,13 +311,24 @@ teardown() {
         sleep 0.1
         local metadata_query="SELECT metadata->>'escalation_level' FROM alerts WHERE id = '${alert_id}'::uuid;"
         local escalation_level
-        escalation_level=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "${metadata_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            escalation_level=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "${metadata_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        else
+            escalation_level=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "${metadata_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+        fi
         
         assert [ "${escalation_level}" = "1" ]
     else
@@ -222,13 +373,24 @@ teardown() {
         dbuser="${current_user}"
     fi
     
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Extract UUID from output (psql returns UUID on a line by itself with -t -A)
     # Use -o flag to only output matching part, not the whole line
@@ -237,13 +399,24 @@ teardown() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -261,12 +434,22 @@ teardown() {
         # Use single-line query to avoid issues with multi-line strings in BATS
         local update_query="UPDATE alerts SET created_at = CURRENT_TIMESTAMP - INTERVAL '2 minutes' WHERE id = '${alert_id}'::uuid;"
         
-        PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -c "${update_query}" >/dev/null 2>&1 || true
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        else
+            psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        fi
         
         # Ensure DBUSER is set correctly for needs_escalation
         export DBUSER="${dbuser}"
@@ -325,13 +508,24 @@ create_test_alert() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('${component}', '${alert_level}', '${alert_type}', '${message}', '{}'::jsonb) RETURNING id;"
     
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Extract UUID from output
     local alert_id
@@ -369,13 +563,24 @@ get_alert_id() {
                  ORDER BY created_at DESC 
                  LIMIT 1;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${query}" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo ""
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo ""
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo ""
+    fi
 }
 
 ##
@@ -424,13 +629,24 @@ get_alert_id() {
         dbuser="${current_user}"
     fi
     
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Extract UUID from output (psql returns UUID on a line by itself with -t -A)
     # Use -o flag to only output matching part, not the whole line
@@ -439,13 +655,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -502,13 +729,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'info', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -520,13 +758,24 @@ get_alert_id() {
         # Try to get alert_id from database directly (fallback) - use local variables
         # Wait a bit more and try again
         sleep 0.1
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' AND alert_level = 'info' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' AND alert_level = 'info' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' AND alert_level = 'info' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -578,13 +827,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -594,13 +854,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -618,12 +889,22 @@ get_alert_id() {
         # Use single-line query to avoid issues with multi-line strings in BATS
         local update_query="UPDATE alerts SET created_at = CURRENT_TIMESTAMP - INTERVAL '10 minutes', metadata = jsonb_build_object('escalation_level', '3') WHERE id = '${alert_id}'::uuid;"
         
-        PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -c "${update_query}" >/dev/null 2>&1 || true
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        else
+            psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        fi
         
         # Ensure DBUSER is set correctly for needs_escalation
         export DBUSER="${dbuser}"
@@ -693,7 +974,8 @@ get_alert_id() {
     
     # Try to rotate
     run rotate_oncall
-    assert_success  # Should handle gracefully when disabled
+    assert_failure  # Should return 1 when disabled
+    assert_output --partial "On-call rotation is not enabled"
 }
 
 ##
@@ -773,13 +1055,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -789,13 +1082,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -881,13 +1185,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'warning', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -897,13 +1212,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' AND alert_level = 'warning' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' AND alert_level = 'warning' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' AND alert_level = 'warning' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -921,12 +1247,22 @@ get_alert_id() {
         # Use single-line query to avoid issues with multi-line strings in BATS
         local update_query="UPDATE alerts SET created_at = CURRENT_TIMESTAMP - INTERVAL '${ESCALATION_LEVEL1_MINUTES} minutes' WHERE id = '${alert_id}'::uuid;"
         
-        PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -c "${update_query}" >/dev/null 2>&1 || true
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        else
+            psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        fi
         
         # Ensure DBUSER is set correctly for needs_escalation
         export DBUSER="${dbuser}"
@@ -971,13 +1307,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -987,13 +1334,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -1011,12 +1369,22 @@ get_alert_id() {
         # Use single-line query to avoid issues with multi-line strings in BATS
         local update_query="UPDATE alerts SET created_at = CURRENT_TIMESTAMP - INTERVAL '${ESCALATION_LEVEL1_MINUTES} minutes' WHERE id = '${alert_id}'::uuid;"
         
-        PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -c "${update_query}" >/dev/null 2>&1 || true
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        else
+            psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -c "${update_query}" >/dev/null 2>&1 || true
+        fi
         
         # Ensure DBUSER is set correctly for escalate_alert
         export DBUSER="${dbuser}"
@@ -1061,13 +1429,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -1077,13 +1456,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then
@@ -1134,23 +1524,44 @@ get_alert_id() {
     local insert_query1="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type1', 'Test message 1', '{}'::jsonb) RETURNING id;"
     local insert_query2="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type2', 'Test message 2', '{}'::jsonb) RETURNING id;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query1}" >/dev/null 2>&1 || true
-    
-    sleep 0.1
-    
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query2}" >/dev/null 2>&1 || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query1}" >/dev/null 2>&1 || true
+        
+        sleep 0.1
+        
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query2}" >/dev/null 2>&1 || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query1}" >/dev/null 2>&1 || true
+        
+        sleep 0.1
+        
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query2}" >/dev/null 2>&1 || true
+    fi
     
     sleep 0.1
     
@@ -1232,13 +1643,24 @@ get_alert_id() {
     local insert_query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata) VALUES ('INGESTION', 'critical', 'test_type', 'Test message', '{}'::jsonb) RETURNING id;"
     local alert_id
     local psql_output
-    psql_output=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${insert_query}" 2>&1) || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        psql_output=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    else
+        psql_output=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${insert_query}" 2>&1) || true
+    fi
     
     # Small delay to ensure INSERT is committed
     sleep 0.1
@@ -1248,13 +1670,24 @@ get_alert_id() {
     # Debug: log what we got (only if alert_id is empty)
     if [[ -z "${alert_id}" ]]; then
         # Try to get alert_id from database directly (fallback) - use local variables
-        alert_id=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_id=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        else
+            alert_id=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "SELECT id FROM alerts WHERE component = 'INGESTION' AND alert_type = 'test_type' ORDER BY created_at DESC LIMIT 1;" 2>/dev/null | grep -oE "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" | head -1 || echo "")
+        fi
     fi
     
     if [[ -n "${alert_id}" && "${#alert_id}" -eq 36 ]]; then

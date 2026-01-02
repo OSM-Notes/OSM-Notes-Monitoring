@@ -51,7 +51,9 @@ teardown() {
         return 1
     }
     
-    run record_metric "TEST_COMPONENT" "test_metric" "100" "component=test"
+    export -f psql
+    
+    run record_metric "ingestion" "test_metric" "100" "component=test"
     assert_success
 }
 
@@ -101,7 +103,7 @@ teardown() {
     
     run get_metric_value "TEST_COMPONENT" "nonexistent_metric"
     assert_success
-    assert [[ -z "${output}" ]]
+    assert_output ""
 }
 
 ##
@@ -121,8 +123,8 @@ teardown() {
     
     run get_metrics_by_component "TEST_COMPONENT"
     assert_success
-    assert [[ "${output}" =~ metric1 ]]
-    assert [[ "${output}" =~ metric2 ]]
+    assert_output --partial "metric1"
+    assert_output --partial "metric2"
 }
 
 ##
@@ -141,7 +143,7 @@ teardown() {
     
     run aggregate_metrics "TEST_COMPONENT" "test_metric" "avg" "24 hours"
     assert_success
-    assert [[ "${output}" =~ 150 ]]
+    assert_output --partial "150"
 }
 
 ##
@@ -238,18 +240,20 @@ teardown() {
     
     run get_metrics_summary "TEST_COMPONENT" "24"
     assert_success
-    assert [[ "${output}" =~ 10 ]]
+    assert_output --partial "10"
 }
 
 @test "cleanup_old_metrics removes old metrics" {
     # Mock psql
     # shellcheck disable=SC2317
     function psql() {
-        if [[ "${*}" =~ DELETE.*metrics ]]; then
+        if [[ "${*}" =~ cleanup_old_metrics ]] || [[ "${*}" =~ DELETE.*metrics ]] || [[ "${*}" =~ SELECT.*cleanup_old_metrics ]]; then
+            echo "100"  # Return count of deleted records
             return 0
         fi
         return 1
     }
+    export -f psql
     
     run cleanup_old_metrics "90"
     assert_success
@@ -264,8 +268,9 @@ teardown() {
         fi
         return 1
     }
+    export -f psql
     
-    run record_metric "TEST_COMPONENT" "test_metric" "100" ""
+    run record_metric "ingestion" "test_metric" "100" ""
     assert_success
 }
 
@@ -278,8 +283,9 @@ teardown() {
         fi
         return 1
     }
+    export -f psql
     
-    run record_metric "TEST_COMPONENT" "test_metric" "100" "key=value&other=test"
+    run record_metric "ingestion" "test_metric" "100" "key=value&other=test"
     assert_success
 }
 
@@ -303,7 +309,7 @@ teardown() {
     
     run get_metrics_by_component "TEST_COMPONENT"
     assert_success
-    assert [[ -z "${output}" ]]
+    assert_output ""
 }
 
 ##
@@ -328,7 +334,7 @@ teardown() {
     
     run get_metrics_summary "TEST_COMPONENT" "48"
     assert_success
-    assert [[ "${output}" =~ metric1 ]]
+    assert_output --partial "metric1"
 }
 
 @test "get_latest_metric_value handles custom hours_back" {
@@ -430,15 +436,21 @@ teardown() {
     
     # shellcheck disable=SC2317
     function store_metric() {
+        # Write to file to track calls
         echo "${1}|${2}|${3}|${4}|${5}" > "${metric_file}"
         return 0
     }
     export -f store_metric
     
+    # Ensure directory exists
+    mkdir -p "${TEST_LOG_DIR}"
+    
     run record_metric "TEST_COMPONENT" "request_count" "100" ""
     assert_success
     
+    # Verify store_metric was called (file should exist)
     assert_file_exists "${metric_file}"
+    # Verify it contains "count" (from metric name "request_count")
     assert grep -q "count" "${metric_file}"
 }
 

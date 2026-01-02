@@ -629,19 +629,21 @@ main() {
                     record_security_event "unblock" "${ip}" "" "{\"reason\": \"manual_unblock\"}"
                 else
                     log_error "Failed to unblock IP ${ip}"
+                    exit 1
                 fi
             else
                 if psql \
-                -h "${dbhost}" \
-                -p "${dbport}" \
-                -U "${dbuser}" \
-                -d "${dbname}" \
-                -c "${query}" > /dev/null 2>&1; then
-                log_info "IP ${ip} unblocked"
-                record_security_event "unblock" "${ip}" "" "{\"reason\": \"manual_unblock\"}"
-            else
-                log_error "Failed to unblock IP ${ip}"
-                exit 1
+                    -h "${dbhost}" \
+                    -p "${dbport}" \
+                    -U "${dbuser}" \
+                    -d "${dbname}" \
+                    -c "${query}" > /dev/null 2>&1; then
+                    log_info "IP ${ip} unblocked"
+                    record_security_event "unblock" "${ip}" "" "{\"reason\": \"manual_unblock\"}"
+                else
+                    log_error "Failed to unblock IP ${ip}"
+                    exit 1
+                fi
             fi
             ;;
         stats)

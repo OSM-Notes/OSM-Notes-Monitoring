@@ -4,6 +4,10 @@
 # Tests for monitoring functions library
 #
 
+# shellcheck disable=SC2030,SC2031,SC1091
+# SC2030/SC2031: Variables modified in subshells are expected in BATS tests
+# SC1091: Not following source files is expected in BATS tests
+
 # Test configuration - set before loading test_helper
 export TEST_COMPONENT="MONITORING"
 
@@ -74,16 +78,17 @@ teardown() {
 # Test: update_component_health - healthy status
 ##
 @test "update_component_health updates status to healthy" {
-    # Mock psql
+    # Mock execute_sql_query (used by update_component_health)
     # shellcheck disable=SC2317
-    function psql() {
-        if [[ "${*}" =~ INSERT.*component_health ]]; then
+    function execute_sql_query() {
+        if [[ "${*}" =~ UPDATE.*component_health ]]; then
             return 0
         fi
         return 1
     }
+    export -f execute_sql_query
     
-    run update_component_health "TEST_COMPONENT" "healthy" "All checks passed"
+    run update_component_health "ingestion" "healthy" 0
     assert_success
 }
 
@@ -91,16 +96,17 @@ teardown() {
 # Test: update_component_health - degraded status
 ##
 @test "update_component_health updates status to degraded" {
-    # Mock psql
+    # Mock execute_sql_query (used by update_component_health)
     # shellcheck disable=SC2317
-    function psql() {
-        if [[ "${*}" =~ INSERT.*component_health ]]; then
+    function execute_sql_query() {
+        if [[ "${*}" =~ UPDATE.*component_health ]]; then
             return 0
         fi
         return 1
     }
+    export -f execute_sql_query
     
-    run update_component_health "TEST_COMPONENT" "degraded" "Some checks failed"
+    run update_component_health "ingestion" "degraded" 5
     assert_success
 }
 
@@ -108,16 +114,17 @@ teardown() {
 # Test: update_component_health - down status
 ##
 @test "update_component_health updates status to down" {
-    # Mock psql
+    # Mock execute_sql_query (used by update_component_health)
     # shellcheck disable=SC2317
-    function psql() {
-        if [[ "${*}" =~ INSERT.*component_health ]]; then
+    function execute_sql_query() {
+        if [[ "${*}" =~ UPDATE.*component_health ]]; then
             return 0
         fi
         return 1
     }
+    export -f execute_sql_query
     
-    run update_component_health "TEST_COMPONENT" "down" "Component unavailable"
+    run update_component_health "ingestion" "down" 10
     assert_success
 }
 
@@ -152,7 +159,7 @@ teardown() {
     
     run get_component_health "TEST_COMPONENT"
     assert_success
-    assert [[ "${output}" =~ healthy ]]
+    assert_output --partial "healthy"
 }
 
 ##
@@ -204,7 +211,7 @@ teardown() {
     
     run execute_sql_query "SELECT * FROM test_table"
     assert_success
-    assert [[ "${output}" =~ result1 ]]
+    assert_output --partial "result1"
 }
 
 @test "execute_sql_query handles query error" {
@@ -217,7 +224,7 @@ teardown() {
     
     run execute_sql_query "SELECT * FROM nonexistent_table"
     assert_failure
-    assert [[ "${output}" =~ Error ]]
+    assert_output --partial "Error"
 }
 
 @test "execute_sql_file executes SQL file" {
@@ -245,29 +252,36 @@ teardown() {
 }
 
 @test "update_component_health handles empty message" {
-    # Mock psql
+    # Mock execute_sql_query (used by update_component_health)
     # shellcheck disable=SC2317
-    function psql() {
-        if [[ "${*}" =~ INSERT.*component_health ]]; then
+    function execute_sql_query() {
+        if [[ "${*}" =~ UPDATE.*component_health ]]; then
             return 0
         fi
         return 1
     }
+    export -f execute_sql_query
     
-    run update_component_health "TEST_COMPONENT" "healthy" ""
+    run update_component_health "ingestion" "healthy" 0
     assert_success
 }
 
 @test "get_component_health handles component not found" {
-    # Mock psql to return empty
+    # Mock execute_sql_query to return empty (component not found)
     # shellcheck disable=SC2317
-    function psql() {
-        return 0
+    function execute_sql_query() {
+        if [[ "${*}" =~ SELECT.*component_health ]]; then
+            echo ""  # Return empty string (component not found)
+            return 0
+        fi
+        return 1
     }
+    export -f execute_sql_query
     
-    run get_component_health "NONEXISTENT_COMPONENT"
-    assert_success
-    # May return empty or default value
+    run get_component_health "nonexistent_component"
+    # Function returns 1 when component not found, but outputs "unknown"
+    assert_failure
+    assert_output "unknown"
 }
 
 @test "check_database_connection uses custom database name" {
@@ -314,14 +328,47 @@ teardown() {
 # Test: init_monitoring - initializes monitoring system
 ##
 @test "init_monitoring initializes with defaults" {
+    # Save original values
+    local orig_dbname="${DBNAME:-}"
+    local orig_dbhost="${DBHOST:-}"
+    local orig_dbport="${DBPORT:-}"
+    local orig_dbuser="${DBUSER:-}"
+    
+    # Unset variables to test default initialization
     unset DBNAME DBHOST DBPORT DBUSER
     
-    run init_monitoring
-    assert_success
+    # Run init_monitoring in current shell to set variables
+    init_monitoring
+    
+    # init_monitoring should set defaults if variables were unset
+    # After init_monitoring, variables should be set (either from config or defaults)
+    # The function uses ${VAR:=default} which sets the value if VAR is unset
     assert [[ -n "${DBNAME:-}" ]]
     assert [[ -n "${DBHOST:-}" ]]
     assert [[ -n "${DBPORT:-}" ]]
     assert [[ -n "${DBUSER:-}" ]]
+    
+    # Restore original values
+    if [[ -n "${orig_dbname}" ]]; then
+        export DBNAME="${orig_dbname}"
+    else
+        unset DBNAME
+    fi
+    if [[ -n "${orig_dbhost}" ]]; then
+        export DBHOST="${orig_dbhost}"
+    else
+        unset DBHOST
+    fi
+    if [[ -n "${orig_dbport}" ]]; then
+        export DBPORT="${orig_dbport}"
+    else
+        unset DBPORT
+    fi
+    if [[ -n "${orig_dbuser}" ]]; then
+        export DBUSER="${orig_dbuser}"
+    else
+        unset DBUSER
+    fi
 }
 
 ##
@@ -335,8 +382,8 @@ teardown() {
     
     run get_db_connection_string
     assert_success
-    assert [[ "${output}" =~ postgresql ]]
-    assert [[ "${output}" =~ test_db ]]
+    assert_output --partial "postgresql"
+    assert_output --partial "test_db"
 }
 
 ##
@@ -396,7 +443,8 @@ teardown() {
     
     run get_http_response_time "http://localhost/test"
     assert_success
-    assert [[ "${output}" =~ ^[0-9]+$ ]]
+    # Output should be numeric (response time in seconds)
+    [[ "${output}" =~ ^[0-9]+(\.[0-9]+)?$ ]]
 }
 
 ##

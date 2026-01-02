@@ -3,8 +3,9 @@
 # Unit Tests: monitorInfrastructure.sh
 # Tests infrastructure monitoring check functions
 #
-# shellcheck disable=SC2030,SC2031
+# shellcheck disable=SC2030,SC2031,SC1091
 # SC2030/SC2031: Variables modified in subshells are expected in BATS tests
+# SC1091: Not following source files is expected in BATS tests
 
 load "${BATS_TEST_DIRNAME}/../../test_helper.bash"
 
@@ -43,6 +44,50 @@ setup() {
     export DBPORT="5432"
     export DBUSER="test_user"
     
+    # Define mocks BEFORE sourcing libraries
+    # Mock psql first, as it's a low-level dependency
+    # shellcheck disable=SC2317
+    psql() {
+        return 0
+    }
+    export -f psql
+    
+    # Mock check_database_connection
+    # shellcheck disable=SC2317
+    check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
+    # Mock execute_sql_query
+    # shellcheck disable=SC2317
+    execute_sql_query() {
+        echo "0"
+        return 0
+    }
+    export -f execute_sql_query
+    
+    # Mock store_alert to avoid database calls
+    # shellcheck disable=SC2317
+    store_alert() {
+        return 0
+    }
+    export -f store_alert
+    
+    # Mock record_metric
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Mock load_config to avoid loading real config
+    # shellcheck disable=SC2317
+    load_config() {
+        return 0
+    }
+    export -f load_config
+    
     # Source libraries
     # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
@@ -55,6 +100,13 @@ setup() {
     # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/lib/metricsFunctions.sh"
     
+    # Re-export mocks after sourcing to ensure they override library functions
+    export -f psql
+    export -f check_database_connection
+    export -f execute_sql_query
+    export -f store_alert
+    export -f record_metric
+    
     # Initialize logging
     init_logging "${TEST_LOG_DIR}/test.log" "test_monitorInfrastructure"
     
@@ -66,8 +118,7 @@ setup() {
     export TEST_MODE=true
     export COMPONENT="INFRASTRUCTURE"
     
-    # We'll source it but need to handle the main execution
-    # shellcheck disable=SC1091
+    # Source monitorInfrastructure.sh functions
     source "${BATS_TEST_DIRNAME}/../../../bin/monitor/monitorInfrastructure.sh" 2>/dev/null || true
 }
 
@@ -493,7 +544,7 @@ teardown() {
     
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${2}" == "CRITICAL" ]] && [[ "${4}" == *"Database connection failed"* ]]; then
+        if [[ "${2}" == "CRITICAL" ]] && { [[ "${4}" == *"Database server connection failed"* ]] || [[ "${4}" == *"Database connection failed"* ]] || [[ "${3}" == "database_connection_failed"* ]]; }; then
             touch "${alert_file}"
         fi
         return 0

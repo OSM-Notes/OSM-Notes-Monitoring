@@ -65,8 +65,8 @@ teardown() {
 @test "importDashboard.sh shows usage with --help" {
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --help
     assert_success
-    assert [[ "${output}" =~ Usage: ]]
-    assert [[ "${output}" =~ importDashboard.sh ]]
+    assert_output --partial "Usage:"
+    assert_output --partial "importDashboard.sh"
 }
 
 ##
@@ -75,14 +75,14 @@ teardown() {
 @test "importDashboard.sh requires input file" {
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh"
     assert_failure
-    assert [[ "${output}" =~ required ]] || [[ "${status}" -ne 0 ]]
+    assert_output --partial "required" || [[ "${status}" -ne 0 ]]
 }
 
 ##
 # Test: importDashboard.sh imports from directory
 ##
 @test "importDashboard.sh imports from directory" {
-    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" "${TEST_ARCHIVE_DIR}" grafana
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" "${TEST_ARCHIVE_DIR}" grafana
     assert_success
     assert_file_exists "${TEST_DASHBOARD_DIR}/grafana/import.json"
 }
@@ -115,9 +115,15 @@ teardown() {
 @test "importDashboard.sh imports all dashboards" {
     mkdir -p "${TEST_ARCHIVE_DIR}/html"
     echo '<html>test</html>' > "${TEST_ARCHIVE_DIR}/html/test.html"
-    (cd "${TEST_ARCHIVE_DIR}" && tar -czf "${TEST_ARCHIVE_DIR}/backup_all.tar.gz" .)
     
-    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" "${TEST_ARCHIVE_DIR}/backup_all.tar.gz" all
+    # Create tar archive in a separate directory to avoid race condition
+    local temp_archive_dir
+    temp_archive_dir=$(mktemp -d)
+    cp -r "${TEST_ARCHIVE_DIR}"/* "${temp_archive_dir}/" 2>/dev/null || true
+    (cd "${temp_archive_dir}" && tar -czf "${TEST_ARCHIVE_DIR}/backup_all.tar.gz" .)
+    rm -rf "${temp_archive_dir}"
+    
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" "${TEST_ARCHIVE_DIR}/backup_all.tar.gz" all
     assert_success
     assert_file_exists "${TEST_DASHBOARD_DIR}/grafana/import.json"
     assert_file_exists "${TEST_DASHBOARD_DIR}/html/test.html"

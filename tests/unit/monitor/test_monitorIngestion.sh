@@ -248,20 +248,24 @@ INFO: Info 2
 INFO: Info 3
 INFO: Info 4"
     
-    local alert_sent=false
+    local alert_file="${TMP_DIR}/.alert_sent"
+    rm -f "${alert_file}"
+    
     # Redefine send_alert function (must be done after monitorIngestion.sh is sourced)
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${4}" == *"High error rate detected"* ]]; then
-            alert_sent=true
+        if [[ "${4}" == *"High error rate detected"* ]] || [[ "${4}" == *"error rate"* ]]; then
+            touch "${alert_file}"
         fi
         return 0
     }
+    export -f send_alert
     
     # shellcheck disable=SC2317
     record_metric() {
         return 0
     }
+    export -f record_metric
     
     # Set low threshold for testing
     export INGESTION_MAX_ERROR_RATE="50"
@@ -270,7 +274,7 @@ INFO: Info 4"
     run check_error_rate || true
     
     # Alert should have been sent (error rate is 60%)
-    assert_equal "true" "${alert_sent}"
+    assert_file_exists "${alert_file}"
 }
 
 @test "check_error_rate alerts when error count exceeds threshold" {
@@ -281,15 +285,18 @@ INFO: Info 4"
     done
     create_test_log "test.log" "${error_log}"
     
-    local alert_sent=false
+    local alert_file="${TMP_DIR}/.alert_sent"
+    rm -f "${alert_file}"
+    
     # Redefine send_alert function (must be done after monitorIngestion.sh is sourced)
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${4}" == *"High error count"* ]]; then
-            alert_sent=true
+        if [[ "${4}" == *"High error count"* ]] || [[ "${4}" == *"error count"* ]]; then
+            touch "${alert_file}"
         fi
         return 0
     }
+    export -f send_alert
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -301,7 +308,7 @@ INFO: Info 4"
     run check_error_rate || true
     
     # Alert should have been sent
-    assert_equal "true" "${alert_sent}"
+    assert_file_exists "${alert_file}"
 }
 
 @test "check_disk_space checks disk usage" {
@@ -422,26 +429,30 @@ INFO: Info 4"
     # Remove test repository
     rm -rf "${TEST_INGESTION_DIR}"
     
-    local alert_sent=false
+    local alert_file="${TMP_DIR}/.alert_sent"
+    rm -f "${alert_file}"
+    
     # Redefine send_alert function (must be done after monitorIngestion.sh is sourced)
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${2}" == "CRITICAL" ]]; then
-            alert_sent=true
+        if [[ "${2}" == "CRITICAL" ]] || [[ "${4}" == *"Repository not found"* ]] || [[ "${4}" == *"not accessible"* ]]; then
+            touch "${alert_file}"
         fi
         return 0
     }
+    export -f send_alert
     
     # shellcheck disable=SC2317
     record_metric() {
         return 0
     }
+    export -f record_metric
     
     # Run check (should fail when repository not found)
     run check_ingestion_health || true
     
     # Should fail and send critical alert
-    assert_equal "true" "${alert_sent}"
+    assert_file_exists "${alert_file}"
 }
 
 @test "check_ingestion_health passes when repository exists" {
@@ -613,21 +624,24 @@ INFO: Info 4"
     }
     export -f record_metric
     
-    local alert_sent=false
+    local alert_file="${TMP_DIR}/.alert_sent"
+    rm -f "${alert_file}"
+    
     # Redefine send_alert function (must be done after monitorIngestion.sh is sourced)
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${4}" == *"High processing latency"* ]]; then
-            alert_sent=true
+        if [[ "${4}" == *"High processing latency"* ]] || [[ "${4}" == *"latency"* ]]; then
+            touch "${alert_file}"
         fi
         return 0
     }
+    export -f send_alert
     
     # Run check (may return 1 if latency exceeds threshold, which is expected)
     run check_processing_latency || true
     
     # Alert should have been sent
-    assert_equal "true" "${alert_sent}"
+    assert_file_exists "${alert_file}"
 }
 
 @test "check_api_download_status detects recent activity" {

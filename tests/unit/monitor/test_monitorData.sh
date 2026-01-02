@@ -51,7 +51,42 @@ setup() {
     export DBPORT="5432"
     export DBUSER="test_user"
     
-    # Source libraries
+    # Mock psql FIRST to avoid password prompts (needed by execute_sql_query)
+    # shellcheck disable=SC2317
+    psql() {
+        return 0
+    }
+    export -f psql
+    
+    # Mock database functions to avoid password prompts
+    # shellcheck disable=SC2317
+    check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
+    # shellcheck disable=SC2317
+    execute_sql_query() {
+        echo "0"
+        return 0
+    }
+    export -f execute_sql_query
+    
+    # Mock store_alert to avoid database calls
+    # shellcheck disable=SC2317
+    store_alert() {
+        return 0
+    }
+    export -f store_alert
+    
+    # Mock record_metric to avoid database calls (called by monitorData.sh)
+    # shellcheck disable=SC2317
+    record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Source libraries (after mocks are defined)
     # shellcheck disable=SC1091
     source "${BATS_TEST_DIRNAME}/../../../bin/lib/loggingFunctions.sh"
     # shellcheck disable=SC1091
@@ -68,6 +103,13 @@ setup() {
     
     # Initialize alerting
     init_alerting
+    
+    # Re-export mocks after sourcing (to ensure they override library functions)
+    export -f psql
+    export -f check_database_connection
+    export -f execute_sql_query
+    export -f store_alert
+    export -f record_metric
     
     # Source monitorData.sh functions
     # Set component name BEFORE sourcing (to allow override)
@@ -650,13 +692,23 @@ create_test_backup() {
     create_test_backup "backup1.sql" 3600
     create_test_backup "backup2.dump" 7200
     
-    local metrics_recorded=0
+    # Use a file to track metrics count (can be modified from mock function)
+    local metrics_file="${TMP_DIR}/.metrics_count"
+    echo "0" > "${metrics_file}"
+    
+    # Unset the function first to ensure our mock is used
+    unset -f record_metric 2>/dev/null || true
     
     # Mock record_metric to count calls
+    # record_metric signature: component metric_name metric_value metadata
+    # So ${1} = component, ${2} = metric_name, ${3} = metric_value, ${4} = metadata
     # shellcheck disable=SC2317
     record_metric() {
-        if [[ "${3}" == "backup_count" ]] || [[ "${3}" == "backup_newest_age_seconds" ]] || [[ "${3}" == "backup_oldest_age_seconds" ]]; then
-            metrics_recorded=$((metrics_recorded + 1))
+        # Check if this is one of the backup metrics we're tracking
+        if [[ "${2}" == "backup_count" ]] || [[ "${2}" == "backup_newest_age_seconds" ]] || [[ "${2}" == "backup_oldest_age_seconds" ]]; then
+            local current_count
+            current_count=$(cat "${metrics_file}" 2>/dev/null || echo "0")
+            echo $((current_count + 1)) > "${metrics_file}"
         fi
         return 0
     }
@@ -673,6 +725,8 @@ create_test_backup() {
     run check_backup_freshness
     
     # Should have recorded metrics
-    assert [ ${metrics_recorded} -ge 3 ]
+    local metrics_recorded
+    metrics_recorded=$(cat "${metrics_file}" 2>/dev/null || echo "0")
+    assert [ "${metrics_recorded}" -ge 3 ]
 }
 
