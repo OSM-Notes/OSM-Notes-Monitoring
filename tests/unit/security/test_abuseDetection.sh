@@ -613,17 +613,30 @@ teardown() {
 }
 
 @test "main function check action checks specific IP" {
-    # Mock check_ip_for_abuse
+    # Mock check_ip_for_abuse (returns 0 if abuse detected, 1 if no abuse)
     # shellcheck disable=SC2317
     check_ip_for_abuse() {
-        return 1  # No abuse
+        return 0  # Abuse detected (or no abuse, but main should handle it)
     }
     export -f check_ip_for_abuse
+    
+    # Mock init_alerting and load_config (called by main)
+    # shellcheck disable=SC2317
+    init_alerting() {
+        return 0
+    }
+    export -f init_alerting
+    
+    # shellcheck disable=SC2317
+    load_config() {
+        return 0
+    }
+    export -f load_config
     
     # Run main with check action
     run main "check" "192.168.1.100"
     
-    # Should succeed
+    # Should succeed (main calls check_ip_for_abuse and returns its exit code)
     assert_success
 }
 

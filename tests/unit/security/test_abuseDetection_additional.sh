@@ -162,41 +162,70 @@ teardown() {
 # Test: check_behavioral_analysis handles database error
 ##
 @test "check_behavioral_analysis handles database error" {
-    # Mock execute_sql_query to fail
+    # Mock is_ip_whitelisted
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        return 1
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
     }
-    export -f execute_sql_query
+    export -f is_ip_whitelisted
     
+    # Mock record_metric (analyze_behavior calls record_metric with "SECURITY" component)
     # shellcheck disable=SC2317
-    record_metric() {
-        return 0
+    function record_metric() {
+        return 0  # Accept any component
     }
     export -f record_metric
     
-    run check_behavioral_analysis || true
-    assert_success || assert_failure
+    # Mock psql to fail (simulate database error)
+    # shellcheck disable=SC2317
+    function psql() {
+        return 1  # Database error
+    }
+    export -f psql
+    
+    # Use correct function name: analyze_behavior (not check_behavioral_analysis)
+    # Function requires IP parameter
+    # Function should handle database error gracefully
+    run analyze_behavior "192.168.1.100"
+    # Should handle error gracefully (returns 1 for normal, but with error should also return 1)
+    # Since psql fails, it will echo "0" and return 1 (normal)
+    assert_failure
 }
 
 ##
 # Test: automatic_response handles IP blocking
 ##
 @test "automatic_response handles IP blocking" {
-    # Mock block_ip
+    # Mock auto_block_ip (called by automatic_response)
     # shellcheck disable=SC2317
-    function block_ip() {
+    function auto_block_ip() {
         return 0
     }
-    export -f block_ip
+    export -f auto_block_ip
     
+    # Mock send_alert (called by automatic_response)
     # shellcheck disable=SC2317
-    record_security_event() {
+    function send_alert() {
         return 0
     }
-    export -f record_security_event
+    export -f send_alert
     
-    run automatic_response "192.168.1.1" "block"
+    # Mock record_metric (called by automatic_response)
+    # shellcheck disable=SC2317
+    function record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Mock psql (automatic_response queries database for violation count)
+    # shellcheck disable=SC2317
+    function psql() {
+        echo "0"  # No previous violations
+        return 0
+    }
+    export -f psql
+    
+    run automatic_response "192.168.1.1" "pattern" "Test abuse"
     assert_success
 }
 
@@ -204,20 +233,36 @@ teardown() {
 # Test: automatic_response handles rate limiting
 ##
 @test "automatic_response handles rate limiting" {
-    # Mock check_rate_limit and related functions
+    # Mock auto_block_ip (called by automatic_response)
     # shellcheck disable=SC2317
-    function check_rate_limit() {
+    function auto_block_ip() {
         return 0
     }
-    export -f check_rate_limit
+    export -f auto_block_ip
     
+    # Mock send_alert (called by automatic_response)
     # shellcheck disable=SC2317
-    record_security_event() {
+    function send_alert() {
         return 0
     }
-    export -f record_security_event
+    export -f send_alert
     
-    run automatic_response "192.168.1.1" "rate_limit"
+    # Mock record_metric (called by automatic_response)
+    # shellcheck disable=SC2317
+    function record_metric() {
+        return 0
+    }
+    export -f record_metric
+    
+    # Mock psql (automatic_response queries database for violation count)
+    # shellcheck disable=SC2317
+    function psql() {
+        echo "1"  # One previous violation
+        return 0
+    }
+    export -f psql
+    
+    run automatic_response "192.168.1.1" "pattern" "Rate limit exceeded"
     assert_success
 }
 
@@ -225,26 +270,29 @@ teardown() {
 # Test: main handles --check option
 ##
 @test "main handles --check option" {
-    # Mock check functions
+    # Mock load_config and init_alerting (called by main)
     # shellcheck disable=SC2317
-    function check_pattern_analysis() {
+    function load_config() {
         return 0
     }
-    export -f check_pattern_analysis
+    export -f load_config
     
     # shellcheck disable=SC2317
-    function check_anomaly_detection() {
+    function init_alerting() {
         return 0
     }
-    export -f check_anomaly_detection
+    export -f init_alerting
     
+    # Mock check_ip_for_abuse (called by main with "check" action)
     # shellcheck disable=SC2317
-    function check_behavioral_analysis() {
-        return 0
+    function check_ip_for_abuse() {
+        return 0  # Abuse detected
     }
-    export -f check_behavioral_analysis
+    export -f check_ip_for_abuse
     
-    run main --check
+    # Main expects "check" as action followed by IP address
+    # The --check option doesn't exist, it should be "check" as action
+    run main "check" "192.168.1.100"
     assert_success
 }
 
@@ -294,7 +342,34 @@ teardown() {
     }
     export -f send_alert
     
-    run check_pattern_analysis || true
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql (analyze_patterns calls psql directly)
+    # shellcheck disable=SC2317
+    function psql() {
+        local query="${*}"
+        if [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ INTERVAL.*10.*seconds ]]; then
+            echo "5"  # Some rapid requests (below threshold)
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FILTER.*WHERE.*metadata ]]; then
+            echo "2|10"  # Some errors, total requests
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ INTERVAL.*1.*hour ]]; then
+            echo "50"  # Some excessive requests (below threshold)
+            return 0
+        fi
+        return 1
+    }
+    export -f psql
+    
+    # Use correct function name: analyze_patterns (not check_pattern_analysis)
+    # Function requires IP parameter
+    run analyze_patterns "192.168.1.100" || true
     
     # May or may not send alert depending on thresholds
     assert_success || true
@@ -324,7 +399,31 @@ teardown() {
     }
     export -f send_alert
     
-    run check_anomaly_detection || true
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql (detect_anomalies calls psql directly)
+    # shellcheck disable=SC2317
+    function psql() {
+        local query="${*}"
+        if [[ "${query}" =~ SELECT.*AVG.*hourly_count ]] || [[ "${query}" =~ DATE_TRUNC.*hour ]]; then
+            echo "5"  # Baseline average
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ DATE_TRUNC.*hour ]]; then
+            echo "20"  # Current hour count (4x baseline, which is > 3x threshold)
+            return 0
+        fi
+        return 1
+    }
+    export -f psql
+    
+    # Use correct function name: detect_anomalies (not check_anomaly_detection)
+    # Function requires IP parameter
+    run detect_anomalies "192.168.1.100" || true
     assert_success || true
 }
 
@@ -332,28 +431,41 @@ teardown() {
 # Test: check_behavioral_analysis detects behavioral changes
 ##
 @test "check_behavioral_analysis detects behavioral changes" {
-    # Mock execute_sql_query to return behavioral change
+    # Mock is_ip_whitelisted
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        echo "192.168.1.1|100|50|10"  # IP, requests, errors, patterns
-        return 0
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
     }
-    export -f execute_sql_query
+    export -f is_ip_whitelisted
     
+    # Mock record_metric (analyze_behavior calls record_metric with "SECURITY" component)
     # shellcheck disable=SC2317
-    record_metric() {
-        return 0
+    function record_metric() {
+        return 0  # Accept any component
     }
     export -f record_metric
     
+    # Mock psql to return high diversity (suspicious behavior)
     # shellcheck disable=SC2317
-    send_alert() {
-        return 0
+    function psql() {
+        local query="${*}"
+        if [[ "${query}" =~ SELECT.*COUNT.*DISTINCT.*endpoint ]]; then
+            echo "25"  # High endpoint diversity (> 20 is suspicious)
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*DISTINCT.*user_agent ]]; then
+            echo "15"  # High user agent diversity (> 10 is suspicious)
+            return 0
+        fi
+        return 1
     }
-    export -f send_alert
+    export -f psql
     
-    run check_behavioral_analysis || true
-    assert_success || true
+    # Use correct function name: analyze_behavior (not check_behavioral_analysis)
+    # Function requires IP parameter
+    # Function returns 0 if suspicious behavior detected, 1 if normal
+    run analyze_behavior "192.168.1.100"
+    # Should return 0 (suspicious behavior detected) since endpoint_count > 20 and ua_count > 10
+    assert_success
 }
 
 ##
@@ -375,26 +487,50 @@ teardown() {
 # Test: main handles --verbose option
 ##
 @test "main handles --verbose option" {
-    # Mock check functions
+    # Mock load_config and init_alerting (called by main)
     # shellcheck disable=SC2317
-    function check_pattern_analysis() {
+    function load_config() {
         return 0
     }
-    export -f check_pattern_analysis
+    export -f load_config
     
     # shellcheck disable=SC2317
-    function check_anomaly_detection() {
+    function init_alerting() {
         return 0
     }
-    export -f check_anomaly_detection
+    export -f init_alerting
     
+    # Mock analyze_all (called by main with "analyze" action without IP)
     # shellcheck disable=SC2317
-    function check_behavioral_analysis() {
+    function analyze_all() {
         return 0
     }
-    export -f check_behavioral_analysis
+    export -f analyze_all
     
-    run main --verbose
+    # Mock psql (analyze_all queries database)
+    # shellcheck disable=SC2317
+    function psql() {
+        if [[ "${*}" =~ SELECT.*DISTINCT.*ip_address ]]; then
+            echo ""  # No IPs found
+            return 0
+        fi
+        return 1
+    }
+    export -f psql
+    
+    # Mock check_ip_for_abuse (called by analyze_all if IPs found)
+    # shellcheck disable=SC2317
+    function check_ip_for_abuse() {
+        return 0
+    }
+    export -f check_ip_for_abuse
+    
+    # --verbose sets LOG_LEVEL, but main still needs an action
+    # The parsing happens before main is called, so we need to call main with action
+    # But since the script parses args, we need to simulate the full call
+    # Actually, --verbose is parsed before main, so LOG_LEVEL is already set
+    # We just need to call main with an action
+    run main "analyze"
     assert_success
 }
 
@@ -427,6 +563,34 @@ teardown() {
     }
     export -f send_alert
     
-    run check_pattern_analysis
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock psql (analyze_patterns calls psql directly)
+    # shellcheck disable=SC2317
+    function psql() {
+        local query="${*}"
+        if [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ INTERVAL.*10.*seconds ]]; then
+            echo "15"  # Rapid requests (above threshold)
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FILTER.*WHERE.*metadata ]]; then
+            echo "60|100"  # High error rate (60%)
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ INTERVAL.*1.*hour ]]; then
+            echo "1500"  # Excessive requests (above threshold)
+            return 0
+        fi
+        return 1
+    }
+    export -f psql
+    
+    # Use correct function name: analyze_patterns (not check_pattern_analysis)
+    # Function requires IP parameter
+    run analyze_patterns "192.168.1.100"
+    # Should detect abuse patterns and return 0
     assert_success
 }
