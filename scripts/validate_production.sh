@@ -68,25 +68,62 @@ validate_database() {
     
     # Source properties
     local dbname="notes_monitoring"
+    local dbhost="localhost"
+    local dbport="5432"
+    local dbuser="postgres"
+    
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
         # shellcheck source=/dev/null
         source "${PROJECT_ROOT}/etc/properties.sh"
         dbname="${DBNAME:-${dbname}}"
+        dbhost="${DBHOST:-${dbhost}}"
+        dbport="${DBPORT:-${dbport}}"
+        dbuser="${DBUSER:-${dbuser}}"
     fi
     
-    if psql -d "${dbname}" -c "SELECT 1;" > /dev/null 2>&1; then
-        test_result "PASS" "Database connection successful"
+    # Build psql connection string
+    # For localhost, use socket (peer auth) if user matches, otherwise use TCP
+    local psql_cmd="psql"
+    local current_user="${USER:-$(whoami)}"
+    
+    # If DBUSER matches current user, use peer authentication (socket)
+    # Otherwise, use TCP with password authentication
+    if [[ "${dbuser}" == "${current_user}" ]]; then
+        # Peer authentication - don't specify user or host
+        if [[ -n "${dbhost}" && "${dbhost}" != "localhost" && "${dbhost}" != "127.0.0.1" ]]; then
+            psql_cmd="${psql_cmd} -h ${dbhost}"
+        fi
+        if [[ -n "${dbport}" && "${dbport}" != "5432" && ("${dbhost}" != "localhost" && "${dbhost}" != "127.0.0.1") ]]; then
+            psql_cmd="${psql_cmd} -p ${dbport}"
+        fi
+    else
+        # Password authentication - specify user and use TCP
+        psql_cmd="${psql_cmd} -U ${dbuser}"
+        if [[ -n "${dbhost}" && "${dbhost}" != "localhost" && "${dbhost}" != "127.0.0.1" ]]; then
+            psql_cmd="${psql_cmd} -h ${dbhost}"
+        fi
+        if [[ -n "${dbport}" && "${dbport}" != "5432" ]]; then
+            psql_cmd="${psql_cmd} -p ${dbport}"
+        fi
+    fi
+    
+    if ${psql_cmd} -d "${dbname}" -c "SELECT 1;" > /dev/null 2>&1; then
+        test_result "PASS" "Database connection successful (${dbuser}@${dbhost}:${dbport}/${dbname})"
         
         # Check schema
         local table_count
-        table_count=$(psql -d "${dbname}" -t -A -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null || echo "0")
+        table_count=$(${psql_cmd} -d "${dbname}" -t -A -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null || echo "0")
         if [[ "${table_count}" -gt 0 ]]; then
             test_result "PASS" "Database schema exists (${table_count} tables)"
         else
             test_result "FAIL" "Database schema not initialized"
         fi
     else
-        test_result "FAIL" "Database connection failed"
+        test_result "FAIL" "Database connection failed (${dbuser}@${dbhost}:${dbport}/${dbname})"
+        print_message "${YELLOW}" "  Troubleshooting:"
+        echo "    - Check .pgpass file: ls -la ~/.pgpass"
+        echo "    - Test connection: ${psql_cmd} -d ${dbname} -c 'SELECT 1;'"
+        echo "    - Check PostgreSQL logs: sudo journalctl -u postgresql"
     fi
 }
 
@@ -315,25 +352,25 @@ main() {
     print_message "${BLUE}" "================================================"
     echo
     
-    validate_database
+    validate_database || true
     echo
     
-    validate_configuration
+    validate_configuration || true
     echo
     
-    validate_monitoring_scripts
+    validate_monitoring_scripts || true
     echo
     
-    validate_alert_delivery
+    validate_alert_delivery || true
     echo
     
-    validate_dashboards
+    validate_dashboards || true
     echo
     
-    validate_system_health
+    validate_system_health || true
     echo
     
-    validate_cron_jobs
+    validate_cron_jobs || true
     echo
     
     generate_summary

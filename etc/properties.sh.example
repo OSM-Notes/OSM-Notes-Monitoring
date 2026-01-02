@@ -12,6 +12,14 @@ DBNAME="osm_notes_monitoring"
 DBHOST="localhost"
 DBPORT="5432"
 DBUSER="postgres"
+# Note: For localhost connections, PostgreSQL uses peer authentication
+# Use your system username (whoami) or configure password authentication
+# Production: Use notes_monitoring database with appropriate user
+# Database password: DO NOT put password here!
+# Use one of these methods instead:
+# 1. Environment variable: export PGPASSWORD="your_password"
+# 2. .pgpass file: ~/.pgpass (format: hostname:port:database:username:password)
+# 3. For cron jobs: Set PGPASSWORD in crontab or use .pgpass file
 
 # Monitored Databases (databases from other projects that we monitor)
 # These are separate from the monitoring database above

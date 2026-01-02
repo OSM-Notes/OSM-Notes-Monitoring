@@ -97,7 +97,9 @@ log_message() {
     esac
     
     # Check if we should log this level
-    if [[ ${level_num} -lt ${LOG_LEVEL} ]]; then
+    # Use default LOG_LEVEL_INFO if LOG_LEVEL is not set
+    local current_log_level="${LOG_LEVEL:-${LOG_LEVEL_INFO}}"
+    if [[ ${level_num} -lt ${current_log_level} ]]; then
         return 0
     fi
     

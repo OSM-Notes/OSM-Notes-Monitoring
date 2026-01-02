@@ -69,22 +69,22 @@ generate_cron_jobs() {
 # Project: ${project_root}
 
 # Ingestion monitoring (every 5 minutes)
-*/5 * * * * ${project_root}/bin/monitor/monitorIngestion.sh >> ${log_dir}/ingestion.log 2>&1
+*/5 * * * * /usr/bin/env bash ${project_root}/bin/monitor/monitorIngestion.sh >> ${log_dir}/ingestion.log 2>&1
 
 # Analytics monitoring (every 15 minutes)
-*/15 * * * * ${project_root}/bin/monitor/monitorAnalytics.sh >> ${log_dir}/analytics.log 2>&1
+*/15 * * * * /usr/bin/env bash ${project_root}/bin/monitor/monitorAnalytics.sh >> ${log_dir}/analytics.log 2>&1
 
 # WMS monitoring (every 5 minutes)
-*/5 * * * * ${project_root}/bin/monitor/monitorWMS.sh >> ${log_dir}/wms.log 2>&1
+*/5 * * * * /usr/bin/env bash ${project_root}/bin/monitor/monitorWMS.sh >> ${log_dir}/wms.log 2>&1
 
 # API/Security monitoring (every minute)
-* * * * * ${project_root}/bin/monitor/monitorAPI.sh >> ${log_dir}/api.log 2>&1
+* * * * * /usr/bin/env bash ${project_root}/bin/monitor/monitorAPI.sh >> ${log_dir}/api.log 2>&1
 
 # Data freshness monitoring (every hour)
-0 * * * * ${project_root}/bin/monitor/monitorData.sh >> ${log_dir}/data.log 2>&1
+0 * * * * /usr/bin/env bash ${project_root}/bin/monitor/monitorData.sh >> ${log_dir}/data.log 2>&1
 
 # Infrastructure monitoring (every 5 minutes)
-*/5 * * * * ${project_root}/bin/monitor/monitorInfrastructure.sh >> ${log_dir}/infrastructure.log 2>&1
+*/5 * * * * /usr/bin/env bash ${project_root}/bin/monitor/monitorInfrastructure.sh >> ${log_dir}/infrastructure.log 2>&1
 
 # Dashboard updates (every 15 minutes)
 */15 * * * * ${project_root}/bin/dashboard/updateDashboard.sh html >> ${log_dir}/dashboard.log 2>&1

@@ -193,11 +193,32 @@ run_all_tests_with_bashcov() {
     # Run from project root so coverage.json is generated there
     cd "${PROJECT_ROOT}" || return 1
     
-    # Run bashcov on all tests at once
-    bashcov \
-        --root "${PROJECT_ROOT}" \
-        --skip-uncovered \
-        bats "${PROJECT_ROOT}/tests" >/dev/null 2>&1 || true
+    # Find all test files and execute them with bats
+    # bashcov needs explicit test files, not directories
+    # Execute tests in batches to avoid command line length issues
+    local test_files=()
+    while IFS= read -r -d '' test_file; do
+        test_files+=("${test_file}")
+    done < <(find "${PROJECT_ROOT}/tests" -name "*.sh" -type f -print0 2>/dev/null | sort -z)
+    
+    # Run bashcov on test files
+    # Note: bashcov works best when executing bats directly on individual files
+    # We'll execute them one by one and bashcov will merge the results
+    if [[ ${#test_files[@]} -gt 0 ]]; then
+        local count=0
+        for test_file in "${test_files[@]}"; do
+            # Run each test file individually - bashcov will accumulate coverage
+            bashcov \
+                --root "${PROJECT_ROOT}" \
+                --skip-uncovered \
+                bats "${test_file}" >/dev/null 2>&1 || true
+            count=$((count + 1))
+            # Show progress every 10 tests
+            if [[ $((count % 10)) -eq 0 ]]; then
+                print_message "${BLUE}" "  Processed ${count}/${#test_files[@]} test files..."
+            fi
+        done
+    fi
     
     # Move coverage.json to output directory if it exists
     if [[ -f "${PROJECT_ROOT}/coverage.json" ]]; then

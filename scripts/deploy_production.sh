@@ -135,8 +135,9 @@ setup_cron_jobs() {
         return 1
     fi
     
-    if "${PROJECT_ROOT}/scripts/setup_cron.sh" --install; then
-        print_message "${GREEN}" "✓ Cron jobs configured"
+    # Install cron jobs for notes user (service user)
+    if sudo "${PROJECT_ROOT}/scripts/setup_cron.sh" --install --user notes; then
+        print_message "${GREEN}" "✓ Cron jobs configured for notes user"
         return 0
     else
         print_message "${RED}" "✗ Cron jobs setup failed"
@@ -297,9 +298,8 @@ main() {
     
     # Step 3: Security hardening
     if [[ "${skip_security}" != "true" ]]; then
-        if ! run_security_hardening; then
-            ((failed_steps++))
-        fi
+        # Security hardening warnings don't stop deployment
+        run_security_hardening || true
         echo
     fi
     

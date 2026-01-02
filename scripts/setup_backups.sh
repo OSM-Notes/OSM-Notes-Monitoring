@@ -96,16 +96,9 @@ install_backup_cron() {
     
     # Check if backup cron job already exists
     if echo "${current_crontab}" | grep -q "${backup_script}"; then
-        print_message "${YELLOW}" "Backup cron job already exists"
-        read -p "Replace existing backup cron job? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_message "${BLUE}" "Installation cancelled"
-            return 0
-        fi
-        
-        # Remove existing backup cron job
-        current_crontab=$(echo "${current_crontab}" | grep -v "${backup_script}")
+        print_message "${GREEN}" "Backup cron job already exists"
+        print_message "${BLUE}" "Skipping installation (already configured)"
+        return 0
     fi
     
     # Add new cron job

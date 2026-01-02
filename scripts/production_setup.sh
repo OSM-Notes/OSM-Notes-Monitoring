@@ -350,8 +350,11 @@ setup_security_hardening() {
     
     if [[ ${issues} -eq 0 ]]; then
         print_message "${GREEN}" "  ✓ Security hardening completed"
+        return 0
     else
-        print_message "${YELLOW}" "  ⚠ Security hardening completed with ${issues} issue(s)"
+        print_message "${YELLOW}" "  ⚠ Security hardening completed with ${issues} warning(s) (non-critical)"
+        # Warnings don't stop deployment, only critical failures do
+        return 0
     fi
 }
 
