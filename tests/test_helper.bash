@@ -59,20 +59,23 @@ if ! command -v assert > /dev/null 2>&1; then
                 condition_parts+=("$1")
                 shift
             done
-            # Join with spaces and evaluate
-            # Use printf %q to properly quote each part, then join
-            local eval_str=""
+            # Build eval command string by properly escaping and quoting
+            # We need to preserve variable references like "${output}" literally
+            local eval_str="[["
             for part in "${condition_parts[@]}"; do
-                if [[ -z "${eval_str}" ]]; then
-                    eval_str="${part}"
+                # Check if part is already a quoted variable reference
+                if [[ "${part}" =~ ^\"\$\{.*\}\"$ ]] || [[ "${part}" =~ ^\"\$[a-zA-Z_][a-zA-Z0-9_]*\"$ ]]; then
+                    # Variable is already quoted - append with a space, preserving quotes
+                    eval_str="${eval_str} ${part}"
                 else
+                    # Not a quoted variable - append as-is
                     eval_str="${eval_str} ${part}"
                 fi
             done
-            # Evaluate the condition
-            # shellcheck disable=SC2086
-            if ! eval "[[ ${eval_str} ]]"; then
-                echo "Assertion failed: [[ ${eval_str} ]]" >&2
+            eval_str="${eval_str} ]]"
+            # Evaluate the condition - the quotes in eval_str will be preserved by eval
+            if ! eval "${eval_str}"; then
+                echo "Assertion failed: ${eval_str}" >&2
                 return 1
             fi
         else
