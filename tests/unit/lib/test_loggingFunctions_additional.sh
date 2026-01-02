@@ -134,6 +134,7 @@ teardown() {
     # Ensure directory exists
     mkdir -p "${TEST_LOG_DIR}"
     init_logging "${test_log}" "test_large"
+    export LOG_FILE="${test_log}"
     
     # Write many lines to simulate large file
     for i in {1..1000}; do

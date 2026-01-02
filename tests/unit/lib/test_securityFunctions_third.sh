@@ -301,18 +301,21 @@ teardown() {
 # Test: is_ip_whitelisted handles expired whitelist entry
 ##
 @test "is_ip_whitelisted handles expired whitelist entry" {
-    # Mock execute_sql_query to return expired entry
+    # Mock psql (is_ip_whitelisted calls psql directly)
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        # Return entry with expired timestamp
-        echo "192.168.1.1|2020-01-01 00:00:00"
-        return 0
+    function psql() {
+        if [[ "${*}" =~ SELECT.*COUNT.*FROM.*ip_management ]] && [[ "${*}" =~ whitelist ]]; then
+            # Return 0 (no active entries) since expired entries are filtered by the query
+            echo "0"
+            return 0
+        fi
+        return 1
     }
-    export -f execute_sql_query
+    export -f psql
     
     run is_ip_whitelisted "192.168.1.1"
-    # Should fail if expired entries are filtered
-    assert_success || assert_failure
+    # Should fail if expired entries are filtered (query filters them, so count = 0)
+    assert_failure
 }
 
 ##

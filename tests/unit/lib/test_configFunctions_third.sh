@@ -34,7 +34,16 @@ teardown() {
 # Test: load_main_config handles config with all optional fields
 ##
 @test "load_main_config handles config with all optional fields" {
-    local test_config="${TEST_LOG_DIR}/test_full_config.sh"
+    # Mock get_project_root to return test directory
+    # shellcheck disable=SC2317
+    function get_project_root() {
+        echo "${TEST_LOG_DIR}"
+    }
+    export -f get_project_root
+    
+    # Create test config file at expected location
+    local test_config="${TEST_LOG_DIR}/etc/properties.sh"
+    mkdir -p "$(dirname "${test_config}")"
     cat > "${test_config}" << 'EOF'
 export DBNAME="test_db"
 export DBHOST="localhost"
@@ -44,10 +53,11 @@ export LOG_LEVEL="DEBUG"
 export ENABLE_MONITORING="true"
 EOF
     
-    run load_main_config "${test_config}"
+    run load_main_config
     assert_success
     
     rm -f "${test_config}"
+    rmdir "$(dirname "${test_config}")" 2>/dev/null || true
 }
 
 ##
@@ -151,18 +161,36 @@ EOF
 # Test: load_all_configs handles multiple config files
 ##
 @test "load_all_configs handles multiple config files" {
-    local main_config="${TEST_LOG_DIR}/test_main.sh"
-    local monitoring_config="${TEST_LOG_DIR}/test_monitoring.conf"
-    local alert_config="${TEST_LOG_DIR}/test_alert.conf"
+    # Mock get_project_root to return test directory
+    # shellcheck disable=SC2317
+    function get_project_root() {
+        echo "${TEST_LOG_DIR}"
+    }
+    export -f get_project_root
     
-    echo 'export DBNAME="test_db"' > "${main_config}"
+    # Create test config files at expected locations
+    local main_config="${TEST_LOG_DIR}/etc/properties.sh"
+    local monitoring_config="${TEST_LOG_DIR}/config/monitoring.conf"
+    local alert_config="${TEST_LOG_DIR}/config/alerts.conf"
+    
+    mkdir -p "$(dirname "${main_config}")"
+    mkdir -p "$(dirname "${monitoring_config}")"
+    
+    cat > "${main_config}" << 'EOF'
+export DBNAME="test_db"
+export DBHOST="localhost"
+export DBPORT="5432"
+export DBUSER="test_user"
+EOF
     echo 'MONITORING_ENABLED=true' > "${monitoring_config}"
     echo 'ADMIN_EMAIL="test@example.com"' > "${alert_config}"
     
-    run load_all_configs "${main_config}" "${monitoring_config}" "${alert_config}"
+    run load_all_configs
     assert_success
     
     rm -f "${main_config}" "${monitoring_config}" "${alert_config}"
+    rmdir "$(dirname "${main_config}")" 2>/dev/null || true
+    rmdir "$(dirname "${monitoring_config}")" 2>/dev/null || true
 }
 
 ##

@@ -56,28 +56,44 @@ teardown() {
 # Test: check_pattern_analysis handles empty patterns
 ##
 @test "check_pattern_analysis handles empty patterns" {
-    # Mock execute_sql_query to return empty
+    # Mock is_ip_whitelisted
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        echo ""
-        return 0
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
     }
-    export -f execute_sql_query
+    export -f is_ip_whitelisted
     
+    # Mock record_metric (analyze_patterns calls record_metric with "SECURITY" component)
     # shellcheck disable=SC2317
-    record_metric() {
-        return 0
+    function record_metric() {
+        return 0  # Accept any component
     }
     export -f record_metric
     
+    # Mock psql (analyze_patterns calls psql multiple times)
     # shellcheck disable=SC2317
-    send_alert() {
-        return 0
+    function psql() {
+        local query="${*}"
+        if [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ INTERVAL.*10.*seconds ]]; then
+            echo "0"  # No rapid requests
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FILTER.*WHERE.*metadata ]]; then
+            echo "0|0"  # No errors, no total
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ INTERVAL.*1.*hour ]]; then
+            echo "0"  # No excessive requests
+            return 0
+        fi
+        return 1
     }
-    export -f send_alert
+    export -f psql
     
-    run check_pattern_analysis
-    assert_success
+    # Use correct function name: analyze_patterns (not check_pattern_analysis)
+    # Function requires IP parameter
+    # Function returns 0 if abuse detected, 1 if normal (no abuse)
+    run analyze_patterns "192.168.1.100"
+    # Should return 1 (normal, no abuse detected) since all counts are 0
+    assert_failure
 }
 
 ##
@@ -98,14 +114,48 @@ teardown() {
     }
     export -f record_metric
     
+    # Mock send_alert
     # shellcheck disable=SC2317
     send_alert() {
         return 0
     }
     export -f send_alert
     
-    run check_anomaly_detection
-    assert_success
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock record_metric (detect_anomalies calls record_metric with "SECURITY" component)
+    # shellcheck disable=SC2317
+    function record_metric() {
+        return 0  # Accept any component
+    }
+    export -f record_metric
+    
+    # Mock psql (detect_anomalies calls psql multiple times)
+    # shellcheck disable=SC2317
+    function psql() {
+        local query="${*}"
+        if [[ "${query}" =~ SELECT.*AVG.*hourly_count ]] || [[ "${query}" =~ DATE_TRUNC.*hour ]]; then
+            echo "5"  # Baseline average
+            return 0
+        elif [[ "${query}" =~ SELECT.*COUNT.*FROM.*security_events ]] && [[ "${query}" =~ DATE_TRUNC.*hour ]]; then
+            echo "5"  # Current hour count (normal, not 3x baseline)
+            return 0
+        fi
+        return 1
+    }
+    export -f psql
+    
+    # Use correct function name: detect_anomalies (not check_anomaly_detection)
+    # Function requires IP parameter
+    # Function returns 0 if anomaly detected, 1 if normal (no anomaly)
+    run detect_anomalies "192.168.1.100"
+    # Should return 1 (normal, no anomaly) since current (5) < 3x baseline (5*3=15)
+    assert_failure
 }
 
 ##

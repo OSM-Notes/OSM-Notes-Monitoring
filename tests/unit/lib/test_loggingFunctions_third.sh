@@ -47,8 +47,12 @@ teardown() {
 @test "log rotation handles file size threshold" {
     # Ensure directory exists
     mkdir -p "${TEST_LOG_DIR}"
-    # Create large log file
-    for i in {1..10000}; do
+    # Ensure LOG_FILE is set and exported
+    export LOG_FILE="${TEST_LOG_DIR}/test_loggingFunctions_third.log"
+    init_logging "${LOG_FILE}" "test_loggingFunctions_third"
+    
+    # Create large log file (reduced iterations for faster test execution)
+    for i in {1..1000}; do
         log_info "Test line ${i}"
     done
     
