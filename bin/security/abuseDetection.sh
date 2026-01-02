@@ -33,11 +33,13 @@ source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/abuse_detection.log" "abuseDetection"
-
-# Initialize security functions
-init_security
+# Initialize logging only if not in test mode
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    init_logging "${LOG_DIR}/abuse_detection.log" "abuseDetection"
+    
+    # Initialize security functions
+    init_security
+fi
 
 # Component name
 COMPONENT="SECURITY"
