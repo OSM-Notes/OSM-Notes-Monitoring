@@ -31,8 +31,11 @@ source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/data.log" "monitorData"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/data.log" "monitorData"
+fi
 
 # Component name (allow override in test mode)
 if [[ -z "${COMPONENT:-}" ]] || [[ "${TEST_MODE:-false}" == "true" ]]; then

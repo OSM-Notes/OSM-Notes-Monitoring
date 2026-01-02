@@ -92,13 +92,24 @@ is_ip_whitelisted() {
              AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);"
     
     local count
-    count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null)
+    else
+        count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null)
+    fi
     
     if [[ "${count:-0}" -gt 0 ]]; then
         return 0  # Whitelisted
@@ -130,13 +141,24 @@ is_ip_blacklisted() {
              AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);"
     
     local count
-    count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null)
+    else
+        count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null)
+    fi
     
     if [[ "${count:-0}" -gt 0 ]]; then
         return 0  # Blacklisted
@@ -186,13 +208,24 @@ check_rate_limit() {
              AND timestamp > CURRENT_TIMESTAMP - INTERVAL '${window_seconds} seconds';"
     
     local count
-    count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null)
+    else
+        count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null)
+    fi
     
     if [[ "${count:-0}" -ge "${max_requests}" ]]; then
         log_warning "Rate limit exceeded for IP ${ip}: ${count}/${max_requests}"
@@ -239,7 +272,22 @@ record_security_event() {
     query="INSERT INTO security_events (event_type, ip_address, endpoint, metadata)
            VALUES ('${event_type}', '${ip_address}'::inet, '${endpoint}', '${metadata}'::jsonb);"
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_debug "Security event recorded: ${event_type} for ${ip_address}"
+            return 0
+        else
+            log_error "Failed to record security event"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -250,6 +298,7 @@ record_security_event() {
     else
         log_error "Failed to record security event"
         return 1
+        fi
     fi
 }
 
@@ -303,7 +352,23 @@ block_ip() {
                    expires_at = NULL;"
     fi
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "IP ${ip} blocked (${block_type}): ${reason}"
+            record_security_event "block" "${ip}" "" "{\"reason\": \"${reason}\", \"type\": \"${block_type}\"}"
+            return 0
+        else
+            log_error "Failed to block IP ${ip}"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -315,6 +380,7 @@ block_ip() {
     else
         log_error "Failed to block IP ${ip}"
         return 1
+        fi
     fi
 }
 

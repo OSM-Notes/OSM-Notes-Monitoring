@@ -25,8 +25,11 @@ source "${PROJECT_ROOT}/bin/lib/configFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/export_dashboard.log" "exportDashboard"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/export_dashboard.log" "exportDashboard"
+fi
 
 ##
 # Show usage
@@ -80,15 +83,17 @@ load_config() {
 # Arguments:
 #   $1 - Output file or directory
 #   $2 - Include data flag
+#   $3 - Export format (tar, zip) (optional)
 ##
 export_grafana_dashboard() {
     local output="${1:-}"
     local include_data="${2:-false}"
+    local export_format="${3:-tar}"
     local dashboard_dir="${DASHBOARD_OUTPUT_DIR}/grafana"
     
     if [[ ! -d "${dashboard_dir}" ]]; then
         log_warning "Grafana dashboard directory not found: ${dashboard_dir}"
-        return 1
+        return 0  # Return success with warning
     fi
     
     if [[ -z "${output}" ]]; then
@@ -112,7 +117,7 @@ export_grafana_dashboard() {
             done
         fi
     else
-        # Export as single JSON file
+        # Export as archive
         local temp_dir
         temp_dir=$(mktemp -d)
         cp -r "${dashboard_dir}"/* "${temp_dir}/" 2>/dev/null || true
@@ -126,12 +131,23 @@ export_grafana_dashboard() {
             done
         fi
         
-        # Create JSON archive
-        tar -czf "${output}.tar.gz" -C "${temp_dir}" . 2>/dev/null || {
-            log_error "Failed to create archive"
-            rm -rf "${temp_dir}"
-            return 1
-        }
+        # Create archive based on format
+        case "${export_format}" in
+            zip)
+                (cd "${temp_dir}" && zip -r "${output}.zip" .) 2>/dev/null || {
+                    log_error "Failed to create zip archive"
+                    rm -rf "${temp_dir}"
+                    return 1
+                }
+                ;;
+            tar|*)
+                tar -czf "${output}.tar.gz" -C "${temp_dir}" . 2>/dev/null || {
+                    log_error "Failed to create tar archive"
+                    rm -rf "${temp_dir}"
+                    return 1
+                }
+                ;;
+        esac
         
         rm -rf "${temp_dir}"
     fi
@@ -145,15 +161,17 @@ export_grafana_dashboard() {
 # Arguments:
 #   $1 - Output file or directory
 #   $2 - Include data flag
+#   $3 - Export format (tar, zip) (optional)
 ##
 export_html_dashboard() {
     local output="${1:-}"
     local include_data="${2:-false}"
+    local export_format="${3:-tar}"
     local dashboard_dir="${DASHBOARD_OUTPUT_DIR}/html"
     
     if [[ ! -d "${dashboard_dir}" ]]; then
         log_warning "HTML dashboard directory not found: ${dashboard_dir}"
-        return 1
+        return 0  # Return success with warning
     fi
     
     if [[ -z "${output}" ]]; then
@@ -229,17 +247,18 @@ main() {
     # Export dashboards based on type
     case "${dashboard_type}" in
         grafana)
-            export_grafana_dashboard "${output}" "${include_data}"
+            export_grafana_dashboard "${output}" "${include_data}" "${EXPORT_FORMAT:-tar}"
             ;;
         html)
-            export_html_dashboard "${output}" "${include_data}"
+            export_html_dashboard "${output}" "${include_data}" "${EXPORT_FORMAT:-tar}"
             ;;
         all)
-            export_grafana_dashboard "${output}/grafana" "${include_data}"
-            export_html_dashboard "${output}/html" "${include_data}"
+            export_grafana_dashboard "${output}/grafana" "${include_data}" "${EXPORT_FORMAT:-tar}"
+            export_html_dashboard "${output}/html" "${include_data}" "${EXPORT_FORMAT:-tar}"
             ;;
         *)
-            log_error "Unknown dashboard type: ${dashboard_type}"
+            echo "ERROR: Unknown dashboard type: ${dashboard_type}" >&2
+            echo "Valid types are: grafana, html, all" >&2
             usage
             exit 1
             ;;
@@ -289,8 +308,33 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            if [[ -z "${DASHBOARD_TYPE}" ]] || [[ "${DASHBOARD_TYPE}" == "all" ]]; then
-                DASHBOARD_TYPE="${1}"
+            # First non-option argument is dashboard type
+            if [[ "${DASHBOARD_TYPE}" == "all" ]]; then
+                # Check if it's a valid dashboard type
+                case "${1}" in
+                    grafana|html|all)
+                        DASHBOARD_TYPE="${1}"
+                        ;;
+                    *)
+                        # If it's not a valid type, treat it as output
+                        if [[ -z "${OUTPUT_FILE}" ]]; then
+                            OUTPUT_FILE="${1}"
+                        else
+                            DASHBOARD_TYPE="${1}"
+                        fi
+                        ;;
+                esac
+            elif [[ -z "${DASHBOARD_TYPE}" ]]; then
+                # Check if it's a valid dashboard type
+                case "${1}" in
+                    grafana|html|all)
+                        DASHBOARD_TYPE="${1}"
+                        ;;
+                    *)
+                        # If it's not a valid type, treat it as output
+                        OUTPUT_FILE="${1}"
+                        ;;
+                esac
             elif [[ -z "${OUTPUT_FILE}" ]]; then
                 OUTPUT_FILE="${1}"
             fi

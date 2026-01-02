@@ -70,7 +70,11 @@ run_tests() {
     while IFS= read -r test_file; do
         print_message "${GREEN}" "Running: $(basename "${test_file}")"
         
-        if ! bats "${test_file}"; then
+        # Capture exit code explicitly to avoid set -e terminating the script
+        local bats_exit_code=0
+        bats "${test_file}" || bats_exit_code=$?
+        
+        if [[ ${bats_exit_code} -ne 0 ]]; then
             failed_tests=$((failed_tests + 1))
         fi
         

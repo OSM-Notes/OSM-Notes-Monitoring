@@ -31,8 +31,11 @@ source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/wms.log" "monitorWMS"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/wms.log" "monitorWMS"
+fi
 
 # Component name (allow override in test mode)
 if [[ -z "${COMPONENT:-}" ]] || [[ "${TEST_MODE:-false}" == "true" ]]; then
@@ -536,6 +539,20 @@ main() {
     init_alerting
     
     log_info "${COMPONENT}: Starting WMS monitoring"
+    
+    # Validate specific_check if provided
+    if [[ -n "${specific_check}" ]]; then
+        case "${specific_check}" in
+            availability|health|response_time|error_rate|tile_performance|cache_hit_rate)
+                # Valid check
+                ;;
+            *)
+                log_error "${COMPONENT}: Unknown check action: ${specific_check}"
+                usage
+                return 1
+                ;;
+        esac
+    fi
     
     # Run checks
     if [[ -z "${specific_check}" ]] || [[ "${specific_check}" == "availability" ]]; then

@@ -27,8 +27,11 @@ source "${PROJECT_ROOT}/bin/lib/configFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/update_dashboard.log" "updateDashboard"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/update_dashboard.log" "updateDashboard"
+fi
 
 ##
 # Show usage
@@ -207,12 +210,22 @@ update_component_health() {
             END;
     "
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1 || log_warning "Failed to update component health"
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" > /dev/null 2>&1 || log_warning "Failed to update component health"
+    fi
 }
 
 ##

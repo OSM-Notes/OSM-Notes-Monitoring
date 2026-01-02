@@ -33,11 +33,14 @@ source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/ip_blocking.log" "ipBlocking"
-
-# Initialize security functions
-init_security
+# Only initialize if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/ip_blocking.log" "ipBlocking"
+    
+    # Initialize security functions
+    init_security
+fi
 
 # Component name (used in logging and alerts)
 export COMPONENT="SECURITY"
@@ -135,7 +138,23 @@ whitelist_add() {
             created_at = CURRENT_TIMESTAMP;
     "
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "IP ${ip} added to whitelist: ${reason}"
+            record_security_event "unblock" "${ip}" "" "{\"action\": \"whitelist_add\", \"reason\": \"${reason}\"}"
+            return 0
+        else
+            log_error "Failed to add IP ${ip} to whitelist"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -147,6 +166,7 @@ whitelist_add() {
     else
         log_error "Failed to add IP ${ip} to whitelist"
         return 1
+        fi
     fi
 }
 
@@ -166,7 +186,22 @@ whitelist_remove() {
     
     local query="DELETE FROM ip_management WHERE ip_address = '${ip}'::inet AND list_type = 'whitelist';"
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "IP ${ip} removed from whitelist"
+            return 0
+        else
+            log_error "Failed to remove IP ${ip} from whitelist"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -177,6 +212,7 @@ whitelist_remove() {
     else
         log_error "Failed to remove IP ${ip} from whitelist"
         return 1
+        fi
     fi
 }
 
@@ -197,12 +233,22 @@ whitelist_list() {
     "
     
     echo "Whitelisted IPs:"
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -237,7 +283,23 @@ blacklist_add() {
             created_at = CURRENT_TIMESTAMP;
     "
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "IP ${ip} added to blacklist: ${reason}"
+            record_security_event "block" "${ip}" "" "{\"action\": \"blacklist_add\", \"reason\": \"${reason}\"}"
+            return 0
+        else
+            log_error "Failed to add IP ${ip} to blacklist"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -249,6 +311,7 @@ blacklist_add() {
     else
         log_error "Failed to add IP ${ip} to blacklist"
         return 1
+        fi
     fi
 }
 
@@ -268,7 +331,23 @@ blacklist_remove() {
     
     local query="DELETE FROM ip_management WHERE ip_address = '${ip}'::inet AND list_type = 'blacklist';"
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "IP ${ip} removed from blacklist"
+            record_security_event "unblock" "${ip}" "" "{\"action\": \"blacklist_remove\"}"
+            return 0
+        else
+            log_error "Failed to remove IP ${ip} from blacklist"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -280,6 +359,7 @@ blacklist_remove() {
     else
         log_error "Failed to remove IP ${ip} from blacklist"
         return 1
+        fi
     fi
 }
 
@@ -300,12 +380,22 @@ blacklist_list() {
     "
     
     echo "Blacklisted IPs:"
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -356,7 +446,23 @@ unblock_ip() {
     
     local query="DELETE FROM ip_management WHERE ip_address = '${ip}'::inet AND list_type IN ('temp_block', 'blacklist');"
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "IP ${ip} unblocked"
+            record_security_event "unblock" "${ip}" "" "{\"action\": \"manual_unblock\"}"
+            return 0
+        else
+            log_error "Failed to unblock IP ${ip}"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -368,6 +474,7 @@ unblock_ip() {
     else
         log_error "Failed to unblock IP ${ip}"
         return 1
+        fi
     fi
 }
 
@@ -397,12 +504,22 @@ list_ips() {
     query="${query} ORDER BY created_at DESC;"
     
     echo "IP Management List (${list_type}):"
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -440,12 +557,22 @@ check_ip_status() {
     
     echo ""
     echo "Details:"
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || echo "  No entries found"
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || echo "  No entries found"
+    fi
 }
 
 ##
@@ -465,21 +592,40 @@ cleanup_expired() {
     "
     
     local deleted
-    deleted=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "SELECT COUNT(*) FROM (${query}) deleted;" 2>/dev/null || echo "0")
-    
-    # Actually delete
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" > /dev/null 2>&1 || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        deleted=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "SELECT COUNT(*) FROM (${query}) deleted;" 2>/dev/null || echo "0")
+        
+        # Actually delete
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1 || true
+    else
+        deleted=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "SELECT COUNT(*) FROM (${query}) deleted;" 2>/dev/null || echo "0")
+        
+        # Actually delete
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1 || true
+    fi
     
     deleted=$(echo "${deleted}" | tr -d '[:space:]' || echo "0")
     

@@ -169,13 +169,24 @@ check_rate_limit_sliding_window() {
     "
     
     local count
-    count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "0")
+    else
+        count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null || echo "0")
+    fi
     
     # Remove whitespace
     count=$(echo "${count}" | tr -d '[:space:]' || echo "0")
@@ -272,12 +283,22 @@ get_rate_limit_stats() {
         LIMIT 20;
     "
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -302,7 +323,22 @@ reset_rate_limit() {
         query="${query} AND endpoint = '${endpoint}'"
     fi
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "Rate limit counters reset for ${ip}${endpoint:+:${endpoint}}"
+            return 0
+        else
+            log_error "Failed to reset rate limit counters for ${ip}"
+            return 1
+        fi
+    else
+        if psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -313,6 +349,7 @@ reset_rate_limit() {
     else
         log_error "Failed to reset rate limit counters for ${ip}"
         return 1
+        fi
     fi
 }
 

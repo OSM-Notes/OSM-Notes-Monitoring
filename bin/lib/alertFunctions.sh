@@ -98,17 +98,33 @@ store_alert() {
     query="INSERT INTO alerts (component, alert_level, alert_type, message, metadata)
            VALUES ('${component}', '${alert_level}', '${alert_type}', '${message}', '${metadata}'::jsonb);"
     
-    if PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" > /dev/null 2>&1; then
-        log_info "Alert stored: ${component}/${alert_type}"
-        return 0
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        if PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "Alert stored: ${component}/${alert_type}"
+            return 0
+        else
+            log_error "Failed to store alert in database"
+            return 1
+        fi
     else
-        log_error "Failed to store alert in database"
-        return 1
+        if psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" > /dev/null 2>&1; then
+            log_info "Alert stored: ${component}/${alert_type}"
+            return 0
+        else
+            log_error "Failed to store alert in database"
+            return 1
+        fi
     fi
 }
 
@@ -143,13 +159,24 @@ is_alert_duplicate() {
              AND created_at > CURRENT_TIMESTAMP - INTERVAL '${window_minutes} minutes';"
     
     local count
-    count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null)
+    else
+        count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null)
+    fi
     
     if [[ "${count:-0}" -gt 0 ]]; then
         return 0  # Duplicate
@@ -216,7 +243,10 @@ send_alert() {
     local metadata="${5:-null}"
     
     # Store alert in database
-    store_alert "${component}" "${alert_level}" "${alert_type}" "${message}" "${metadata}"
+    if ! store_alert "${component}" "${alert_level}" "${alert_type}" "${message}" "${metadata}"; then
+        log_error "Failed to store alert, aborting send_alert"
+        return 1
+    fi
     
     # Determine recipients based on alert level
     local recipients
@@ -281,6 +311,18 @@ send_slack_alert() {
     local alert_level="${2}"
     local alert_type="${3}"
     local message="${4}"
+    
+    # Check if Slack is enabled
+    if [[ "${SLACK_ENABLED:-false}" != "true" ]]; then
+        log_debug "Slack notifications disabled, skipping"
+        return 0
+    fi
+    
+    # Check if webhook URL is configured
+    if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
+        log_debug "Slack webhook URL not configured, skipping"
+        return 0
+    fi
     
     # Check if curl is available
     if ! command -v curl > /dev/null 2>&1; then

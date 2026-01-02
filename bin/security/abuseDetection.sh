@@ -133,13 +133,24 @@ analyze_patterns() {
     "
     
     local rapid_count
-    rapid_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${rapid_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        rapid_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${rapid_query}" 2>/dev/null || echo "0")
+    else
+        rapid_count=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${rapid_query}" 2>/dev/null || echo "0")
+    fi
     
     rapid_count=$(echo "${rapid_count}" | tr -d '[:space:]' || echo "0")
     
@@ -154,13 +165,24 @@ analyze_patterns() {
     "
     
     local error_result
-    error_result=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${error_query}" 2>/dev/null || echo "0|0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        error_result=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${error_query}" 2>/dev/null || echo "0|0")
+    else
+        error_result=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${error_query}" 2>/dev/null || echo "0|0")
+    fi
     
     local error_count
     error_count=$(echo "${error_result}" | cut -d'|' -f1 | tr -d '[:space:]' || echo "0")
@@ -181,13 +203,24 @@ analyze_patterns() {
     "
     
     local excessive_count
-    excessive_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${excessive_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        excessive_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${excessive_query}" 2>/dev/null || echo "0")
+    else
+        excessive_count=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${excessive_query}" 2>/dev/null || echo "0")
+    fi
     
     excessive_count=$(echo "${excessive_count}" | tr -d '[:space:]' || echo "0")
     
@@ -265,13 +298,24 @@ detect_anomalies() {
     "
     
     local baseline
-    baseline=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${baseline_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        baseline=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${baseline_query}" 2>/dev/null || echo "0")
+    else
+        baseline=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${baseline_query}" 2>/dev/null || echo "0")
+    fi
     
     baseline=$(echo "${baseline}" | tr -d '[:space:]' || echo "0")
     
@@ -284,13 +328,24 @@ detect_anomalies() {
     "
     
     local current_count
-    current_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${current_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        current_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${current_query}" 2>/dev/null || echo "0")
+    else
+        current_count=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${current_query}" 2>/dev/null || echo "0")
+    fi
     
     current_count=$(echo "${current_count}" | tr -d '[:space:]' || echo "0")
     
@@ -342,13 +397,24 @@ analyze_behavior() {
     "
     
     local endpoint_count
-    endpoint_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${endpoint_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        endpoint_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${endpoint_query}" 2>/dev/null || echo "0")
+    else
+        endpoint_count=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${endpoint_query}" 2>/dev/null || echo "0")
+    fi
     
     endpoint_count=$(echo "${endpoint_count}" | tr -d '[:space:]' || echo "0")
     
@@ -361,13 +427,24 @@ analyze_behavior() {
     "
     
     local ua_count
-    ua_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${ua_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        ua_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${ua_query}" 2>/dev/null || echo "0")
+    else
+        ua_count=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${ua_query}" 2>/dev/null || echo "0")
+    fi
     
     ua_count=$(echo "${ua_count}" | tr -d '[:space:]' || echo "0")
     
@@ -436,13 +513,24 @@ automatic_response() {
     "
     
     local violation_count
-    violation_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${violation_query}" 2>/dev/null || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        violation_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${violation_query}" 2>/dev/null || echo "0")
+    else
+        violation_count=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${violation_query}" 2>/dev/null || echo "0")
+    fi
     
     violation_count=$(echo "${violation_count}" | tr -d '[:space:]' || echo "0")
     
@@ -529,13 +617,24 @@ analyze_all() {
     "
     
     local ips
-    ips=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${query}" 2>/dev/null || echo "")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        ips=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "")
+    else
+        ips=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "")
+    fi
     
     local abuse_count=0
     
@@ -578,12 +677,22 @@ get_abuse_stats() {
     "
     
     echo "Abuse Detection Statistics (last 24 hours):"
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
     
     echo ""
     echo "Top abusive IPs:"
@@ -600,12 +709,22 @@ get_abuse_stats() {
         LIMIT 10;
     "
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -632,12 +751,22 @@ show_patterns() {
     "
     
     echo "Detected Abuse Patterns:"
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##

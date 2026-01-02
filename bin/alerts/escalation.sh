@@ -37,11 +37,14 @@ fi
 # Ensure log directory exists
 mkdir -p "${LOG_DIR}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/escalation.log" "escalation"
-
-# Initialize alerting
-init_alerting
+# Only initialize if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/escalation.log" "escalation"
+    
+    # Initialize alerting
+    init_alerting
+fi
 
 ##
 # Show usage
@@ -128,14 +131,26 @@ needs_escalation() {
                    AND status = 'active';"
     
     local result
-    result=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -F "|" \
-        -c "${query}" 2>/dev/null || echo "")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        result=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -F "|" \
+            -c "${query}" 2>/dev/null || echo "")
+    else
+        result=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -F "|" \
+            -c "${query}" 2>/dev/null || echo "")
+    fi
     
     if [[ -z "${result}" ]]; then
         return 1  # Alert not found or not active
@@ -155,13 +170,24 @@ needs_escalation() {
     # Calculate age in minutes
     local age_query="SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - '${created_at}'::timestamp)) / 60;"
     local age_minutes
-    age_minutes=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${age_query}" 2>/dev/null | cut -d'.' -f1 || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        age_minutes=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${age_query}" 2>/dev/null | cut -d'.' -f1 || echo "0")
+    else
+        age_minutes=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${age_query}" 2>/dev/null | cut -d'.' -f1 || echo "0")
+    fi
     
     # Determine escalation thresholds based on alert level
     local threshold1
@@ -221,13 +247,24 @@ escalate_alert() {
                          WHERE id = '${alert_id}'::uuid;"
     
     local current_level
-    current_level=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${current_query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        current_level=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${current_query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    else
+        current_level=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${current_query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    fi
     current_level="${current_level:-0}"
     
     # Determine target level
@@ -270,13 +307,24 @@ escalate_alert() {
                         RETURNING id;"
     
     local result
-    result=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${update_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        result=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${update_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    else
+        result=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${update_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    fi
     
     if [[ -n "${result}" ]]; then
         log_info "Alert ${alert_id} escalated to level ${target_level}"
@@ -287,14 +335,26 @@ escalate_alert() {
                            WHERE id = '${alert_id}'::uuid;"
         
         local alert_data
-        alert_data=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-            -h "${dbhost}" \
-            -p "${dbport}" \
-            -U "${dbuser}" \
-            -d "${dbname}" \
-            -t -A \
-            -F "|" \
-            -c "${alert_query}" 2>/dev/null || echo "")
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            alert_data=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -F "|" \
+                -c "${alert_query}" 2>/dev/null || echo "")
+        else
+            alert_data=$(psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -F "|" \
+                -c "${alert_query}" 2>/dev/null || echo "")
+        fi
         
         if [[ -n "${alert_data}" ]]; then
             local component
@@ -338,13 +398,24 @@ check_escalation() {
     query="${query};"
     
     local alert_ids
-    alert_ids=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${query}" 2>/dev/null || echo "")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        alert_ids=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "")
+    else
+        alert_ids=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "")
+    fi
     
     local escalated_count=0
     

@@ -33,11 +33,14 @@ source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/ddos_protection.log" "ddosProtection"
-
-# Initialize security functions
-init_security
+# Only initialize if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/ddos_protection.log" "ddosProtection"
+    
+    # Initialize security functions
+    init_security
+fi
 
 # Component name
 COMPONENT="SECURITY"
@@ -152,13 +155,24 @@ detect_ddos_attack() {
     "
     
     local request_count
-    request_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        request_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "0")
+    else
+        request_count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null || echo "0")
+    fi
     
     # Remove whitespace
     request_count=$(echo "${request_count}" | tr -d '[:space:]' || echo "0")
@@ -322,13 +336,24 @@ check_concurrent_connections() {
     "
     
     local connection_count
-    connection_count=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        connection_count=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null || echo "0")
+    else
+        connection_count=$(psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "${query}" 2>/dev/null || echo "0")
+    fi
     
     connection_count=$(echo "${connection_count}" | tr -d '[:space:]' || echo "0")
     
@@ -418,13 +443,24 @@ check_and_block_ddos() {
         "
         
         local ips
-        ips=$(PGPASSWORD="${PGPASSWORD:-}" psql \
+        # Use PGPASSWORD only if set, otherwise let psql use default authentication
+        if [[ -n "${PGPASSWORD:-}" ]]; then
+            ips=$(PGPASSWORD="${PGPASSWORD}" psql \
+                -h "${dbhost}" \
+                -p "${dbport}" \
+                -U "${dbuser}" \
+                -d "${dbname}" \
+                -t -A \
+                -c "${query}" 2>/dev/null || echo "")
+        else
+            ips=$(psql \
             -h "${dbhost}" \
             -p "${dbport}" \
             -U "${dbuser}" \
             -d "${dbname}" \
             -t -A \
             -c "${query}" 2>/dev/null || echo "")
+        fi
         
         if [[ -n "${ips}" ]]; then
             while IFS= read -r check_ip; do
@@ -485,12 +521,22 @@ get_ddos_stats() {
         WHERE timestamp > CURRENT_TIMESTAMP - INTERVAL '24 hours';
     "
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || true
+    fi
     
     # Show blocked IPs
     echo ""
@@ -504,12 +550,22 @@ get_ddos_stats() {
         LIMIT 20;
     "
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -561,7 +617,21 @@ main() {
             
             local query="DELETE FROM ip_management WHERE ip_address = '${ip}'::inet AND list_type = 'temp_block';"
             
-            if PGPASSWORD="${PGPASSWORD:-}" psql \
+            # Use PGPASSWORD only if set, otherwise let psql use default authentication
+            if [[ -n "${PGPASSWORD:-}" ]]; then
+                if PGPASSWORD="${PGPASSWORD}" psql \
+                    -h "${dbhost}" \
+                    -p "${dbport}" \
+                    -U "${dbuser}" \
+                    -d "${dbname}" \
+                    -c "${query}" > /dev/null 2>&1; then
+                    log_info "IP ${ip} unblocked"
+                    record_security_event "unblock" "${ip}" "" "{\"reason\": \"manual_unblock\"}"
+                else
+                    log_error "Failed to unblock IP ${ip}"
+                fi
+            else
+                if psql \
                 -h "${dbhost}" \
                 -p "${dbport}" \
                 -U "${dbuser}" \

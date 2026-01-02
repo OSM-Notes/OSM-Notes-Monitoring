@@ -31,11 +31,15 @@ init_monitoring() {
         export LOG_DIR="${saved_log_dir}"
     fi
     
-    # Set defaults if not configured
-    export DBNAME="${DBNAME:-osm_notes_monitoring}"
-    export DBHOST="${DBHOST:-localhost}"
-    export DBPORT="${DBPORT:-5432}"
-    export DBUSER="${DBUSER:-postgres}"
+    # Set defaults if not configured (only if not already set)
+    # This ensures init_monitoring always sets these variables
+    : "${DBNAME:=osm_notes_monitoring}"
+    : "${DBHOST:=localhost}"
+    : "${DBPORT:=5432}"
+    : "${DBUSER:=postgres}"
+    
+    # Export them
+    export DBNAME DBHOST DBPORT DBUSER
     
     return 0
 }

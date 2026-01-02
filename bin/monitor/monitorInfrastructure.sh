@@ -31,8 +31,11 @@ source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/infrastructure.log" "monitorInfrastructure"
+# Only initialize if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/infrastructure.log" "monitorInfrastructure"
+fi
 
 # Component name (allow override in test mode)
 if [[ -z "${COMPONENT:-}" ]] || [[ "${TEST_MODE:-false}" == "true" ]]; then
@@ -477,38 +480,41 @@ main() {
     return ${overall_result}
 }
 
-# Parse command line arguments
-SPECIFIC_CHECK=""
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        -v|--verbose)
-            export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
-            shift
-            ;;
-        -q|--quiet)
-            export LOG_LEVEL="${LOG_LEVEL_ERROR}"
-            shift
-            ;;
-        -c|--config)
-            export CONFIG_FILE="$2"
-            shift 2
-            ;;
-        --check)
-            SPECIFIC_CHECK="$2"
-            shift 2
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            usage
-            exit 1
-            ;;
-    esac
-done
+# Only run main if script is executed directly (not sourced) and not in test mode
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]] && [[ "${TEST_MODE:-false}" != "true" ]]; then
+    # Parse command line arguments
+    SPECIFIC_CHECK=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--verbose)
+                export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
+                shift
+                ;;
+            -q|--quiet)
+                export LOG_LEVEL="${LOG_LEVEL_ERROR}"
+                shift
+                ;;
+            -c|--config)
+                export CONFIG_FILE="$2"
+                shift 2
+                ;;
+            --check)
+                SPECIFIC_CHECK="$2"
+                shift 2
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                usage
+                exit 1
+                ;;
+        esac
+    done
 
-# Run main function
-main "${SPECIFIC_CHECK}"
+    # Run main function
+    main "${SPECIFIC_CHECK}"
+fi
 

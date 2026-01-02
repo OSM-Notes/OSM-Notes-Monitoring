@@ -25,8 +25,11 @@ source "${PROJECT_ROOT}/bin/lib/configFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/import_dashboard.log" "importDashboard"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/import_dashboard.log" "importDashboard"
+fi
 
 ##
 # Show usage
@@ -155,12 +158,36 @@ import_grafana_dashboard() {
         rm -rf "${dashboard_dir:?}"/*
     fi
     
-    cp -r "${extract_dir}"/* "${dashboard_dir}/" 2>/dev/null || {
-        log_warning "Some files may not have been copied"
-    }
+    # Ensure dashboard directory exists
+    mkdir -p "${dashboard_dir}"
+    
+    # Copy files (handle both directory and file cases)
+    if [[ -d "${extract_dir}" ]]; then
+        # Check if extract_dir contains files directly or in a subdirectory
+        if [[ -f "${extract_dir}/import.json" ]] || [[ -f "${extract_dir}/dashboard.json" ]]; then
+            # Files are directly in extract_dir
+            cp -r "${extract_dir}"/* "${dashboard_dir}/" 2>/dev/null || {
+                log_warning "Some files may not have been copied"
+            }
+        elif [[ -d "${extract_dir}/grafana" ]]; then
+            # Files are in grafana subdirectory
+            cp -r "${extract_dir}/grafana"/* "${dashboard_dir}/" 2>/dev/null || {
+                log_warning "Some files may not have been copied"
+            }
+        else
+            # Try to copy everything
+            cp -r "${extract_dir}"/* "${dashboard_dir}/" 2>/dev/null || {
+                log_warning "Some files may not have been copied"
+            }
+        fi
+    elif [[ -f "${extract_dir}" ]]; then
+        cp "${extract_dir}" "${dashboard_dir}/" 2>/dev/null || {
+            log_warning "File may not have been copied"
+        }
+    fi
     
     # Cleanup temp directory if created
-    if [[ -f "${input}" ]] && [[ -d "${extract_dir}" ]]; then
+    if [[ -f "${input}" ]] && [[ -d "${extract_dir}" ]] && [[ "${extract_dir}" != "${dashboard_dir}" ]]; then
         rm -rf "${extract_dir}"
     fi
     
@@ -247,6 +274,12 @@ main() {
     local dashboard_type="${2:-all}"
     local create_backup_flag="${3:-false}"
     local overwrite="${4:-false}"
+    
+    # Validate input file/directory exists
+    if [[ ! -f "${input}" ]] && [[ ! -d "${input}" ]]; then
+        log_error "Input file or directory does not exist: ${input}"
+        return 1
+    fi
     
     # Load configuration
     load_config "${CONFIG_FILE:-}"

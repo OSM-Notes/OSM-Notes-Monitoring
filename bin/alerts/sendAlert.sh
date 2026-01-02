@@ -37,11 +37,15 @@ fi
 # Ensure log directory exists
 mkdir -p "${LOG_DIR}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/send_alert.log" "sendAlert"
-
-# Initialize alerting
-init_alerting
+# Only initialize logging if not in test mode
+# When TEST_MODE is true, initialization is skipped to avoid database connections
+if [[ "${TEST_MODE:-false}" != "true" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/send_alert.log" "sendAlert"
+    
+    # Initialize alerting
+    init_alerting
+fi
 
 ##
 # Show usage
@@ -231,6 +235,14 @@ main() {
             --config|-c)
                 export CONFIG_FILE="${2}"
                 shift 2
+                ;;
+            --verbose|-v)
+                export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
+                shift
+                ;;
+            --quiet|-q)
+                export LOG_LEVEL="${LOG_LEVEL_ERROR}"
+                shift
                 ;;
             *)
                 break

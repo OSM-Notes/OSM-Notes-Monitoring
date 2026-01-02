@@ -31,8 +31,11 @@ source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/analytics.log" "monitorAnalytics"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/analytics.log" "monitorAnalytics"
+fi
 
 # Component name
 # Component name (allow override in test mode)
@@ -536,8 +539,9 @@ check_etl_processing_duration() {
                 
                 # Try to extract duration from log file
                 # Look for patterns like "duration: 123s", "took 123 seconds", "completed in 123s"
+                # Use case-insensitive grep to match "Duration:" or "duration:"
                 local log_durations
-                log_durations=$(grep -oE "(duration|took|completed in|execution time)[: ]*[0-9]+[ ]*(seconds?|s|sec)" "${logfile}" 2>/dev/null | grep -oE "[0-9]+" | head -5)
+                log_durations=$(grep -ioE "(duration|took|completed in|execution time)[: ]*[0-9]+[ ]*(seconds?|s|sec)" "${logfile}" 2>/dev/null | grep -oE "[0-9]+" | head -5)
                 
                 if [[ -n "${log_durations}" ]]; then
                     while IFS= read -r duration_str; do

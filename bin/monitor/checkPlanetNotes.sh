@@ -28,8 +28,11 @@ source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
 # shellcheck disable=SC1091
 source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 
-# Initialize logging
-init_logging "${LOG_DIR}/ingestion.log" "checkPlanetNotes"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/ingestion.log" "checkPlanetNotes"
+fi
 
 # Component name
 # Component name (allow override in test mode)

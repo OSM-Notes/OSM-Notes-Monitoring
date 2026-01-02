@@ -29,8 +29,11 @@ source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 
-# Initialize logging
-init_logging "${LOG_DIR}/generate_metrics.log" "generateMetrics"
+# Only initialize logging if not in test mode or if script is executed directly
+if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Initialize logging
+    init_logging "${LOG_DIR}/generate_metrics.log" "generateMetrics"
+fi
 
 ##
 # Show usage
@@ -139,13 +142,24 @@ generate_json_metrics() {
     local dbuser="${6}"
     
     # Use psql with JSON output
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "SELECT json_agg(row_to_json(t)) FROM (${query}) t;" 2>/dev/null || echo "[]"
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "SELECT json_agg(row_to_json(t)) FROM (${query}) t;" 2>/dev/null || echo "[]"
+    fi
 }
 
 ##
@@ -163,7 +177,18 @@ generate_csv_metrics() {
     echo "metric_name,metric_value,metadata,timestamp"
     
     # Data
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -F "," \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
@@ -171,6 +196,7 @@ generate_csv_metrics() {
         -t -A \
         -F "," \
         -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -203,13 +229,24 @@ generate_dashboard_metrics() {
                           ORDER BY metric_name;"
     
     # Output as JSON for dashboard consumption
-    PGPASSWORD="${PGPASSWORD:-}" psql \
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "SELECT json_agg(row_to_json(t)) FROM (${dashboard_query}) t;" 2>/dev/null || echo "[]"
+    else
+        psql \
         -h "${dbhost}" \
         -p "${dbport}" \
         -U "${dbuser}" \
         -d "${dbname}" \
         -t -A \
         -c "SELECT json_agg(row_to_json(t)) FROM (${dashboard_query}) t;" 2>/dev/null || echo "[]"
+    fi
 }
 
 ##
@@ -311,10 +348,13 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
+            # If --component was already set, treat remaining positional args as format/output
             if [[ -z "${COMPONENT}" ]]; then
                 COMPONENT="${1}"
             elif [[ -z "${OUTPUT_FORMAT}" ]]; then
                 OUTPUT_FORMAT="${1}"
+            elif [[ -z "${OUTPUT_FILE}" ]]; then
+                OUTPUT_FILE="${1}"
             fi
             shift
             ;;
@@ -326,5 +366,13 @@ OUTPUT_FORMAT="${OUTPUT_FORMAT:-json}"
 
 # Run main if script is executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "${COMPONENT:-all}" "${OUTPUT_FORMAT}" "${OUTPUT_FILE}" "${TIME_RANGE:-24}"
+    # If --component was specified, use it; otherwise use positional argument or default to "all"
+    FINAL_COMPONENT="${COMPONENT:-${1:-all}}"
+    # If COMPONENT was set via --component, skip first positional arg (it's the component)
+    if [[ -n "${COMPONENT}" ]] && [[ $# -gt 0 ]]; then
+        shift  # Skip first positional arg since we're using --component value
+    fi
+    # Get output format from remaining args or default
+    FINAL_FORMAT="${OUTPUT_FORMAT:-${1:-json}}"
+    main "${FINAL_COMPONENT}" "${FINAL_FORMAT}" "${OUTPUT_FILE}" "${TIME_RANGE:-24}"
 fi

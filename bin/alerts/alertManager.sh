@@ -149,12 +149,22 @@ list_alerts() {
     
     query="${query} ORDER BY created_at DESC LIMIT 100;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -172,12 +182,22 @@ show_alert() {
     
     local query="SELECT * FROM alerts WHERE id = '${alert_id}'::uuid;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -203,13 +223,24 @@ acknowledge_alert() {
                  RETURNING id;"
     
     local result
-    result=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        result=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    else
+        result=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    fi
     
     if [[ -n "${result}" ]]; then
         log_info "Alert ${alert_id} acknowledged by ${user}"
@@ -246,13 +277,24 @@ resolve_alert() {
                  RETURNING id;"
     
     local result
-    result=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        result=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    else
+        result=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    fi
     
     if [[ -n "${result}" ]]; then
         log_info "Alert ${alert_id} resolved by ${user}"
@@ -274,7 +316,7 @@ resolve_alert() {
 ##
 aggregate_alerts() {
     local component="${1:-}"
-    local window_minutes="${2:-${ALERT_AGGREGATION_WINDOW_MINUTES}}"
+    local window_minutes="${2:-${ALERT_AGGREGATION_WINDOW_MINUTES:-15}}"
     local dbname="${DBNAME:-osm_notes_monitoring}"
     local dbhost="${DBHOST:-localhost}"
     local dbport="${DBPORT:-5432}"
@@ -292,12 +334,22 @@ aggregate_alerts() {
     query="${query} GROUP BY component, alert_level, alert_type
                  ORDER BY count DESC, latest DESC;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -322,12 +374,22 @@ show_history() {
                  ORDER BY created_at DESC
                  LIMIT 100;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -359,12 +421,22 @@ show_stats() {
     query="${query} GROUP BY component, alert_level, status
                  ORDER BY component, alert_level, status;"
     
-    PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -c "${query}" 2>/dev/null || true
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    else
+        psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -c "${query}" 2>/dev/null || true
+    fi
 }
 
 ##
@@ -374,7 +446,7 @@ show_stats() {
 #   $1 - Retention days (optional, default: 180)
 ##
 cleanup_alerts() {
-    local retention_days="${1:-${ALERT_RETENTION_DAYS}}"
+    local retention_days="${1:-${ALERT_RETENTION_DAYS:-180}}"
     local dbname="${DBNAME:-osm_notes_monitoring}"
     local dbhost="${DBHOST:-localhost}"
     local dbport="${DBPORT:-5432}"
@@ -383,13 +455,24 @@ cleanup_alerts() {
     local query="SELECT cleanup_old_alerts(${retention_days});"
     
     local result
-    result=$(PGPASSWORD="${PGPASSWORD:-}" psql \
-        -h "${dbhost}" \
-        -p "${dbport}" \
-        -U "${dbuser}" \
-        -d "${dbname}" \
-        -t -A \
-        -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        result=$(PGPASSWORD="${PGPASSWORD}" psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    else
+        result=$(psql \
+            -h "${dbhost}" \
+            -p "${dbport}" \
+            -U "${dbuser}" \
+            -d "${dbname}" \
+            -t -A \
+            -c "${query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    fi
     
     log_info "Cleaned up ${result} old alerts (retention: ${retention_days} days)"
     echo "Cleaned up ${result} old alerts"
