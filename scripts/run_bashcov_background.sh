@@ -125,8 +125,26 @@ monitor_bashcov() {
             fi
         fi
         
-        # Show progress
-        printf "\r%sProgress: %s/%s tests | Results: %s%s" "${BLUE}" "${processed}" "${total_tests}" "${resultset_size}" "${NC}"
+        # Get current test being executed
+        local current_test=""
+        local bashcov_pid
+        bashcov_pid=$(cat "${PID_FILE}" 2>/dev/null || echo "")
+        if [[ -n "${bashcov_pid}" ]]; then
+            # Find the bashcov process and extract the test file name
+            local test_line
+            test_line=$(pgrep -af "bashcov.*bats" 2>/dev/null | tail -1 || echo "")
+            if [[ -n "${test_line}" ]]; then
+                # Extract test file name from the command line
+                current_test=$(echo "${test_line}" | sed 's/.*bats //' | sed 's/ .*//' | xargs basename 2>/dev/null || echo "")
+            fi
+        fi
+        
+        # Show progress with current test
+        if [[ -n "${current_test}" ]]; then
+            printf "\r%sProgress: %s/%s tests | Current: %s | Results: %s%s" "${BLUE}" "${processed}" "${total_tests}" "${current_test}" "${resultset_size}" "${NC}"
+        else
+            printf "\r%sProgress: %s/%s tests | Results: %s%s" "${BLUE}" "${processed}" "${total_tests}" "${resultset_size}" "${NC}"
+        fi
         
         sleep 2
     done

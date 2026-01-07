@@ -91,6 +91,7 @@ For detailed architecture documentation, see:
 - [Vulnerability Scanning Guide](./docs/VULNERABILITY_SCANNING_GUIDE.md): Automated vulnerability detection
 - [Penetration Testing Guide](./docs/PENETRATION_TESTING_GUIDE.md): Security penetration testing procedures
 - [Code Coverage Instrumentation](./docs/CODE_COVERAGE_INSTRUMENTATION.md): Using bashcov for real coverage measurement
+- [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md): Understanding estimated vs instrumented coverage
 
 ## Features
 
@@ -199,6 +200,44 @@ OSM-Notes-Monitoring/
 # Or view HTML dashboard
 open dashboards/html/overview.html
 ```
+
+## Code Coverage
+
+This project uses **two complementary methods** to measure code coverage:
+
+### Quick Coverage Check (Estimated)
+```bash
+bash scripts/generate_coverage_report.sh
+# Fast: Shows estimated coverage based on test file presence
+# Output: coverage/coverage_report.txt
+```
+
+### Detailed Coverage Analysis (Instrumented)
+```bash
+# Run in background (takes hours)
+bash scripts/run_bashcov_background.sh start
+
+# Monitor progress
+bash scripts/monitor_bashcov.sh
+
+# Check status
+bash scripts/run_bashcov_background.sh status
+# Output: coverage/coverage_report_instrumented.txt
+```
+
+### Combined Report (Both Side by Side)
+```bash
+bash scripts/generate_coverage_combined.sh
+# Shows estimated vs instrumented coverage comparison
+# Output: coverage/coverage_report_combined.txt
+```
+
+**Understanding the Numbers:**
+- **Estimated (80%)**: "We have tests for 80% of scripts" - Fast, optimistic
+- **Instrumented (27%)**: "27% of code lines are executed during tests" - Slow, accurate
+- **Gap (53%)**: Normal for unit tests with mocks - indicates tests exist but don't execute full code paths
+
+For detailed explanation, see: [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md)
 
 ## Configuration
 

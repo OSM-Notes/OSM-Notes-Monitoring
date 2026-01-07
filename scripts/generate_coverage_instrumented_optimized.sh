@@ -93,9 +93,14 @@ run_all_tests_with_bashcov() {
     
     # Find all test files and execute them with bats
     # bashcov needs explicit test files, not directories
+    # Exclude integration tests as they are very slow and may not be needed for code coverage
     # Execute tests in batches to avoid command line length issues
     local test_files=()
     while IFS= read -r -d '' test_file; do
+        # Skip integration tests - they are very slow and may cause timeouts
+        if [[ "${test_file}" =~ /integration/ ]]; then
+            continue
+        fi
         test_files+=("${test_file}")
     done < <(find "${PROJECT_ROOT}/tests" -name "*.sh" -type f -print0 2>/dev/null | sort -z)
     
