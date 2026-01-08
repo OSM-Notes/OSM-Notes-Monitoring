@@ -1,6 +1,6 @@
 # Operations Runbook
 
-> **Last Updated:** 2026-01-01  
+> **Last Updated:** 2026-01-07  
 > **Version:** 1.0.0
 
 Operations runbook for OSM-Notes-Monitoring production system.
@@ -13,6 +13,8 @@ Operations runbook for OSM-Notes-Monitoring production system.
 4. [Common Tasks](#common-tasks)
 5. [Emergency Procedures](#emergency-procedures)
 6. [On-Call Procedures](#on-call-procedures)
+7. [Maintenance Windows](#maintenance-windows)
+8. [Ongoing Maintenance Plan](#ongoing-maintenance-plan)
 
 ---
 
@@ -431,4 +433,51 @@ Operations runbook for OSM-Notes-Monitoring production system.
 
 ---
 
-**Last Updated:** 2026-01-01
+## Ongoing Maintenance Plan
+
+This section outlines continuous maintenance tasks that should be performed regularly to keep the system healthy and up-to-date.
+
+### Code Maintenance
+
+- **Regular Code Reviews**: Review code changes, ensure standards compliance
+- **Update Dependencies**: Keep system dependencies up-to-date (PostgreSQL, bash, tools)
+- **Security Patches**: Apply security patches promptly
+- **Performance Optimization**: Monitor and optimize slow queries, improve resource usage
+- **Documentation Updates**: Keep documentation current with code changes
+
+### Monitoring Improvements
+
+- **Add New Monitoring Checks**: As new components or requirements emerge
+- **Improve Alert Thresholds**: Adjust thresholds based on operational experience
+- **Optimize Queries**: Review and optimize SQL queries based on usage patterns
+- **Add New Dashboards**: Create dashboards for new metrics or components as needed
+
+### Maintenance Schedule
+
+**Weekly**:
+- Review alert patterns and thresholds
+- Check for dependency updates
+- Review and optimize slow queries
+
+**Monthly**:
+- Code review session
+- Security audit
+- Performance review
+- Documentation review
+
+**Quarterly**:
+- Comprehensive security review
+- Architecture review
+- Capacity planning review
+- Dependency audit
+
+### Maintenance Tracking
+
+Track maintenance activities in:
+- Git commits with appropriate tags (`maintenance`, `security`, `performance`)
+- CHANGELOG.md for significant changes
+- Documentation updates as needed
+
+---
+
+**Last Updated:** 2026-01-07

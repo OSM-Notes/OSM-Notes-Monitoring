@@ -133,7 +133,6 @@
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | [Monitoring Resumen Ejecutivo](./Monitoring_Resumen_Ejecutivo.md) | Executive summary (Spanish) | Management |
-| [Phase 0 Progress](./PHASE0_PROGRESS.md) | Initial progress tracking | Project managers |
 
 ---
 
@@ -223,5 +222,5 @@ When updating documentation:
 
 ---
 
-**Last Updated:** 2025-12-31  
+**Last Updated:** 2026-01-07  
 **Version:** 1.0.0
