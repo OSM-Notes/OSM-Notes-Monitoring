@@ -4,6 +4,9 @@
 # Tests configuration loading and validation
 #
 
+# Test configuration - set before loading test_helper
+export TEST_DB_NAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
+
 load "${BATS_TEST_DIRNAME}/../test_helper.bash"
 
 # Source libraries

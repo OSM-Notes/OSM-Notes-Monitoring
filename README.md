@@ -91,8 +91,7 @@ For detailed architecture documentation, see:
 - [Vulnerability Scanning Guide](./docs/VULNERABILITY_SCANNING_GUIDE.md): Automated vulnerability detection
 - [Penetration Testing Guide](./docs/PENETRATION_TESTING_GUIDE.md): Security penetration testing procedures
 - [Code Coverage Instrumentation](./docs/CODE_COVERAGE_INSTRUMENTATION.md): Using bashcov for real coverage measurement
-- [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md): Understanding estimated vs instrumented coverage
-- [Improving Code Coverage](./docs/IMPROVING_COVERAGE.md): Guide to improve real code coverage
+- [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md): Understanding estimated vs instrumented coverage and how to improve it
 
 ## Features
 
