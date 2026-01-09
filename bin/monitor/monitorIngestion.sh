@@ -67,6 +67,7 @@ Check Types:
     error-rate      Check error rate from logs
     disk-space      Check disk space usage
     api-download    Check API download status
+    daemon          Check daemon process metrics
     all             Run all checks (default)
 
 Examples:
@@ -1326,6 +1327,124 @@ check_api_download_success_rate() {
 }
 
 ##
+# Check daemon metrics
+##
+check_daemon_metrics() {
+    log_info "${COMPONENT}: Starting daemon metrics check"
+    
+    # Check if daemon metrics collection script exists
+    local daemon_metrics_script="${SCRIPT_DIR}/collectDaemonMetrics.sh"
+    
+    if [[ ! -f "${daemon_metrics_script}" ]]; then
+        log_warning "${COMPONENT}: Daemon metrics collection script not found: ${daemon_metrics_script}"
+        return 0
+    fi
+    
+    # Check if script is executable
+    if [[ ! -x "${daemon_metrics_script}" ]]; then
+        log_warning "${COMPONENT}: Daemon metrics collection script is not executable: ${daemon_metrics_script}"
+        return 0
+    fi
+    
+    # Run daemon metrics collection
+    local output
+    local exit_code=0
+    
+    if [[ "${TEST_MODE:-false}" == "true" ]]; then
+        # In test mode, capture output for debugging
+        output=$(bash "${daemon_metrics_script}" 2>&1) || exit_code=$?
+        if [[ ${exit_code} -ne 0 ]]; then
+            log_debug "${COMPONENT}: Daemon metrics collection output: ${output}"
+        fi
+    else
+        # In production, run silently and log errors
+        bash "${daemon_metrics_script}" > /dev/null 2>&1 || exit_code=$?
+    fi
+    
+    if [[ ${exit_code} -ne 0 ]]; then
+        log_warning "${COMPONENT}: Daemon metrics collection failed (exit code: ${exit_code})"
+        return 1
+    fi
+    
+    # Check daemon status from metrics (if available)
+    # Get latest daemon_status metric
+    local daemon_status_query
+    daemon_status_query="SELECT metric_value FROM metrics 
+                         WHERE component = 'ingestion' 
+                           AND metric_name = 'daemon_status' 
+                         ORDER BY timestamp DESC 
+                         LIMIT 1;"
+    
+    local daemon_status
+    daemon_status=$(execute_sql_query "${daemon_status_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    if [[ -n "${daemon_status}" ]]; then
+        if [[ "${daemon_status}" == "0" ]]; then
+            log_warning "${COMPONENT}: Daemon is not active"
+            send_alert "${COMPONENT}" "CRITICAL" "daemon_down" "Daemon service is not active"
+            return 1
+        fi
+    fi
+    
+    # Check cycle duration threshold
+    local cycle_duration_query
+    cycle_duration_query="SELECT metric_value FROM metrics 
+                          WHERE component = 'ingestion' 
+                            AND metric_name = 'daemon_cycle_duration_seconds' 
+                          ORDER BY timestamp DESC 
+                          LIMIT 1;"
+    
+    local cycle_duration
+    cycle_duration=$(execute_sql_query "${cycle_duration_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    if [[ -n "${cycle_duration}" ]] && [[ "${cycle_duration}" =~ ^[0-9]+$ ]]; then
+        local cycle_duration_threshold="${INGESTION_DAEMON_CYCLE_DURATION_THRESHOLD:-30}"
+        if [[ ${cycle_duration} -gt ${cycle_duration_threshold} ]]; then
+            log_warning "${COMPONENT}: Cycle duration (${cycle_duration}s) exceeds threshold (${cycle_duration_threshold}s)"
+            send_alert "${COMPONENT}" "WARNING" "daemon_cycle_duration" "Cycle duration (${cycle_duration}s) exceeds threshold (${cycle_duration_threshold}s)"
+        fi
+    fi
+    
+    # Check cycle success rate
+    local success_rate_query
+    success_rate_query="SELECT metric_value FROM metrics 
+                        WHERE component = 'ingestion' 
+                          AND metric_name = 'daemon_cycle_success_rate_percent' 
+                        ORDER BY timestamp DESC 
+                        LIMIT 1;"
+    
+    local success_rate
+    success_rate=$(execute_sql_query "${success_rate_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    if [[ -n "${success_rate}" ]] && [[ "${success_rate}" =~ ^[0-9]+$ ]]; then
+        local success_rate_threshold="${INGESTION_DAEMON_SUCCESS_RATE_THRESHOLD:-95}"
+        if [[ ${success_rate} -lt ${success_rate_threshold} ]]; then
+            log_warning "${COMPONENT}: Cycle success rate (${success_rate}%) below threshold (${success_rate_threshold}%)"
+            send_alert "${COMPONENT}" "WARNING" "daemon_success_rate" "Cycle success rate (${success_rate}%) below threshold (${success_rate_threshold}%)"
+        fi
+    fi
+    
+    # Check if no processing in last 5 minutes
+    local last_cycle_query
+    last_cycle_query="SELECT MAX(timestamp) FROM metrics 
+                      WHERE component = 'ingestion' 
+                        AND metric_name = 'daemon_cycle_number' 
+                        AND timestamp > NOW() - INTERVAL '5 minutes';"
+    
+    local last_cycle_time
+    last_cycle_time=$(execute_sql_query "${last_cycle_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    if [[ -z "${last_cycle_time}" ]]; then
+        log_warning "${COMPONENT}: No daemon processing detected in last 5 minutes"
+        send_alert "${COMPONENT}" "CRITICAL" "daemon_no_processing" "No daemon processing detected in last 5 minutes"
+        return 1
+    fi
+    
+    log_info "${COMPONENT}: Daemon metrics check passed"
+    return 0
+}
+
+##
 # Run all checks
 ##
 run_all_checks() {
@@ -1395,6 +1514,13 @@ run_all_checks() {
     
     # API download success rate check
     if check_api_download_success_rate; then
+        checks_passed=$((checks_passed + 1))
+    else
+        checks_failed=$((checks_failed + 1))
+    fi
+    
+    # Daemon metrics check
+    if check_daemon_metrics; then
         checks_passed=$((checks_passed + 1))
     else
         checks_failed=$((checks_failed + 1))
@@ -1522,6 +1648,13 @@ main() {
             ;;
         api-download)
             if check_api_download_status && check_api_download_success_rate; then
+                exit 0
+            else
+                exit 1
+            fi
+            ;;
+        daemon)
+            if check_daemon_metrics; then
                 exit 0
             else
                 exit 1

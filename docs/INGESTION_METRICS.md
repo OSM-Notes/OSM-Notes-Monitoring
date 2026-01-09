@@ -484,6 +484,243 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Description:** Age of most recent data update
 - **Type:** Gauge
 - **Unit:** `seconds`
+- **Collection:** Should be collected during processing checks
+- **Expected Range:** 0-3600 seconds
+- **Alert Threshold:** > 3600 seconds (1 hour)
+
+---
+
+## 9. Daemon Process Metrics
+
+Metrics related to the daemon process (`processAPINotesDaemon.sh`).
+
+### 9.1 Daemon Status Metrics
+
+#### `daemon_status`
+- **Description:** Daemon service status (1=active, 0=inactive/failed)
+- **Type:** Gauge
+- **Unit:** `boolean` (0 or 1)
+- **Collection:** Collected during `check_daemon_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 1 (active)
+- **Alert Threshold:** 0 (inactive/failed) - CRITICAL
+- **Metadata:** `component=ingestion,status={active|inactive|failed|not-found}`
+
+#### `daemon_service_enabled`
+- **Description:** Whether daemon service is enabled in systemd (1=enabled, 0=disabled)
+- **Type:** Gauge
+- **Unit:** `boolean` (0 or 1)
+- **Collection:** Collected during `check_daemon_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 1 (enabled)
+- **Alert Threshold:** 0 (disabled) - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_pid`
+- **Description:** Process ID of the daemon process
+- **Type:** Gauge
+- **Unit:** `count`
+- **Collection:** Collected during `check_daemon_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** > 0 (valid PID)
+- **Alert Threshold:** 0 (process not found) - CRITICAL
+- **Metadata:** `component=ingestion`
+
+#### `daemon_uptime_seconds`
+- **Description:** Daemon process uptime in seconds
+- **Type:** Gauge
+- **Unit:** `seconds`
+- **Collection:** Collected during `check_daemon_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** > 0
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_restarts_count`
+- **Description:** Number of times daemon service has been restarted
+- **Type:** Counter
+- **Unit:** `count`
+- **Collection:** Collected during `check_daemon_metrics()` from systemd
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 0 (no restarts)
+- **Alert Threshold:** > 0 (restarts detected) - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_lock_status`
+- **Description:** Status of daemon lock file (1=exists, 0=not found)
+- **Type:** Gauge
+- **Unit:** `boolean` (0 or 1)
+- **Collection:** Collected during `check_daemon_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 1 (lock file exists)
+- **Alert Threshold:** 0 (lock file missing) - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_lock_age_seconds`
+- **Description:** Age of daemon lock file in seconds
+- **Type:** Gauge
+- **Unit:** `seconds`
+- **Collection:** Collected during `check_daemon_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 0-300 seconds
+- **Alert Threshold:** > 300 seconds (5 minutes) - WARNING
+- **Metadata:** `component=ingestion`
+
+### 9.2 Cycle Metrics
+
+#### `daemon_cycle_number`
+- **Description:** Last completed cycle number
+- **Type:** Counter
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Incrementing
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycle_duration_seconds`
+- **Description:** Duration of last completed cycle in seconds
+- **Type:** Gauge
+- **Unit:** `seconds`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 5-30 seconds
+- **Alert Threshold:** > 30 seconds (configurable via `INGESTION_DAEMON_CYCLE_DURATION_THRESHOLD`) - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycles_total`
+- **Description:** Total number of cycles completed
+- **Type:** Counter
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()` from logs
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Incrementing
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycle_avg_duration_seconds`
+- **Description:** Average cycle duration in seconds
+- **Type:** Gauge
+- **Unit:** `seconds`
+- **Collection:** Calculated during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 5-30 seconds
+- **Alert Threshold:** > 30 seconds - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycle_min_duration_seconds`
+- **Description:** Minimum cycle duration in seconds
+- **Type:** Gauge
+- **Unit:** `seconds`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 1-10 seconds
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycle_max_duration_seconds`
+- **Description:** Maximum cycle duration in seconds
+- **Type:** Gauge
+- **Unit:** `seconds`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 10-60 seconds
+- **Alert Threshold:** > 60 seconds - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycle_success_rate_percent`
+- **Description:** Percentage of successful cycles
+- **Type:** Gauge
+- **Unit:** `percent`
+- **Collection:** Calculated during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 95-100%
+- **Alert Threshold:** < 95% (configurable via `INGESTION_DAEMON_SUCCESS_RATE_THRESHOLD`) - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycles_per_hour`
+- **Description:** Number of cycles completed per hour
+- **Type:** Gauge
+- **Unit:** `count`
+- **Collection:** Calculated during `parse_daemon_cycle_metrics()` from recent logs
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 50-60 cycles/hour (approximately 1 per minute)
+- **Alert Threshold:** < 50 cycles/hour - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycles_successful_count`
+- **Description:** Number of successful cycles
+- **Type:** Counter
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Incrementing
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_cycles_failed_count`
+- **Description:** Number of failed cycles
+- **Type:** Counter
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_cycle_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** 0
+- **Alert Threshold:** > 0 - WARNING
+- **Metadata:** `component=ingestion`
+
+### 9.3 Processing Metrics
+
+#### `daemon_notes_processed_per_cycle`
+- **Description:** Number of notes processed in last cycle
+- **Type:** Gauge
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_processing_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Varies with data volume
+- **Alert Threshold:** 0 (no notes processed) - WARNING
+- **Metadata:** `component=ingestion`
+
+#### `daemon_notes_new_count`
+- **Description:** Number of new notes processed in last cycle
+- **Type:** Gauge
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_processing_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Varies with data volume
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_notes_updated_count`
+- **Description:** Number of updated notes processed in last cycle
+- **Type:** Gauge
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_processing_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Varies with data volume
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_comments_processed_per_cycle`
+- **Description:** Number of comments processed in last cycle
+- **Type:** Gauge
+- **Unit:** `count`
+- **Collection:** Collected during `parse_daemon_processing_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** Varies with data volume
+- **Alert Threshold:** None (informational)
+- **Metadata:** `component=ingestion`
+
+#### `daemon_processing_rate_notes_per_second`
+- **Description:** Processing rate in notes per second
+- **Type:** Gauge
+- **Unit:** `notes_per_second`
+- **Collection:** Calculated during `parse_daemon_processing_metrics()`
+- **Frequency:** Every monitoring cycle
+- **Expected Range:** > 0
+- **Alert Threshold:** 0 (no processing) - WARNING
+- **Metadata:** `component=ingestion`
+- **Type:** Gauge
+- **Unit:** `seconds`
 - **Collection:** Should be collected during `check_data_freshness()`
 - **Expected Range:** 0-3600 seconds (1 hour)
 - **Alert Threshold:** > 3600 seconds
@@ -512,7 +749,7 @@ The following metrics are referenced in the code but functions are not yet imple
 
 ---
 
-**Last Updated:** 2025-12-25  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-08  
+**Version:** 1.1.0  
 **Status:** Active
 

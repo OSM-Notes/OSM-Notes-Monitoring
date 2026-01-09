@@ -57,6 +57,11 @@ INGESTION_PLANET_CHECK_DURATION_THRESHOLD=600  # seconds (10 minutes) - alert if
 INGESTION_API_DOWNLOAD_SUCCESS_RATE_THRESHOLD=95  # percentage - minimum acceptable success rate
 INGESTION_API_DOWNLOAD_DURATION_THRESHOLD=600  # seconds (10 minutes) - alert if download takes longer
 
+# Daemon Monitoring Thresholds
+INGESTION_DAEMON_CYCLE_DURATION_THRESHOLD=30  # seconds - alert if cycle duration exceeds this
+INGESTION_DAEMON_SUCCESS_RATE_THRESHOLD=95  # percentage - minimum acceptable cycle success rate
+INGESTION_DAEMON_NO_PROCESSING_THRESHOLD=300  # seconds (5 minutes) - alert if no processing detected
+
 # Analytics Monitoring
 ANALYTICS_ENABLED=true
 ANALYTICS_CHECK_TIMEOUT=600  # seconds
