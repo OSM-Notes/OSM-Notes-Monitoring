@@ -39,7 +39,7 @@
         "editorMode": "code",
         "format": "time_series",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connection_time_ms' AND \$__timeFilter(timestamp) ORDER BY timestamp",
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connection_time_ms' AND $__timeFilter(timestamp) ORDER BY timestamp",
         "refId": "A"
       }],
       "fieldConfig": {
@@ -62,7 +62,7 @@
         "editorMode": "code",
         "format": "time_series",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'scripts_running' AND \$__timeFilter(timestamp) ORDER BY timestamp",
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'scripts_running' AND $__timeFilter(timestamp) ORDER BY timestamp",
         "refId": "A"
       }],
       "fieldConfig": {

@@ -12,7 +12,7 @@
     {
       "id": 1,
       "title": "Analytics Health Status",
-      "type": "stat",
+      "type": "table",
       "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
       "targets": [{
         "datasource": {
@@ -24,7 +24,50 @@
         "rawQuery": true,
         "rawSql": "SELECT status FROM component_health WHERE component = 'analytics'",
         "refId": "A"
-      }]
+      }],
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "healthy": {
+                        "color": "green",
+                        "text": "Healthy"
+                      },
+                      "degraded": {
+                        "color": "yellow",
+                        "text": "Degraded"
+                      },
+                      "down": {
+                        "color": "red",
+                        "text": "Down"
+                      },
+                      "unknown": {
+                        "color": "gray",
+                        "text": "Unknown"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 2,
@@ -39,9 +82,32 @@
         "editorMode": "code",
         "format": "time_series",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value, metric_name FROM metrics WHERE component = 'analytics' AND metric_name IN ('etl_scripts_executable', 'etl_scripts_running', 'etl_scripts_found') AND timestamp > NOW() - INTERVAL '24 hours' ORDER BY timestamp",
+        "rawSql": "SELECT timestamp AS time, metric_value::numeric AS value, metric_name FROM metrics WHERE component = 'analytics' AND metric_name IN ('etl_scripts_executable', 'etl_scripts_running', 'etl_scripts_found') AND timestamp > NOW() - INTERVAL '24 hours' ORDER BY timestamp",
         "refId": "A"
-      }]
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "pointSize": 5,
+            "showPoints": "auto"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
     }
   ],
   "time": {"from": "now-24h", "to": "now"}
