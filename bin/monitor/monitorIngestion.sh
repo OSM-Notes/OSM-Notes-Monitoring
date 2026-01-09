@@ -89,8 +89,11 @@ check_script_execution_status() {
     log_info "${COMPONENT}: Starting script execution status check"
     
     # Define scripts with their subdirectories
+    # Note: processAPINotesDaemon.sh is the daemon wrapper, but we check for processAPINotes.sh
+    # as it may be invoked by the daemon or run directly
     local scripts_to_check=(
         "process/processAPINotes.sh"
+        "process/processAPINotesDaemon.sh"
         "process/processPlanetNotes.sh"
         "monitor/notesCheckVerifier.sh"
         "monitor/processCheckPlanetNotes.sh"
@@ -125,16 +128,33 @@ check_script_execution_status() {
         # Check if script process is running
         local script_basename
         script_basename=$(basename "${script_path}")
-        if pgrep -f "${script_basename}" > /dev/null 2>&1; then
+        
+        # Try multiple pgrep strategies to find running processes
+        local pid_found=""
+        # First try: exact match with -f (full command line)
+        pid_found=$(pgrep -f "${script_basename}" 2>/dev/null | head -1)
+        
+        # If not found, try matching just the basename (in case script is invoked differently)
+        if [[ -z "${pid_found}" ]]; then
+            pid_found=$(pgrep "${script_basename}" 2>/dev/null | head -1)
+        fi
+        
+        # If still not found, try matching without .sh extension (for daemon processes)
+        if [[ -z "${pid_found}" ]] && [[ "${script_basename}" == *.sh ]]; then
+            local script_name_noext="${script_basename%.sh}"
+            pid_found=$(pgrep -f "${script_name_noext}" 2>/dev/null | head -1)
+        fi
+        
+        if [[ -n "${pid_found}" ]]; then
             scripts_running=$((scripts_running + 1))
-            log_info "${COMPONENT}: Script is running: ${script_name}"
+            log_info "${COMPONENT}: Script is running: ${script_name} (PID: ${pid_found})"
             
             # Get process info
-            local pid
-            pid=$(pgrep -f "${script_basename}" | head -1)
             local runtime
-            runtime=$(ps -o etime= -p "${pid}" 2>/dev/null | tr -d ' ' || echo "unknown")
-            log_debug "${COMPONENT}: Script ${script_name} PID: ${pid}, Runtime: ${runtime}"
+            runtime=$(ps -o etime= -p "${pid_found}" 2>/dev/null | tr -d ' ' || echo "unknown")
+            log_debug "${COMPONENT}: Script ${script_name} PID: ${pid_found}, Runtime: ${runtime}"
+        else
+            log_debug "${COMPONENT}: Script not running: ${script_name} (checked: ${script_basename})"
         fi
     done
     
