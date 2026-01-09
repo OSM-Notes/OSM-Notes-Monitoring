@@ -203,6 +203,118 @@ check_server_resources() {
 }
 
 ##
+# Check advanced system metrics (load average, swap, I/O, network)
+##
+check_advanced_system_metrics() {
+    log_info "${COMPONENT}: Starting advanced system metrics check"
+    
+    if [[ "${INFRASTRUCTURE_ENABLED:-false}" != "true" ]]; then
+        log_info "${COMPONENT}: Infrastructure monitoring is disabled"
+        return 0
+    fi
+    
+    # Check if collectSystemMetrics.sh script exists
+    local system_metrics_script="${SCRIPT_DIR}/collectSystemMetrics.sh"
+    
+    if [[ ! -f "${system_metrics_script}" ]]; then
+        log_debug "${COMPONENT}: Advanced system metrics collection script not found: ${system_metrics_script}"
+        return 0
+    fi
+    
+    # Check if script is executable
+    if [[ ! -x "${system_metrics_script}" ]]; then
+        log_debug "${COMPONENT}: Advanced system metrics collection script is not executable: ${system_metrics_script}"
+        return 0
+    fi
+    
+    # Run advanced system metrics collection
+    local output
+    local exit_code=0
+    
+    if [[ "${TEST_MODE:-false}" == "true" ]]; then
+        # In test mode, capture output for debugging
+        output=$(bash "${system_metrics_script}" 2>&1) || exit_code=$?
+        if [[ ${exit_code} -ne 0 ]]; then
+            log_debug "${COMPONENT}: Advanced system metrics collection output: ${output}"
+        fi
+    else
+        # In production, run silently and log errors
+        bash "${system_metrics_script}" > /dev/null 2>&1 || exit_code=$?
+    fi
+    
+    if [[ ${exit_code} -ne 0 ]]; then
+        log_warning "${COMPONENT}: Advanced system metrics collection failed (exit code: ${exit_code})"
+        return 1
+    fi
+    
+    # Check load average threshold
+    local load_avg_query
+    load_avg_query="SELECT metric_value FROM metrics 
+                    WHERE component = 'infrastructure' 
+                      AND metric_name = 'system_load_average_1min' 
+                    ORDER BY timestamp DESC 
+                    LIMIT 1;"
+    
+    local load_1min
+    load_1min=$(execute_sql_query "${load_avg_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    if [[ -n "${load_1min}" ]] && [[ "${load_1min}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        # Get CPU count for threshold calculation
+        local cpu_count_query
+        cpu_count_query="SELECT metric_value FROM metrics 
+                        WHERE component = 'infrastructure' 
+                          AND metric_name = 'system_cpu_count' 
+                        ORDER BY timestamp DESC 
+                        LIMIT 1;"
+        
+        local cpu_count
+        cpu_count=$(execute_sql_query "${cpu_count_query}" 2>/dev/null | tr -d '[:space:]' || echo "1")
+        
+        # Threshold: 2x number of CPUs
+        local load_threshold
+        load_threshold=$(awk "BEGIN {printf \"%.2f\", ${cpu_count} * 2}")
+        
+        local load_1min_float
+        load_1min_float=$(echo "${load_1min}" | awk '{printf "%.2f", $1}')
+        
+        # Use awk for comparison (more portable than bc)
+        local comparison_result
+        comparison_result=$(awk "BEGIN {print (${load_1min_float} > ${load_threshold})}")
+        
+        if [[ "${comparison_result}" == "1" ]]; then
+            local load_multiplier="${INFRASTRUCTURE_LOAD_THRESHOLD_MULTIPLIER:-2}"
+            log_warning "${COMPONENT}: Load average (${load_1min}) exceeds threshold (${load_threshold} = ${load_multiplier}x ${cpu_count} CPUs)"
+            send_alert "${COMPONENT}" "WARNING" "system_load_high" "Load average (${load_1min}) exceeds threshold (${load_threshold})"
+        fi
+    fi
+    
+    # Check swap usage threshold
+    local swap_usage_query
+    swap_usage_query="SELECT metric_value FROM metrics 
+                     WHERE component = 'infrastructure' 
+                       AND metric_name = 'system_swap_usage_percent' 
+                     ORDER BY timestamp DESC 
+                     LIMIT 1;"
+    
+    local swap_usage
+    swap_usage=$(execute_sql_query "${swap_usage_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    if [[ -n "${swap_usage}" ]] && [[ "${swap_usage}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        local swap_threshold="${INFRASTRUCTURE_SWAP_THRESHOLD:-50}"
+        local swap_usage_int
+        swap_usage_int=$(echo "${swap_usage}" | awk '{printf "%.0f", $1}')
+        
+        if [[ ${swap_usage_int} -gt ${swap_threshold} ]]; then
+            log_warning "${COMPONENT}: Swap usage (${swap_usage}%) exceeds threshold (${swap_threshold}%)"
+            send_alert "${COMPONENT}" "WARNING" "system_swap_high" "Swap usage (${swap_usage}%) exceeds threshold (${swap_threshold}%)"
+        fi
+    fi
+    
+    log_info "${COMPONENT}: Advanced system metrics check completed"
+    return 0
+}
+
+##
 # Check network connectivity
 ##
 check_network_connectivity() {
@@ -449,6 +561,11 @@ main() {
     # Run checks
     if [[ -z "${specific_check}" ]] || [[ "${specific_check}" == "server_resources" ]]; then
         if ! check_server_resources; then
+            overall_result=1
+        fi
+        
+        # Check advanced system metrics
+        if ! check_advanced_system_metrics; then
             overall_result=1
         fi
     fi

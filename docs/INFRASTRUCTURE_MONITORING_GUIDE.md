@@ -1,7 +1,7 @@
 # Infrastructure Monitoring Guide
 
-**Version:** 1.0.0  
-**Last Updated:** 2025-12-27  
+**Version:** 1.1.0  
+**Last Updated:** 2026-01-09  
 **Component:** Infrastructure Monitoring
 
 ## Overview
@@ -102,6 +102,8 @@ psql -U postgres -d osm_notes_monitoring -c "SELECT * FROM alerts WHERE componen
 | `INFRASTRUCTURE_CPU_THRESHOLD` | `80` | CPU usage warning threshold (%) |
 | `INFRASTRUCTURE_MEMORY_THRESHOLD` | `85` | Memory usage warning threshold (%) |
 | `INFRASTRUCTURE_DISK_THRESHOLD` | `90` | Disk usage warning threshold (%) |
+| `INFRASTRUCTURE_SWAP_THRESHOLD` | `50` | Swap usage warning threshold (%) |
+| `INFRASTRUCTURE_LOAD_THRESHOLD_MULTIPLIER` | `2` | Load average threshold multiplier (alert if load > multiplier x CPU count) |
 | `INFRASTRUCTURE_CHECK_TIMEOUT` | `30` | Timeout for network checks (seconds) |
 | `INFRASTRUCTURE_NETWORK_HOSTS` | `localhost` | Comma-separated list of hosts to check |
 | `INFRASTRUCTURE_SERVICE_DEPENDENCIES` | `postgresql` | Comma-separated list of services to check |
@@ -113,6 +115,8 @@ psql -U postgres -d osm_notes_monitoring -c "SELECT * FROM alerts WHERE componen
 | CPU Usage | 80% | 95% | CPU utilization percentage |
 | Memory Usage | 85% | 95% | Memory utilization percentage |
 | Disk Usage | 90% | 95% | Disk space usage percentage |
+| Swap Usage | 50% | N/A | Swap space usage percentage |
+| Load Average | 2x CPU count | N/A | System load average (1 minute) |
 | Network Connectivity | Any failure | N/A | Host reachability |
 | Database Connections | 80% of max | N/A | Active connection usage |
 | Service Dependencies | Any down | N/A | Service availability |
@@ -244,6 +248,101 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Unit:** Bytes
 - **Description:** Total disk space
 - **Collection:** `df` command
+
+### Advanced System Metrics
+
+#### Load Average - 1 minute (`system_load_average_1min`)
+- **Type:** Gauge
+- **Unit:** Load average
+- **Description:** System load average for the last 1 minute
+- **Collection:** `/proc/loadavg`
+- **Alert Threshold:** > 2x CPU count (configurable via `INFRASTRUCTURE_LOAD_THRESHOLD_MULTIPLIER`)
+
+#### Load Average - 5 minutes (`system_load_average_5min`)
+- **Type:** Gauge
+- **Unit:** Load average
+- **Description:** System load average for the last 5 minutes
+- **Collection:** `/proc/loadavg`
+
+#### Load Average - 15 minutes (`system_load_average_15min`)
+- **Type:** Gauge
+- **Unit:** Load average
+- **Description:** System load average for the last 15 minutes
+- **Collection:** `/proc/loadavg`
+
+#### PostgreSQL CPU Usage (`system_cpu_postgres_percent`)
+- **Type:** Gauge
+- **Unit:** Percentage
+- **Description:** CPU usage by PostgreSQL processes (sum of all postgres processes)
+- **Collection:** `ps` command
+- **Range:** 0-100
+
+#### PostgreSQL Memory Usage (`system_memory_postgres_bytes`)
+- **Type:** Gauge
+- **Unit:** Bytes
+- **Description:** Memory usage by PostgreSQL processes (RSS, sum of all postgres processes)
+- **Collection:** `ps` command
+
+#### PostgreSQL Shared Memory (`system_memory_postgres_shared_bytes`)
+- **Type:** Gauge
+- **Unit:** Bytes
+- **Description:** Shared memory used by PostgreSQL processes
+- **Collection:** `/proc/[pid]/statm`
+
+#### Swap Total (`system_swap_total_bytes`)
+- **Type:** Gauge
+- **Unit:** Bytes
+- **Description:** Total swap space available
+- **Collection:** `free` command
+
+#### Swap Used (`system_swap_used_bytes`)
+- **Type:** Gauge
+- **Unit:** Bytes
+- **Description:** Swap space currently in use
+- **Collection:** `free` command
+
+#### Swap Usage (`system_swap_usage_percent`)
+- **Type:** Gauge
+- **Unit:** Percentage
+- **Description:** Swap usage percentage
+- **Collection:** Calculated from `free` command
+- **Alert Threshold:** > 50% (configurable via `INFRASTRUCTURE_SWAP_THRESHOLD`)
+
+#### Disk Reads (`system_disk_reads_bytes`)
+- **Type:** Counter
+- **Unit:** Bytes
+- **Description:** Total bytes read from disk (cumulative)
+- **Collection:** `/proc/diskstats`
+
+#### Disk Writes (`system_disk_writes_bytes`)
+- **Type:** Counter
+- **Unit:** Bytes
+- **Description:** Total bytes written to disk (cumulative)
+- **Collection:** `/proc/diskstats`
+
+#### Network RX (`system_network_rx_bytes`)
+- **Type:** Counter
+- **Unit:** Bytes
+- **Description:** Total bytes received over network (cumulative, all interfaces except loopback)
+- **Collection:** `/proc/net/dev`
+
+#### Network TX (`system_network_tx_bytes`)
+- **Type:** Counter
+- **Unit:** Bytes
+- **Description:** Total bytes transmitted over network (cumulative, all interfaces except loopback)
+- **Collection:** `/proc/net/dev`
+
+#### Network Traffic (`system_network_traffic_bytes`)
+- **Type:** Counter
+- **Unit:** Bytes
+- **Description:** Total network traffic (RX + TX)
+- **Collection:** Calculated from `/proc/net/dev`
+
+#### CPU Count (`system_cpu_count`)
+- **Type:** Gauge
+- **Unit:** Count
+- **Description:** Number of CPU cores available
+- **Collection:** `/proc/cpuinfo` or `nproc` command
 
 ### Network Connectivity Metrics
 
