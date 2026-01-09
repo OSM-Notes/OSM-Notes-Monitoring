@@ -99,16 +99,14 @@ check_etl_job_execution_status() {
         return 0
     fi
     
-    # Expected ETL scripts/jobs
+    # Expected ETL scripts/jobs (actual scripts in the Analytics project)
     local etl_scripts=(
-        "etl_main.sh"
-        "etl_daily.sh"
-        "etl_hourly.sh"
-        "load_data.sh"
-        "transform_data.sh"
+        "ETL.sh"
+        "cleanupDWH.sh"
+        "copyBaseTables.sh"
     )
     
-    local scripts_dir="${ANALYTICS_REPO_PATH}/bin"
+    local scripts_dir="${ANALYTICS_REPO_PATH}/bin/dwh"
     local scripts_found=0
     local scripts_executable=0
     local scripts_running=0
