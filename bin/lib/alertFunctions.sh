@@ -96,7 +96,7 @@ store_alert() {
     fi
     
     # Get database connection info
-    local dbname="${DBNAME:-notes_monitoring}"
+    local dbname="${DBNAME:-osm_notes_monitoring}"
     
     # Insert alert - escape single quotes in message and metadata
     local message_escaped="${message//\'/\'\'}"
@@ -272,7 +272,15 @@ send_alert() {
     local message="${4:?Message required}"
     local metadata="${5:-null}"
     
-    # Store alert in database (normalization happens in store_alert)
+    # Normalize alert level to lowercase before using it
+    alert_level=$(echo "${alert_level}" | tr '[:upper:]' '[:lower:]')
+    
+    # Map ERROR to critical (since ERROR is not a valid level)
+    if [[ "${alert_level}" == "error" ]]; then
+        alert_level="critical"
+    fi
+    
+    # Store alert in database (normalization also happens in store_alert for consistency)
     if ! store_alert "${component}" "${alert_level}" "${alert_type}" "${message}" "${metadata}"; then
         log_error "Failed to store alert, aborting send_alert"
         return 1

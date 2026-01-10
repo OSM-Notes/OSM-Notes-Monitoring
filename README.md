@@ -325,5 +325,5 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 **Author:** Andres Gomez (AngocA)  
 **Version:** 1.0.0  
-**Last Updated:** 2026-01-07
+**Last Updated:** 2026-01-09
 

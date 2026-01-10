@@ -4,7 +4,7 @@
 # Collects advanced database performance metrics for ingestion monitoring
 #
 # Version: 1.0.0
-# Date: 2026-01-08
+# Date: 2026-01-09
 #
 
 set -euo pipefail
