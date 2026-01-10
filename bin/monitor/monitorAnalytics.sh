@@ -72,6 +72,7 @@ Check Types:
     storage         Check storage growth
     query-performance Check query performance
     database-performance Check database performance metrics
+    datamart-status  Check datamart status and metrics
     all             Run all checks (default)
 
 Examples:
@@ -391,6 +392,32 @@ check_database_performance() {
 		return 0
 	else
 		log_warning "${COMPONENT}: Database performance check failed"
+		return 1
+	fi
+}
+
+##
+# Check datamart status and metrics
+##
+check_datamart_status() {
+	log_info "${COMPONENT}: Starting datamart status check"
+
+	# Check if collect_datamart_metrics script exists
+	local collect_script="${PROJECT_ROOT}/bin/monitor/collect_datamart_metrics.sh"
+
+	if [[ ! -f "${collect_script}" ]] || [[ ! -x "${collect_script}" ]]; then
+		log_debug "${COMPONENT}: Datamart metrics collection script not found or not executable: ${collect_script}"
+		return 0
+	fi
+
+	# Execute the collection script
+	if bash "${collect_script}" 2>&1 | while IFS= read -r line; do
+		log_debug "${COMPONENT}: ${line}"
+	done; then
+		log_info "${COMPONENT}: Datamart status check completed"
+		return 0
+	else
+		log_warning "${COMPONENT}: Datamart status check failed"
 		return 1
 	fi
 }
@@ -1557,6 +1584,7 @@ run_all_checks() {
 	check_etl_log_analysis
 	check_etl_execution_frequency
 	check_database_performance
+	check_datamart_status
 	check_data_warehouse_freshness
 	check_etl_processing_duration
 	check_data_mart_update_status
@@ -1658,6 +1686,9 @@ main() {
 		;;
 	database-performance)
 		check_database_performance
+		;;
+	datamart-status)
+		check_datamart_status
 		;;
 	all)
 		run_all_checks

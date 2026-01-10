@@ -1,0 +1,254 @@
+{
+  "id": null,
+  "uid": "osm-notes-analytics-datamarts",
+  "title": "Analytics Datamarts Overview",
+  "tags": ["osm", "monitoring", "analytics", "datamarts"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Datamart Status",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT labels->>'datamart' AS datamart, CASE WHEN metric_value = 1 THEN 'Running' ELSE 'Not Running' END as status FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_process_running' ORDER BY timestamp DESC LIMIT 3",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "Running": {"text": "Running", "color": "green"},
+                "Not Running": {"text": "Not Running", "color": "red"}
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Datamart Freshness",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_freshness_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "green"},
+              {"value": 86400, "color": "yellow"},
+              {"value": 172800, "color": "red"}
+            ]
+          }
+        }
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "datamart": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Execution Duration by Datamart",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_execution_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0
+        }
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "datamart": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Records by Datamart",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_records_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "refId": "A",
+          "alias": "Total Records"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_countries_processed_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "refId": "B",
+          "alias": "Countries Processed"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_users_processed_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "refId": "C",
+          "alias": "Users Processed"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Parallel Processing (Countries)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_parallel_processing_count' AND labels->>'datamart' = 'countries' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Users Progress",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_users_processed_total' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A",
+          "alias": "Processed"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_users_pending_total' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "B",
+          "alias": "Pending"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_initial_load_progress_percent' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "C",
+          "alias": "Progress %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    }
+  ],
+  "time": {"from": "now-24h", "to": "now"}
+}
