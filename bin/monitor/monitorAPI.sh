@@ -112,7 +112,7 @@ check_api_availability() {
         else
             log_warn "API is not available (HTTP ${http_code})"
             record_metric "${COMPONENT}" "api_availability" "0" "API is not available"
-            send_alert "WARNING" "API unavailable" "API returned HTTP ${http_code}"
+            send_alert "${COMPONENT}" "WARNING" "api_unavailable" "API returned HTTP ${http_code}"
             return 1
         fi
     else
@@ -131,10 +131,10 @@ check_rate_limiting() {
         # Run rate limiter check (if it supports status check)
         if "${PROJECT_ROOT}/bin/security/rateLimiter.sh" --status > /dev/null 2>&1; then
             log_info "Rate limiting is active"
-            record_metric "rate_limiting_active" "1" "gauge" "Rate limiting is active"
+            record_metric "${COMPONENT}" "rate_limiting_active" "1" "Rate limiting is active"
         else
             log_warn "Rate limiting check failed or not configured"
-            record_metric "rate_limiting_active" "0" "gauge" "Rate limiting not active"
+            record_metric "${COMPONENT}" "rate_limiting_active" "0" "Rate limiting not active"
         fi
     else
         log_warn "Rate limiter script not found"
@@ -151,10 +151,10 @@ check_ddos_protection() {
         # Run DDoS protection check
         if "${PROJECT_ROOT}/bin/security/ddosProtection.sh" --check > /dev/null 2>&1; then
             log_info "DDoS protection is active"
-            record_metric "ddos_protection_active" "1" "gauge" "DDoS protection is active"
+            record_metric "${COMPONENT}" "ddos_protection_active" "1" "DDoS protection is active"
         else
             log_warn "DDoS protection check failed or not configured"
-            record_metric "ddos_protection_active" "0" "gauge" "DDoS protection not active"
+            record_metric "${COMPONENT}" "ddos_protection_active" "0" "DDoS protection not active"
         fi
     else
         log_warn "DDoS protection script not found"
@@ -171,10 +171,10 @@ check_abuse_detection() {
         # Run abuse detection check
         if "${PROJECT_ROOT}/bin/security/abuseDetection.sh" --check > /dev/null 2>&1; then
             log_info "Abuse detection is active"
-            record_metric "abuse_detection_active" "1" "gauge" "Abuse detection is active"
+            record_metric "${COMPONENT}" "abuse_detection_active" "1" "Abuse detection is active"
         else
             log_warn "Abuse detection check failed or not configured"
-            record_metric "abuse_detection_active" "0" "gauge" "Abuse detection not active"
+            record_metric "${COMPONENT}" "abuse_detection_active" "0" "Abuse detection not active"
         fi
     else
         log_warn "Abuse detection script not found"
