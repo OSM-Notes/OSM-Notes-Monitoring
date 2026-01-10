@@ -74,6 +74,7 @@ Check Types:
     database-performance Check database performance metrics
     datamart-status  Check datamart status and metrics
     validation-status Check validation status and data quality metrics
+    system-resources Check system resources (CPU, memory, disk) for Analytics processes
     all             Run all checks (default)
 
 Examples:
@@ -1596,6 +1597,32 @@ check_performance() {
 }
 
 ##
+# Check system resources for Analytics
+##
+check_system_resources() {
+	log_info "${COMPONENT}: Starting system resources check"
+
+	# Check if collect_analytics_system_metrics script exists
+	local collect_script="${PROJECT_ROOT}/bin/monitor/collect_analytics_system_metrics.sh"
+
+	if [[ ! -f "${collect_script}" ]] || [[ ! -x "${collect_script}" ]]; then
+		log_debug "${COMPONENT}: Analytics system metrics collection script not found or not executable: ${collect_script}"
+		return 0
+	fi
+
+	# Execute the collection script
+	if bash "${collect_script}" 2>&1 | while IFS= read -r line; do
+		log_debug "${COMPONENT}: ${line}"
+	done; then
+		log_info "${COMPONENT}: System resources check completed"
+		return 0
+	else
+		log_warning "${COMPONENT}: System resources check failed"
+		return 1
+	fi
+}
+
+##
 # Check data quality metrics
 ##
 check_data_quality_metrics() {
@@ -1620,6 +1647,7 @@ run_all_checks() {
 	check_database_performance
 	check_datamart_status
 	check_validation_status
+	check_system_resources
 	check_data_warehouse_freshness
 	check_etl_processing_duration
 	check_data_mart_update_status
@@ -1727,6 +1755,9 @@ main() {
 		;;
 	validation-status)
 		check_validation_status
+		;;
+	system-resources)
+		check_system_resources
 		;;
 	all)
 		run_all_checks

@@ -1,0 +1,102 @@
+groups:
+  - name: AnalyticsSystemAlerts
+    rules:
+      - alert: AnalyticsDiskUsageCritical
+        expr: osm_analytics_system_disk_usage_percent > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Analytics System: Disk usage critical ({{ $value }}%)"
+          description: "The disk usage for Analytics system is {{ $value }}%, which exceeds the critical threshold of 90%. Immediate action required to free up disk space."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsDiskUsageWarning
+        expr: osm_analytics_system_disk_usage_percent > 85
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics System: Disk usage high ({{ $value }}%)"
+          description: "The disk usage for Analytics system is {{ $value }}%, which exceeds the warning threshold of 85%. Consider cleaning up old logs or data."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsETLCPUHigh
+        expr: osm_analytics_etl_cpu_usage_percent > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics ETL: High CPU usage ({{ $value }}%)"
+          description: "The ETL process is using {{ $value }}% CPU, which is higher than expected. This might indicate performance issues or a stuck process."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsETLMemoryHigh
+        expr: osm_analytics_etl_memory_usage_bytes > 4294967296 # 4GB
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics ETL: High memory usage ({{ $value | humanize1024 }})"
+          description: "The ETL process is using {{ $value | humanize1024 }} of memory, which is higher than expected. This might indicate a memory leak or inefficient processing."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsPostgreSQLCPUHigh
+        expr: osm_analytics_postgresql_cpu_usage_percent > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics PostgreSQL: High CPU usage ({{ $value }}%)"
+          description: "The PostgreSQL process for Analytics is using {{ $value }}% CPU, which is higher than expected. This might indicate slow queries or high load."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsPostgreSQLMemoryHigh
+        expr: osm_analytics_postgresql_memory_usage_bytes > 8589934592 # 8GB
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics PostgreSQL: High memory usage ({{ $value | humanize1024 }})"
+          description: "The PostgreSQL process for Analytics is using {{ $value | humanize1024 }} of memory, which is higher than expected. This might indicate inefficient queries or memory leaks."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsETLLogDiskUsageHigh
+        expr: osm_analytics_etl_log_disk_usage_bytes > 5368709120 # 5GB
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics ETL: High log disk usage ({{ $value | humanize1024 }})"
+          description: "The ETL log directories are using {{ $value | humanize1024 }} of disk space. Consider cleaning up old log files."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsSystemLoadHigh
+        expr: osm_analytics_system_load_average_1min > 10
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics System: High load average ({{ $value }})"
+          description: "The system load average (1min) is {{ $value }}, which is higher than expected. This might indicate system overload."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsETLProcessNotRunning
+        expr: osm_analytics_etl_process_pid == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Analytics ETL: Process not running"
+          description: "The ETL process is not detected as running. This requires immediate investigation."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsETLDiskIOHigh
+        expr: rate(osm_analytics_etl_disk_read_bytes[5m]) + rate(osm_analytics_etl_disk_write_bytes[5m]) > 104857600 # 100MB/s
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics ETL: High disk I/O ({{ $value | humanize1024 }}/s)"
+          description: "The ETL process is performing high disk I/O ({{ $value | humanize1024 }}/s), which might indicate performance issues."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
