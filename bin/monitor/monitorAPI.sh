@@ -106,12 +106,12 @@ check_api_availability() {
         
         if [[ "${http_code}" == "200" ]]; then
             log_info "API is available (HTTP ${http_code}, ${response_time}s)"
-            record_metric "api_availability" "1" "gauge" "API is available"
-            record_metric "api_response_time_seconds" "${response_time}" "gauge" "API response time"
+            record_metric "${COMPONENT}" "api_availability" "1" "API is available"
+            record_metric "${COMPONENT}" "api_response_time_seconds" "${response_time}" "API response time"
             return 0
         else
             log_warn "API is not available (HTTP ${http_code})"
-            record_metric "api_availability" "0" "gauge" "API is not available"
+            record_metric "${COMPONENT}" "api_availability" "0" "API is not available"
             send_alert "WARNING" "API unavailable" "API returned HTTP ${http_code}"
             return 1
         fi

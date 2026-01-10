@@ -166,10 +166,18 @@ check_server_resources() {
     
     local overall_result=0
     
+    # Convert decimal percentages to integers for comparison
+    local cpu_usage_int
+    local memory_usage_int
+    local disk_usage_int
+    cpu_usage_int=$(printf "%.0f" "${cpu_usage}" 2>/dev/null || echo "0")
+    memory_usage_int=$(printf "%.0f" "${memory_usage}" 2>/dev/null || echo "0")
+    disk_usage_int=$(printf "%.0f" "${disk_usage}" 2>/dev/null || echo "0")
+    
     # Alert if CPU usage exceeds threshold
-    if [[ ${cpu_usage} -gt ${cpu_threshold} ]]; then
+    if [[ ${cpu_usage_int} -gt ${cpu_threshold} ]]; then
         local alert_level="WARNING"
-        if [[ ${cpu_usage} -gt 95 ]]; then
+        if [[ ${cpu_usage_int} -gt 95 ]]; then
             alert_level="CRITICAL"
         fi
         log_warning "${COMPONENT}: CPU usage (${cpu_usage}%) exceeds threshold (${cpu_threshold}%)"
@@ -178,9 +186,9 @@ check_server_resources() {
     fi
     
     # Alert if memory usage exceeds threshold
-    if [[ ${memory_usage} -gt ${memory_threshold} ]]; then
+    if [[ ${memory_usage_int} -gt ${memory_threshold} ]]; then
         local alert_level="WARNING"
-        if [[ ${memory_usage} -gt 95 ]]; then
+        if [[ ${memory_usage_int} -gt 95 ]]; then
             alert_level="CRITICAL"
         fi
         log_warning "${COMPONENT}: Memory usage (${memory_usage}%) exceeds threshold (${memory_threshold}%)"
@@ -189,9 +197,9 @@ check_server_resources() {
     fi
     
     # Alert if disk usage exceeds threshold
-    if [[ ${disk_usage} -gt ${disk_threshold} ]]; then
+    if [[ ${disk_usage_int} -gt ${disk_threshold} ]]; then
         local alert_level="WARNING"
-        if [[ ${disk_usage} -gt 95 ]]; then
+        if [[ ${disk_usage_int} -gt 95 ]]; then
             alert_level="CRITICAL"
         fi
         log_warning "${COMPONENT}: Disk usage (${disk_usage}%) exceeds threshold (${disk_threshold}%)"
