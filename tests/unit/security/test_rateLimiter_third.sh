@@ -100,13 +100,24 @@ teardown() {
 # Test: main handles --check option
 ##
 @test "main handles --check option" {
-    # Mock check_rate_limit
+    # Mock check_rate_limit_sliding_window
     # shellcheck disable=SC2317
-    function check_rate_limit() {
+    function check_rate_limit_sliding_window() {
         return 0
     }
-    export -f check_rate_limit
+    export -f check_rate_limit_sliding_window
     
-    run main --check "192.168.1.1"
+    # Mock load_config to avoid sourcing config files
+    # shellcheck disable=SC2317
+    function load_config() {
+        export RATE_LIMIT_WINDOW_SECONDS="${RATE_LIMIT_WINDOW_SECONDS:-60}"
+        export RATE_LIMIT_MAX_REQUESTS="${RATE_LIMIT_MAX_REQUESTS:-100}"
+        export RATE_LIMIT_BURST_SIZE="${RATE_LIMIT_BURST_SIZE:-10}"
+        return 0
+    }
+    export -f load_config
+    
+    # Call main with 'check' action (not --check option)
+    run main check "192.168.1.1"
     assert_success
 }
