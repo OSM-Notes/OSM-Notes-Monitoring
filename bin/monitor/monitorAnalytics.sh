@@ -75,6 +75,7 @@ Check Types:
     datamart-status  Check datamart status and metrics
     validation-status Check validation status and data quality metrics
     system-resources Check system resources (CPU, memory, disk) for Analytics processes
+    export-status   Check export status (JSON, CSV, GitHub push)
     all             Run all checks (default)
 
 Examples:
@@ -1623,6 +1624,28 @@ check_system_resources() {
 }
 
 ##
+# Check export status
+##
+check_export_status() {
+	log_info "${COMPONENT}: Starting export status check"
+
+	local collect_script="${PROJECT_ROOT}/bin/monitor/collect_export_metrics.sh"
+
+	if [[ ! -f "${collect_script}" ]] || [[ ! -x "${collect_script}" ]]; then
+		log_debug "${COMPONENT}: Export metrics collection script not found or not executable: ${collect_script}"
+		return 0
+	fi
+
+	if ! "${collect_script}"; then
+		log_error "${COMPONENT}: Failed to collect export metrics"
+		return 1
+	fi
+
+	log_info "${COMPONENT}: Export status check completed"
+	return 0
+}
+
+##
 # Check data quality metrics
 ##
 check_data_quality_metrics() {
@@ -1648,6 +1671,7 @@ run_all_checks() {
 	check_datamart_status
 	check_validation_status
 	check_system_resources
+	check_export_status
 	check_data_warehouse_freshness
 	check_etl_processing_duration
 	check_data_mart_update_status
@@ -1758,6 +1782,9 @@ main() {
 		;;
 	system-resources)
 		check_system_resources
+		;;
+	export-status)
+		check_export_status
 		;;
 	all)
 		run_all_checks

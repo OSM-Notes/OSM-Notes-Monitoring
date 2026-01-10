@@ -1,0 +1,102 @@
+groups:
+  - name: AnalyticsExportAlerts
+    rules:
+      - alert: AnalyticsExportFailed
+        expr: osm_analytics_export_status{status="unknown"} == 1 OR osm_analytics_export_status{status="failed"} == 1
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Analytics Export: Export process failed"
+          description: "The Analytics export process has failed or is in an unknown state. Check export logs for details."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportFilesStale
+        expr: osm_analytics_export_last_export_seconds > 86400 # 24 hours
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export: Files are stale ({{ $value | humanizeDuration }} old)"
+          description: "The Analytics export files have not been updated in {{ $value | humanizeDuration }}. The export process may not be running or may have failed."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportJSONStale
+        expr: osm_analytics_export_last_export_seconds{type="json"} > 86400 # 24 hours
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export JSON: Files are stale ({{ $value | humanizeDuration }} old)"
+          description: "The Analytics JSON export files have not been updated in {{ $value | humanizeDuration }}. Check the JSON export process."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportCSVStale
+        expr: osm_analytics_export_last_export_seconds{type="csv"} > 86400 # 24 hours
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export CSV: Files are stale ({{ $value | humanizeDuration }} old)"
+          description: "The Analytics CSV export files have not been updated in {{ $value | humanizeDuration }}. Check the CSV export process."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportGitHubPushFailed
+        expr: osm_analytics_export_github_push_status{status="pending"} == 1
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export: GitHub push pending for {{ $value | humanizeDuration }}"
+          description: "There are unpushed commits to GitHub for {{ $value | humanizeDuration }}. The push process may have failed or is not running."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportJSONValidationLow
+        expr: osm_analytics_export_validation_rate{type="json"} < 80
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export JSON: Low validation rate ({{ $value }}%)"
+          description: "The JSON export validation rate is {{ $value }}%, which is below the threshold of 80%. Some JSON files may be invalid or corrupted."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportJSONValidationFailed
+        expr: osm_analytics_export_validation_invalid{type="json"} > 0
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "Analytics Export JSON: Invalid files detected ({{ $value }} files)"
+          description: "There are {{ $value }} invalid JSON files in the export directory. These files may be corrupted or have schema violations."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportNoFiles
+        expr: osm_analytics_export_files_total{type="json"} == 0 OR osm_analytics_export_files_total{type="csv"} == 0
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "Analytics Export: No export files found"
+          description: "No export files (JSON or CSV) were found in the export directories. The export process may not be running or may have failed."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportLongDuration
+        expr: osm_analytics_export_duration_seconds > 1800 # 30 minutes
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export: Long execution duration ({{ $value }}s)"
+          description: "The export process has been running for {{ $value }} seconds, which exceeds the expected duration. This might indicate performance issues or a stuck process."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+
+      - alert: AnalyticsExportGitHubPushStale
+        expr: osm_analytics_export_github_push_last_seconds > 86400 # 24 hours
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Analytics Export: Last GitHub push is stale ({{ $value | humanizeDuration }} ago)"
+          description: "The last successful GitHub push was {{ $value | humanizeDuration }} ago. This might indicate that the push process is not running or has failed."
+          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"

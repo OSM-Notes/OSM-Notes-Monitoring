@@ -1,0 +1,325 @@
+{
+  "id": null,
+  "uid": "osm-notes-analytics-export-status",
+  "title": "Analytics Export Status",
+  "tags": ["osm", "monitoring", "analytics", "exports"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Export Status",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT CASE WHEN metric_value = 1 THEN 100 ELSE 0 END as value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_status' AND labels->>'status' = 'success' ORDER BY timestamp DESC LIMIT 1",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 50, "color": "yellow"},
+              {"value": 100, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "GitHub Push Status",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT labels->>'status' AS status FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_github_push_status' ORDER BY timestamp DESC LIMIT 1",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "success": {"text": "Success", "color": "green"},
+                "pending": {"text": "Pending", "color": "yellow"},
+                "no_repo": {"text": "No Repo", "color": "gray"},
+                "no_github_remote": {"text": "No GitHub Remote", "color": "gray"}
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Files Exported",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_files_total' AND labels->>'type' = 'json' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A",
+          "alias": "JSON Files"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_files_total' AND labels->>'type' = 'csv' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "B",
+          "alias": "CSV Files"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Export Size",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_size_bytes' AND labels->>'type' = 'json' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A",
+          "alias": "JSON Size"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_size_bytes' AND labels->>'type' = 'csv' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "B",
+          "alias": "CSV Size"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Last Export (seconds ago)",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 14},
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value AS value, labels->>'type' AS type FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_last_export_seconds' ORDER BY timestamp DESC LIMIT 2",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "green"},
+              {"value": 3600, "color": "yellow"},
+              {"value": 86400, "color": "red"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "JSON Schema Validation Rate",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 14},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_validation_rate' AND labels->>'type' = 'json' ORDER BY timestamp DESC LIMIT 1",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 80, "color": "yellow"},
+              {"value": 95, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Last GitHub Push (seconds ago)",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 14},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_github_push_last_seconds' ORDER BY timestamp DESC LIMIT 1",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "green"},
+              {"value": 3600, "color": "yellow"},
+              {"value": 86400, "color": "red"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Export Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "targets": [{
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Validation Results",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 20},
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value AS value, labels->>'status' AS status FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_validation_valid' AND labels->>'type' = 'json' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A",
+          "alias": "Valid"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value AS value, labels->>'status' AS status FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'export_validation_invalid' AND labels->>'type' = 'json' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "B",
+          "alias": "Invalid"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "green"},
+              {"value": 1, "color": "yellow"},
+              {"value": 10, "color": "red"}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
