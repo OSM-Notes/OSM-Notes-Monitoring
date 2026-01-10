@@ -76,6 +76,7 @@ Check Types:
     validation-status Check validation status and data quality metrics
     system-resources Check system resources (CPU, memory, disk) for Analytics processes
     export-status   Check export status (JSON, CSV, GitHub push)
+    cron-jobs       Check cron job execution status and detect gaps
     all             Run all checks (default)
 
 Examples:
@@ -1646,6 +1647,28 @@ check_export_status() {
 }
 
 ##
+# Check cron jobs
+##
+check_cron_jobs() {
+	log_info "${COMPONENT}: Starting cron jobs check"
+
+	local collect_script="${PROJECT_ROOT}/bin/monitor/collect_cron_metrics.sh"
+
+	if [[ ! -f "${collect_script}" ]] || [[ ! -x "${collect_script}" ]]; then
+		log_debug "${COMPONENT}: Cron metrics collection script not found or not executable: ${collect_script}"
+		return 0
+	fi
+
+	if ! "${collect_script}"; then
+		log_error "${COMPONENT}: Failed to collect cron metrics"
+		return 1
+	fi
+
+	log_info "${COMPONENT}: Cron jobs check completed"
+	return 0
+}
+
+##
 # Check data quality metrics
 ##
 check_data_quality_metrics() {
@@ -1672,6 +1695,7 @@ run_all_checks() {
 	check_validation_status
 	check_system_resources
 	check_export_status
+	check_cron_jobs
 	check_data_warehouse_freshness
 	check_etl_processing_duration
 	check_data_mart_update_status
@@ -1785,6 +1809,9 @@ main() {
 		;;
 	export-status)
 		check_export_status
+		;;
+	cron-jobs)
+		check_cron_jobs
 		;;
 	all)
 		run_all_checks
