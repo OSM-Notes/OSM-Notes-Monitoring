@@ -91,7 +91,8 @@ store_alert() {
     if [[ "${ALERT_DEDUPLICATION_ENABLED:-true}" == "true" ]]; then
         if is_alert_duplicate "${component}" "${alert_type}" "${message}"; then
             log_debug "Alert deduplicated: ${component}/${alert_type}"
-            return 0
+            # Return 2 to indicate duplicate (so send_alert knows not to send email)
+            return 2
         fi
     fi
     
@@ -242,12 +243,22 @@ send_email_alert() {
         return 1
     fi
     
-    # Send email
-    if echo "${body}" | mutt -s "${subject}" "${recipient}" 2>/dev/null; then
+    # Send email - capture stderr to diagnose issues
+    local mutt_output
+    local mutt_exit_code
+    mutt_output=$(echo "${body}" | mutt -s "${subject}" "${recipient}" 2>&1)
+    mutt_exit_code=$?
+    
+    if [[ ${mutt_exit_code} -eq 0 ]]; then
         log_info "Email alert sent to ${recipient}"
         return 0
     else
-        log_error "Failed to send email alert to ${recipient}"
+        # Log the actual error from mutt for debugging
+        if [[ -n "${mutt_output}" ]]; then
+            log_error "Failed to send email alert to ${recipient}: ${mutt_output}"
+        else
+            log_error "Failed to send email alert to ${recipient} (exit code: ${mutt_exit_code})"
+        fi
         return 1
     fi
 }
@@ -281,9 +292,19 @@ send_alert() {
     fi
     
     # Store alert in database (normalization also happens in store_alert for consistency)
-    if ! store_alert "${component}" "${alert_level}" "${alert_type}" "${message}" "${metadata}"; then
+    local store_result
+    store_alert "${component}" "${alert_level}" "${alert_type}" "${message}" "${metadata}"
+    store_result=$?
+    
+    if [[ ${store_result} -eq 1 ]]; then
         log_error "Failed to store alert, aborting send_alert"
         return 1
+    fi
+    
+    # If alert was deduplicated (return code 2), skip sending email
+    if [[ ${store_result} -eq 2 ]]; then
+        log_debug "Alert was deduplicated, skipping email notification"
+        return 0
     fi
     
     # Determine recipients based on alert level
