@@ -218,9 +218,18 @@ FROM alerts
 WHERE status = 'active'
 GROUP BY component, alert_level;
 
--- Grant permissions (adjust as needed for your setup)
--- GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO monitoring_user;
--- GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO monitoring_user;
+-- Grant permissions
+-- Note: After running this script, you must grant permissions to your monitoring database user.
+-- The GRANT commands are documented in the installation guides (README.md, DEPLOYMENT_GUIDE.md, etc.)
+-- 
+-- Example (replace 'osm_notes_monitoring_user' with your actual database user):
+-- GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO osm_notes_monitoring_user;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO osm_notes_monitoring_user;
+-- GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO osm_notes_monitoring_user;
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE ON TABLES TO osm_notes_monitoring_user;
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO osm_notes_monitoring_user;
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO osm_notes_monitoring_user;
+-- GRANT USAGE ON SCHEMA public TO osm_notes_monitoring_user;
 
 -- Table comments
 COMMENT ON TABLE metrics IS 'Time-series metrics storage for all monitored components';

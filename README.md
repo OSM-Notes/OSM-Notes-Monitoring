@@ -62,6 +62,16 @@ createdb osm_notes_monitoring
 # Run initialization scripts
 psql -d osm_notes_monitoring -f sql/init.sql
 
+# Grant permissions to monitoring user (required!)
+# Replace 'osm_notes_monitoring_user' with your actual database user
+psql -d osm_notes_monitoring -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d osm_notes_monitoring -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d osm_notes_monitoring -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d osm_notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE ON TABLES TO osm_notes_monitoring_user;"
+psql -d osm_notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO osm_notes_monitoring_user;"
+psql -d osm_notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO osm_notes_monitoring_user;"
+psql -d osm_notes_monitoring -c "GRANT USAGE ON SCHEMA public TO osm_notes_monitoring_user;"
+
 # Apply query performance optimizations (recommended)
 psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```

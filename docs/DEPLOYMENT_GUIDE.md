@@ -82,6 +82,47 @@ This script:
 - Initializes the database
 - Applies security hardening
 
+**Important:** After database initialization, grant permissions to the monitoring user:
+
+```sql
+-- Grant permissions on all existing tables
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO osm_notes_monitoring_user;
+
+-- Grant permissions on all sequences (for auto-increment columns)
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO osm_notes_monitoring_user;
+
+-- Grant execute permissions on all functions
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO osm_notes_monitoring_user;
+
+-- Grant permissions on default privileges for future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE ON TABLES TO osm_notes_monitoring_user;
+
+-- Grant permissions on default privileges for future sequences
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO osm_notes_monitoring_user;
+
+-- Grant permissions on default privileges for future functions
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO osm_notes_monitoring_user;
+
+-- Grant usage on schema (required to access objects in schema)
+GRANT USAGE ON SCHEMA public TO osm_notes_monitoring_user;
+```
+
+Execute these commands:
+
+```bash
+# Replace 'osm_notes_monitoring_user' with your actual monitoring database user
+psql -d notes_monitoring -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE ON TABLES TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "GRANT USAGE ON SCHEMA public TO osm_notes_monitoring_user;"
+
+```
+
+**Note:** Replace `osm_notes_monitoring_user` with your actual monitoring database user if different.
+
 **Options:**
 - `--skip-checks`: Skip environment validation
 - `--skip-database`: Skip database setup

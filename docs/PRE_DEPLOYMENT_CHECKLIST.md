@@ -199,6 +199,7 @@ tail -f /var/log/osm-notes-monitoring/*.log
 
 - [x] Database connection works
 - [x] Database schema initialized
+- [x] Database permissions granted to monitoring user
 - [x] `.pgpass` file created with correct permissions (600)
 - [x] `sql/init.sql` exists
 - [x] `sql/migrations/run_migrations.sh` exists
@@ -206,7 +207,22 @@ tail -f /var/log/osm-notes-monitoring/*.log
 
 **Verify:**
 ```bash
+# Test database connection
 psql -d notes_monitoring -c "SELECT 1;"
+
+# Grant permissions (if not done during init)
+# Replace 'osm_notes_monitoring_user' with your actual monitoring database user
+psql -d notes_monitoring -c "GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE ON TABLES TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO osm_notes_monitoring_user;"
+psql -d notes_monitoring -c "GRANT USAGE ON SCHEMA public TO osm_notes_monitoring_user;"
+
+# Verify permissions
+psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
+
 # Check PostgreSQL logs if connection fails: sudo journalctl -u postgresql
 ```
 
