@@ -83,6 +83,11 @@ execute_sql_query() {
     local psql_cmd="psql"
     local current_user="${USER:-$(whoami)}"
     
+    # Set PGPASSFILE if not already set and .pgpass exists in home directory
+    if [[ -z "${PGPASSFILE:-}" ]] && [[ -f "${HOME}/.pgpass" ]]; then
+        export PGPASSFILE="${HOME}/.pgpass"
+    fi
+    
     # If DBUSER matches current user and DBHOST is localhost, use peer authentication (socket)
     if [[ "${DBUSER}" == "${current_user}" ]] && [[ "${DBHOST}" == "localhost" || "${DBHOST}" == "127.0.0.1" || -z "${DBHOST}" ]]; then
         # Peer authentication - don't specify user or host
@@ -91,8 +96,12 @@ execute_sql_query() {
         fi
     else
         # Password authentication - specify user and use TCP
+        # Always use -h localhost when DBUSER != current_user to force TCP and use .pgpass
         psql_cmd="${psql_cmd} -U ${DBUSER}"
-        if [[ -n "${DBHOST}" && "${DBHOST}" != "localhost" && "${DBHOST}" != "127.0.0.1" ]]; then
+        if [[ "${DBHOST}" == "localhost" || "${DBHOST}" == "127.0.0.1" || -z "${DBHOST}" ]]; then
+            # Force TCP connection to use .pgpass instead of peer auth
+            psql_cmd="${psql_cmd} -h localhost"
+        else
             psql_cmd="${psql_cmd} -h ${DBHOST}"
         fi
         if [[ -n "${DBPORT}" && "${DBPORT}" != "5432" ]]; then
@@ -101,6 +110,9 @@ execute_sql_query() {
         # Use PGPASSWORD if set, otherwise rely on .pgpass
         if [[ -n "${PGPASSWORD:-}" ]]; then
             psql_cmd="PGPASSWORD=\"${PGPASSWORD}\" ${psql_cmd}"
+        elif [[ -n "${PGPASSFILE:-}" ]]; then
+            # Ensure PGPASSFILE is exported for psql to use
+            psql_cmd="PGPASSFILE=\"${PGPASSFILE}\" ${psql_cmd}"
         fi
     fi
     
@@ -185,22 +197,35 @@ check_database_connection() {
     local psql_cmd="psql"
     local current_user="${USER:-$(whoami)}"
     
+    # Set PGPASSFILE if not already set and .pgpass exists in home directory
+    if [[ -z "${PGPASSFILE:-}" ]] && [[ -f "${HOME}/.pgpass" ]]; then
+        export PGPASSFILE="${HOME}/.pgpass"
+    fi
+    
     if [[ "${DBUSER}" == "${current_user}" ]] && [[ "${DBHOST}" == "localhost" || "${DBHOST}" == "127.0.0.1" || -z "${DBHOST}" ]]; then
         # Peer authentication
         if [[ -n "${DBPORT}" && "${DBPORT}" != "5432" ]]; then
             psql_cmd="${psql_cmd} -p ${DBPORT}"
         fi
     else
-        # Password authentication
+        # Password authentication - specify user and use TCP
+        # Always use -h localhost when DBUSER != current_user to force TCP and use .pgpass
         psql_cmd="${psql_cmd} -U ${DBUSER}"
-        if [[ -n "${DBHOST}" && "${DBHOST}" != "localhost" && "${DBHOST}" != "127.0.0.1" ]]; then
+        if [[ "${DBHOST}" == "localhost" || "${DBHOST}" == "127.0.0.1" || -z "${DBHOST}" ]]; then
+            # Force TCP connection to use .pgpass instead of peer auth
+            psql_cmd="${psql_cmd} -h localhost"
+        else
             psql_cmd="${psql_cmd} -h ${DBHOST}"
         fi
         if [[ -n "${DBPORT}" && "${DBPORT}" != "5432" ]]; then
             psql_cmd="${psql_cmd} -p ${DBPORT}"
         fi
+        # Use PGPASSWORD if set, otherwise rely on .pgpass
         if [[ -n "${PGPASSWORD:-}" ]]; then
             psql_cmd="PGPASSWORD=\"${PGPASSWORD}\" ${psql_cmd}"
+        elif [[ -n "${PGPASSFILE:-}" ]]; then
+            # Ensure PGPASSFILE is exported for psql to use
+            psql_cmd="PGPASSFILE=\"${PGPASSFILE}\" ${psql_cmd}"
         fi
     fi
     

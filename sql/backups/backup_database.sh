@@ -19,8 +19,12 @@ readonly GREEN='\033[0;32m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
-# Default values
-DBNAME="${DBNAME:-osm_notes_monitoring}"
+# Default values - try to get from properties.sh if available
+if [[ -f "${SCRIPT_DIR}/../../etc/properties.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${SCRIPT_DIR}/../../etc/properties.sh"
+fi
+DBNAME="${DBNAME:-notes_monitoring}"
 BACKUP_DIR="${BACKUP_DIR:-${SCRIPT_DIR}}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-30}"
 

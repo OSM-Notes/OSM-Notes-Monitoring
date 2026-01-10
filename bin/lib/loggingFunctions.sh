@@ -170,6 +170,11 @@ log_info() {
 # Arguments:
 #   $@ - Message
 ##
+# Alias for log_warning (backward compatibility)
+log_warn() {
+    log_warning "$@"
+}
+
 log_warning() {
     log_message "WARNING" "$@"
 }
