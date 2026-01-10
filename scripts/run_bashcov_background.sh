@@ -102,15 +102,31 @@ monitor_bashcov() {
         # Count processed tests from log
         local processed=0
         if [[ -f "${LOG_FILE}" ]]; then
-            # Use grep -c to count matching lines
-            local grep_result
-            grep_result=$(grep -c "Processed.*test files" "${LOG_FILE}" 2>/dev/null || echo "0")
-            # Clean result: remove whitespace and ensure it's a number
-            grep_result=$(echo "${grep_result}" | tr -d '[:space:]')
-            if [[ -z "${grep_result}" ]] || ! [[ "${grep_result}" =~ ^[0-9]+$ ]]; then
-                grep_result="0"
+            # Extract the actual number from the last "Processed X/Y test files" line
+            local last_progress_line
+            last_progress_line=$(grep -E "Processed[[:space:]]+[0-9]+/[0-9]+[[:space:]]+test files" "${LOG_FILE}" 2>/dev/null | tail -1 || echo "")
+            
+            if [[ -n "${last_progress_line}" ]]; then
+                # Extract the first number (processed count) from "Processed X/Y test files"
+                local processed_count
+                processed_count=$(echo "${last_progress_line}" | sed -n 's/.*Processed[[:space:]]*\([0-9]*\)\/[0-9]*.*/\1/p' || echo "")
+                
+                # Clean result: remove whitespace and ensure it's a number
+                processed_count=$(echo "${processed_count}" | tr -d '[:space:]')
+                if [[ -n "${processed_count}" ]] && [[ "${processed_count}" =~ ^[0-9]+$ ]]; then
+                    processed="${processed_count}"
+                fi
             fi
-            processed=$((grep_result * 10))  # Progress shown every 10 tests
+            
+            # Fallback: count matching lines if extraction failed
+            if [[ "${processed}" -eq 0 ]]; then
+                local grep_result
+                grep_result=$(grep -c "Processed.*test files" "${LOG_FILE}" 2>/dev/null || echo "0")
+                grep_result=$(echo "${grep_result}" | tr -d '[:space:]')
+                if [[ -n "${grep_result}" ]] && [[ "${grep_result}" =~ ^[0-9]+$ ]]; then
+                    processed=$((grep_result * 10))  # Progress shown every 10 tests
+                fi
+            fi
         fi
         
         # Check resultset file size
