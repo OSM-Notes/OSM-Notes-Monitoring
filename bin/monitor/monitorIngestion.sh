@@ -912,11 +912,30 @@ check_ingestion_performance() {
         
         log_info "${COMPONENT}: Running analyzeDatabasePerformance.sh from ${perf_script}"
         
+        # Verify script can be read and has valid shebang
+        if ! head -1 "${perf_script}" | grep -qE "^#!.*bash"; then
+            log_warning "${COMPONENT}: Script may not have valid bash shebang: ${perf_script}"
+        fi
+        
+        # Check for common dependencies before running
+        local missing_deps=()
+        for cmd in bash psql; do
+            if ! command -v "${cmd}" >/dev/null 2>&1; then
+                missing_deps+=("${cmd}")
+            fi
+        done
+        
+        if [[ ${#missing_deps[@]} -gt 0 ]]; then
+            log_error "${COMPONENT}: Missing dependencies: ${missing_deps[*]}"
+            send_alert "${COMPONENT}" "ERROR" "performance_check_failed" "Performance analysis failed: Missing dependencies (${missing_deps[*]}). Check PATH and install missing tools."
+            return 1
+        fi
+        
         # Ensure PATH includes standard binary directories for psql, timeout, and other tools
         # This is critical when script runs from cron or with limited PATH
         # The script itself also uses timeout and psql, so PATH must be set
         local saved_path="${PATH:-}"
-        export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+        export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/pgsql/bin:${PATH:-}"
         
         # Also export PATH in the environment for the script and its subprocesses
         # This ensures timeout, psql, and other commands are found
@@ -929,8 +948,20 @@ check_ingestion_performance() {
         
         local exit_code=0
         local output
+        local output_file
+        output_file="${LOG_DIR}/performance_output/analyzeDatabasePerformance_$(date +%Y%m%d_%H%M%S).txt"
+        mkdir -p "$(dirname "${output_file}")"
+        
         # Use env to explicitly set PATH for the script and all its subprocesses
-        output=$(cd "${INGESTION_REPO_PATH}" && env PATH="${PATH}" bash "${perf_script}" 2>&1) || exit_code=$?
+        # Capture both stdout and stderr, and save to file
+        if ! output=$(cd "${INGESTION_REPO_PATH}" && env PATH="${PATH}" bash "${perf_script}" 2>&1 | tee "${output_file}"); then
+            exit_code=$?
+        fi
+        
+        # If output is empty but file exists, read from file
+        if [[ -z "${output}" ]] && [[ -f "${output_file}" ]]; then
+            output=$(cat "${output_file}" 2>/dev/null || echo "")
+        fi
         
         # Restore original PATH
         export PATH="${saved_path}"
@@ -939,8 +970,17 @@ check_ingestion_performance() {
         end_time=$(date +%s)
         local duration=$((end_time - start_time))
         
-        # Log the output
-        log_debug "${COMPONENT}: analyzeDatabasePerformance.sh output:\n${output}"
+        # Log the output (truncate if too long for debug log)
+        local output_preview
+        output_preview=$(echo "${output}" | head -50)
+        log_debug "${COMPONENT}: analyzeDatabasePerformance.sh output (first 50 lines):\n${output_preview}"
+        
+        # Log where full output is saved
+        if [[ -f "${output_file}" ]]; then
+            log_debug "${COMPONENT}: Full performance check output saved to: ${output_file}"
+            # Keep only last 10 output files
+            find "$(dirname "${output_file}")" -name "analyzeDatabasePerformance_*.txt" -type f -mtime +7 -delete 2>/dev/null || true
+        fi
         
         # Check exit code
         if [[ ${exit_code} -eq 0 ]]; then
@@ -985,27 +1025,61 @@ check_ingestion_performance() {
         else
             # Extract error message from output (first few lines)
             local error_summary
-            error_summary=$(echo "${output}" | head -5 | tr '\n' '; ' | sed 's/; $//')
+            error_summary=$(echo "${output}" | head -10 | tr '\n' '; ' | sed 's/; $//')
             
-            log_error "${COMPONENT}: Performance analysis failed (exit_code: ${exit_code}, duration: ${duration}s)"
+            # Determine error type based on exit code
+            local error_type="unknown"
+            local error_hint=""
+            case ${exit_code} in
+                255)
+                    error_type="script_execution_failed"
+                    error_hint="Exit code 255 usually indicates: script syntax error, command not found, or bash execution failure. Check script syntax and dependencies."
+                    ;;
+                127)
+                    error_type="command_not_found"
+                    error_hint="Exit code 127 indicates a command was not found. Check PATH and script dependencies."
+                    ;;
+                126)
+                    error_type="permission_denied"
+                    error_hint="Exit code 126 indicates permission denied. Check script and file permissions."
+                    ;;
+                *)
+                    error_type="script_error"
+                    error_hint="Script returned exit code ${exit_code}. Review script output for details."
+                    ;;
+            esac
+            
+            log_error "${COMPONENT}: Performance analysis failed (exit_code: ${exit_code}, duration: ${duration}s, type: ${error_type})"
             log_error "${COMPONENT}: Script path: ${perf_script}"
-            log_error "${COMPONENT}: Error output (first 10 lines):"
-            echo "${output}" | head -10 | while IFS= read -r line; do
-                log_error "${COMPONENT}:   ${line}"
-            done
+            log_error "${COMPONENT}: Error hint: ${error_hint}"
+            
+            # Log more details if output file exists
+            if [[ -f "${output_file}" ]]; then
+                log_error "${COMPONENT}: Full error output saved to: ${output_file}"
+                log_error "${COMPONENT}: Error output (first 20 lines):"
+                head -20 "${output_file}" | while IFS= read -r line; do
+                    log_error "${COMPONENT}:   ${line}"
+                done
+            else
+                log_error "${COMPONENT}: Error output (first 20 lines):"
+                echo "${output}" | head -20 | while IFS= read -r line; do
+                    log_error "${COMPONENT}:   ${line}"
+                done
+            fi
             
             record_metric "${COMPONENT}" "performance_check_status" "0" "component=ingestion,check=analyzeDatabasePerformance"
             record_metric "${COMPONENT}" "performance_check_duration" "${duration}" "component=ingestion,check=analyzeDatabasePerformance"
+            record_metric "${COMPONENT}" "performance_check_exit_code" "${exit_code}" "component=ingestion,check=analyzeDatabasePerformance"
             
             # Include error summary in alert message (truncate if too long)
             local alert_message
             if [[ ${#error_summary} -gt 200 ]]; then
-                alert_message="Performance analysis failed: exit_code=${exit_code}, duration=${duration}s. Error: ${error_summary:0:197}..."
+                alert_message="Performance analysis failed: exit_code=${exit_code} (${error_type}), duration=${duration}s. ${error_hint} Error: ${error_summary:0:150}... Full output: ${output_file}"
             else
-                alert_message="Performance analysis failed: exit_code=${exit_code}, duration=${duration}s. Error: ${error_summary}"
+                alert_message="Performance analysis failed: exit_code=${exit_code} (${error_type}), duration=${duration}s. ${error_hint} Error: ${error_summary} Full output: ${output_file}"
             fi
             
-            send_alert "${COMPONENT}" "ERROR" "performance_check_failed" "${alert_message}"
+            send_alert "${COMPONENT}" "CRITICAL" "performance_check_failed" "${alert_message}"
         fi
     else
         log_warning "${COMPONENT}: analyzeDatabasePerformance.sh not found: ${perf_script}"
@@ -1147,8 +1221,23 @@ check_ingestion_data_quality() {
         end_time=$(date +%s)
         local duration=$((end_time - start_time))
         
-        # Log the output
-        log_debug "${COMPONENT}: notesCheckVerifier.sh output:\n${output}"
+        # Log the output (truncate if too long)
+        local output_preview
+        output_preview=$(echo "${output}" | head -50)
+        log_debug "${COMPONENT}: notesCheckVerifier.sh output (first 50 lines):\n${output_preview}"
+        
+        # Save full output to file for analysis (if output is not empty)
+        if [[ -n "${output}" ]]; then
+            local output_dir="${LOG_DIR}/verifier_output"
+            mkdir -p "${output_dir}"
+            local output_file
+            output_file="${output_dir}/notesCheckVerifier_$(date +%Y%m%d_%H%M%S).txt"
+            echo "${output}" > "${output_file}"
+            log_debug "${COMPONENT}: Full verifier output saved to: ${output_file}"
+            
+            # Keep only last 10 output files
+            find "${output_dir}" -name "notesCheckVerifier_*.txt" -type f -mtime +7 -delete 2>/dev/null || true
+        fi
         
         # Check exit code
         if [[ ${exit_code} -eq 0 ]]; then
