@@ -134,19 +134,67 @@ check_server_resources() {
         # This provides a more stable reading and reduces false alerts from brief spikes
         local cpu_samples=()
         local sample_count=3
+        local failed_samples=0
+        
         for i in $(seq 1 ${sample_count}); do
-            local sample
-            sample=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}' 2>/dev/null || echo "0")
-            if [[ -n "${sample}" ]] && [[ "${sample}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                cpu_samples+=("${sample}")
+            local sample=0
+            local top_output
+            top_output=$(top -bn1 2>/dev/null | grep -i "Cpu(s)\|%Cpu" | head -1 || echo "")
+            
+            if [[ -n "${top_output}" ]]; then
+                # Try multiple parsing methods for different top formats
+                # Method 1: Extract idle time and calculate usage (most common format)
+                local idle_time
+                idle_time=$(echo "${top_output}" | grep -oE "[0-9.]+%id" | grep -oE "[0-9.]+" | head -1 || echo "")
+                
+                if [[ -n "${idle_time}" ]] && [[ "${idle_time}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+                    # Calculate CPU usage: 100 - idle
+                    sample=$(awk "BEGIN {printf \"%.2f\", 100 - ${idle_time}}")
+                else
+                    # Method 2: Try to extract us, sy, ni, etc. and sum them
+                    local us_time sy_time ni_time
+                    us_time=$(echo "${top_output}" | grep -oE "[0-9.]+%us" | grep -oE "[0-9.]+" | head -1 || echo "0")
+                    sy_time=$(echo "${top_output}" | grep -oE "[0-9.]+%sy" | grep -oE "[0-9.]+" | head -1 || echo "0")
+                    ni_time=$(echo "${top_output}" | grep -oE "[0-9.]+%ni" | grep -oE "[0-9.]+" | head -1 || echo "0")
+                    
+                    if [[ -n "${us_time}" ]] && [[ "${us_time}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+                        sample=$(awk "BEGIN {printf \"%.2f\", ${us_time} + ${sy_time} + ${ni_time}}")
+                    else
+                        # Method 3: Fallback to sed parsing (original method)
+                        sample=$(echo "${top_output}" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" 2>/dev/null | awk '{print 100 - $1}' 2>/dev/null || echo "0")
+                    fi
+                fi
+            else
+                failed_samples=$((failed_samples + 1))
             fi
+            
+            # Validate sample is reasonable (0-100)
+            if [[ -n "${sample}" ]] && [[ "${sample}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+                # Check if sample is within reasonable bounds
+                local sample_int
+                sample_int=$(printf "%.0f" "${sample}" 2>/dev/null || echo "0")
+                if [[ ${sample_int} -ge 0 ]] && [[ ${sample_int} -le 100 ]]; then
+                    cpu_samples+=("${sample}")
+                else
+                    log_warning "${COMPONENT}: Invalid CPU sample detected: ${sample}% (skipping)"
+                    failed_samples=$((failed_samples + 1))
+                fi
+            else
+                failed_samples=$((failed_samples + 1))
+            fi
+            
             # Small delay between samples (except for last one)
             if [[ ${i} -lt ${sample_count} ]]; then
                 sleep 0.5
             fi
         done
         
-        # Calculate average if we have samples
+        # Log if many samples failed
+        if [[ ${failed_samples} -gt 0 ]]; then
+            log_warning "${COMPONENT}: Failed to parse ${failed_samples} CPU samples (out of ${sample_count})"
+        fi
+        
+        # Calculate average if we have valid samples
         if [[ ${#cpu_samples[@]} -gt 0 ]]; then
             local sum=0
             local count=0
@@ -156,15 +204,34 @@ check_server_resources() {
             done
             if [[ ${count} -gt 0 ]]; then
                 cpu_usage=$(awk "BEGIN {printf \"%.2f\", ${sum} / ${count}}")
+                log_debug "${COMPONENT}: CPU samples: ${cpu_samples[*]}, Average: ${cpu_usage}%"
+            fi
+        else
+            log_warning "${COMPONENT}: No valid CPU samples collected, using fallback method"
+            # Fallback: try vmstat or /proc/stat
+            if command -v vmstat > /dev/null 2>&1; then
+                local vmstat_idle
+                vmstat_idle=$(vmstat 1 2 | tail -1 | awk '{print $15}' 2>/dev/null || echo "0")
+                if [[ -n "${vmstat_idle}" ]] && [[ "${vmstat_idle}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+                    cpu_usage=$(awk "BEGIN {printf \"%.2f\", 100 - ${vmstat_idle}}")
+                fi
             fi
         fi
     elif command -v vmstat > /dev/null 2>&1; then
         # Alternative: use vmstat (2 samples, 1 second apart)
-        local vmstat_samples=()
-        IFS=' ' read -ra vmstat_samples <<< "$(vmstat 1 2 | tail -1 | awk '{print 100 - $15}' 2>/dev/null || echo "0")"
-        if [[ ${#vmstat_samples[@]} -gt 0 ]]; then
-            cpu_usage="${vmstat_samples[0]}"
+        local vmstat_idle
+        vmstat_idle=$(vmstat 1 2 | tail -1 | awk '{print $15}' 2>/dev/null || echo "0")
+        if [[ -n "${vmstat_idle}" ]] && [[ "${vmstat_idle}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+            cpu_usage=$(awk "BEGIN {printf \"%.2f\", 100 - ${vmstat_idle}}")
         fi
+    fi
+    
+    # Validate final CPU usage is reasonable
+    local cpu_usage_int
+    cpu_usage_int=$(printf "%.0f" "${cpu_usage}" 2>/dev/null || echo "0")
+    if [[ ${cpu_usage_int} -lt 0 ]] || [[ ${cpu_usage_int} -gt 100 ]]; then
+        log_warning "${COMPONENT}: Calculated CPU usage (${cpu_usage}%) is out of bounds, resetting to 0"
+        cpu_usage=0
     fi
     
     # Check memory usage
