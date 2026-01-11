@@ -25,8 +25,17 @@ source "${PROJECT_ROOT}/bin/lib/monitoringFunctions.sh"
 source "${PROJECT_ROOT}/bin/lib/configFunctions.sh"
 # shellcheck disable=SC1091
 source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
+# Set TEST_MODE temporarily to prevent COMPONENT from being readonly
+original_test_mode="${TEST_MODE:-false}"
+export TEST_MODE="true"
+
 # shellcheck disable=SC1091
 source "${PROJECT_ROOT}/bin/lib/datamartLogParser.sh"
+
+# Restore TEST_MODE and set COMPONENT to lowercase
+export TEST_MODE="${original_test_mode}"
+COMPONENT="analytics"
+export COMPONENT
 
 # Set default LOG_DIR if not set
 export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
@@ -35,9 +44,6 @@ export LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/logs}"
 if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 	init_logging "${LOG_DIR}/datamart_metrics.log" "collectDatamartMetrics"
 fi
-
-# Component name
-readonly COMPONENT="ANALYTICS"
 
 # Datamart log file patterns (allow override in test mode)
 if [[ "${TEST_MODE:-false}" != "true" ]]; then
@@ -112,32 +118,65 @@ collect_datamart_log_metrics() {
 }
 
 ##
-# Check datamart freshness from database
+# Check datamart freshness from database and logs
 ##
 check_datamart_freshness() {
-	log_info "${COMPONENT}: Checking datamart freshness from database"
+	log_info "${COMPONENT}: Checking datamart freshness from database and logs"
 
-	if ! check_database_connection; then
-		log_warning "${COMPONENT}: Cannot check datamart freshness - database connection failed"
-		return 1
-	fi
+	# Map datamart names to table names and log patterns
+	local datamart_config=(
+		"countries:datamartcountries:${DATAMART_COUNTRIES_PATTERN}"
+		"users:datamartusers:${DATAMART_USERS_PATTERN}"
+		"global:datamartglobal:${DATAMART_GLOBAL_PATTERN}"
+	)
 
-	# Check freshness for each datamart table
-	local datamarts=("datamart_countries" "datamart_users" "datamart_global")
+	for config in "${datamart_config[@]}"; do
+		IFS=':' read -r datamart_name table_name _ <<< "${config}"
+		# Third field (log_pattern) is not used, we use find directly
+		
+		# Check freshness from log file modification time
+		local freshness_seconds=0
+		local log_file
+		# Find the most recent log file matching the pattern
+		log_file=$(find /tmp -maxdepth 2 -path "*/datamart${datamart_name^}*/datamart${datamart_name^}.log" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2- || echo "")
+		
+		if [[ -n "${log_file}" && -f "${log_file}" ]]; then
+			local log_mtime
+			log_mtime=$(stat -c %Y "${log_file}" 2>/dev/null || echo "0")
+			local current_time
+			current_time=$(date +%s)
+			freshness_seconds=$((current_time - log_mtime))
+		fi
 
-	for datamart in "${datamarts[@]}"; do
-		local query="SELECT EXTRACT(EPOCH FROM (NOW() - MAX(updated_at)))::bigint AS freshness_seconds FROM dwh.${datamart} WHERE updated_at IS NOT NULL;"
-		local result
-		result=$(execute_sql_query "${query}" 2>/dev/null || echo "")
-
+		# Also get row count from database
+		local row_count=0
+		# Use ANALYTICS_DBNAME if available, otherwise default to notes_dwh
+		local analytics_dbname="${ANALYTICS_DBNAME:-notes_dwh}"
+		local analytics_dbuser="${ANALYTICS_DBUSER:-osm_notes_analytics_user}"
+		
+		# Try to get row count, but don't fail if database is not accessible
+		local query="SELECT COUNT(*)::bigint FROM dwh.${table_name};"
+		local result=""
+		
+		# Temporarily override DBUSER for this query
+		local original_dbuser="${DBUSER:-}"
+		export DBUSER="${analytics_dbuser}"
+		result=$(execute_sql_query "${query}" "${analytics_dbname}" 2>/dev/null || echo "")
+		export DBUSER="${original_dbuser}"
+		
 		if [[ -n "${result}" ]]; then
-			local freshness_seconds
-			freshness_seconds=$(echo "${result}" | tr -d '[:space:]' || echo "0")
-			if [[ "${freshness_seconds}" =~ ^[0-9]+$ ]]; then
-				local datamart_name="${datamart#datamart_}"
-				record_metric "${COMPONENT}" "datamart_freshness_seconds" "${freshness_seconds}" "component=analytics,datamart=\"${datamart_name}\""
-				log_info "${COMPONENT}: Datamart ${datamart_name} freshness: ${freshness_seconds} seconds"
-			fi
+			row_count=$(echo "${result}" | tr -d '[:space:]' || echo "0")
+		fi
+
+		# Record freshness metric
+		if [[ "${freshness_seconds}" =~ ^[0-9]+$ ]]; then
+			record_metric "${COMPONENT}" "datamart_freshness_seconds" "${freshness_seconds}" "component=analytics,datamart=\"${datamart_name}\""
+			log_info "${COMPONENT}: Datamart ${datamart_name} freshness: ${freshness_seconds} seconds (rows: ${row_count})"
+		fi
+
+		# Record row count metric
+		if [[ "${row_count}" =~ ^[0-9]+$ ]] && [[ ${row_count} -gt 0 ]]; then
+			record_metric "${COMPONENT}" "datamart_records_total" "${row_count}" "component=analytics,datamart=\"${datamart_name}\""
 		fi
 	done
 
@@ -149,6 +188,18 @@ check_datamart_freshness() {
 ##
 main() {
 	log_info "${COMPONENT}: Starting datamart metrics collection"
+
+	# Ensure HOME is set (important for .pgpass)
+	if [[ -z "${HOME:-}" ]]; then
+		local home_dir
+		home_dir=$(getent passwd "${USER:-$(whoami)}" | cut -d: -f6 2>/dev/null || echo "/home/${USER:-$(whoami)}")
+		export HOME="${home_dir}"
+	fi
+	
+	# Ensure PGPASSFILE is set if .pgpass exists
+	if [[ -z "${PGPASSFILE:-}" ]] && [[ -f "${HOME}/.pgpass" ]]; then
+		export PGPASSFILE="${HOME}/.pgpass"
+	fi
 
 	# Load configuration
 	if ! load_monitoring_config; then

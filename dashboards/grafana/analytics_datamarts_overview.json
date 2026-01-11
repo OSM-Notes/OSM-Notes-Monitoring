@@ -22,7 +22,7 @@
         "editorMode": "code",
         "format": "table",
         "rawQuery": true,
-        "rawSql": "SELECT labels->>'datamart' AS datamart, CASE WHEN metric_value = 1 THEN 'Running' ELSE 'Not Running' END as status FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_process_running' ORDER BY timestamp DESC LIMIT 3",
+        "rawSql": "SELECT labels->>'datamart' AS datamart, CASE WHEN metric_value = 1 THEN 'Running' ELSE 'Not Running' END as status FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_process_running' ORDER BY timestamp DESC LIMIT 3",
         "refId": "A"
       }],
       "fieldConfig": {
@@ -59,7 +59,7 @@
         "editorMode": "code",
         "format": "time_series",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_freshness_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_freshness_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
         "refId": "A"
       }],
       "fieldConfig": {
@@ -103,7 +103,7 @@
         "editorMode": "code",
         "format": "time_series",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_execution_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_execution_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
         "refId": "A"
       }],
       "fieldConfig": {
@@ -140,7 +140,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_records_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_records_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
           "refId": "A",
           "alias": "Total Records"
         },
@@ -152,7 +152,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_countries_processed_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_countries_processed_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
           "refId": "B",
           "alias": "Countries Processed"
         },
@@ -164,7 +164,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_users_processed_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_users_processed_total' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
           "refId": "C",
           "alias": "Users Processed"
         }
@@ -189,7 +189,7 @@
         "editorMode": "code",
         "format": "time_series",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_parallel_processing_count' AND labels->>'datamart' = 'countries' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_parallel_processing_count' AND labels->>'datamart' = 'countries' AND $__timeFilter(timestamp) ORDER BY timestamp",
         "refId": "A"
       }],
       "fieldConfig": {
@@ -213,7 +213,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_users_processed_total' ORDER BY timestamp DESC LIMIT 1",
+          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_users_processed_total' ORDER BY timestamp DESC LIMIT 1",
           "refId": "A",
           "alias": "Processed"
         },
@@ -225,7 +225,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_users_pending_total' ORDER BY timestamp DESC LIMIT 1",
+          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_users_pending_total' ORDER BY timestamp DESC LIMIT 1",
           "refId": "B",
           "alias": "Pending"
         },
@@ -237,7 +237,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'datamart_initial_load_progress_percent' ORDER BY timestamp DESC LIMIT 1",
+          "rawSql": "SELECT labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_initial_load_progress_percent' ORDER BY timestamp DESC LIMIT 1",
           "refId": "C",
           "alias": "Progress %"
         }

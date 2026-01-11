@@ -122,7 +122,32 @@ execute_sql_query() {
     local query_escaped
     query_escaped=$(printf '%q' "${query}")
     
-    if ! result=$(eval "${psql_cmd} -d ${dbname} -t -A -c ${query_escaped}" 2>&1); then
+    # Export PGPASSFILE if set, so psql can use it
+    # Also ensure HOME is set so psql can find .pgpass in home directory
+    if [[ -n "${PGPASSFILE:-}" ]]; then
+        export PGPASSFILE
+    elif [[ -f "${HOME}/.pgpass" ]]; then
+        export PGPASSFILE="${HOME}/.pgpass"
+    fi
+    
+    # Ensure HOME is exported for psql to find .pgpass
+    if [[ -z "${HOME:-}" ]]; then
+        local home_dir
+        home_dir=$(getent passwd "${USER:-$(whoami)}" | cut -d: -f6)
+        export HOME="${home_dir}"
+    fi
+    
+    # Build environment variables for psql
+    local env_vars=""
+    if [[ -n "${PGPASSFILE:-}" ]]; then
+        env_vars="PGPASSFILE=\"${PGPASSFILE}\" "
+    fi
+    if [[ -n "${PGPASSWORD:-}" ]]; then
+        env_vars="${env_vars}PGPASSWORD=\"${PGPASSWORD}\" "
+    fi
+    
+    # Execute query with environment variables
+    if ! result=$(eval "${env_vars}${psql_cmd} -d ${dbname} -t -A -c ${query_escaped}" 2>&1); then
         echo "Error executing query: ${result}" >&2
         return 1
     fi
@@ -191,7 +216,7 @@ execute_sql_file() {
 #   0 if accessible, 1 if not
 ##
 check_database_connection() {
-    local dbname="${1:-${DBNAME}}"
+    local dbname="${1:-${DBNAME:-notes_monitoring}}"
     
     # Build psql command (same logic as execute_sql_query)
     local psql_cmd="psql"

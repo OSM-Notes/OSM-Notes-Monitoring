@@ -415,13 +415,23 @@ check_datamart_status() {
 	fi
 
 	# Execute the collection script
-	if bash "${collect_script}" 2>&1 | while IFS= read -r line; do
+	# Capture both stdout and stderr, but allow script to complete even if there are errors
+	local script_output
+	script_output=$(bash "${collect_script}" 2>&1)
+	local script_exit_code=$?
+	
+	# Log the output
+	while IFS= read -r line; do
 		log_debug "${COMPONENT}: ${line}"
-	done; then
+	done <<< "${script_output}"
+	
+	if [[ ${script_exit_code} -eq 0 ]]; then
 		log_info "${COMPONENT}: Datamart status check completed"
 		return 0
 	else
-		log_warning "${COMPONENT}: Datamart status check failed"
+		log_warning "${COMPONENT}: Datamart status check failed (exit code: ${script_exit_code})"
+		# Log last few lines of output for debugging
+		log_debug "${COMPONENT}: Last output lines: $(echo "${script_output}" | tail -5 | tr '\n' '; ')"
 		return 1
 	fi
 }
