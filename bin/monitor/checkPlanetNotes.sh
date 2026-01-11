@@ -69,6 +69,11 @@ run_planet_check() {
     
     log_info "${COMPONENT}: Running processCheckPlanetNotes.sh"
     
+    # Ensure PATH includes standard binary directories for psql and other tools
+    # This is important when script runs from cron or with limited PATH
+    local saved_path="${PATH:-}"
+    export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+    
     # Run the Planet check script
     local start_time
     start_time=$(date +%s)
@@ -76,6 +81,9 @@ run_planet_check() {
     local exit_code=0
     local output
     output=$(cd "${INGESTION_REPO_PATH}" && bash "${planet_check_script}" 2>&1) || exit_code=$?
+    
+    # Restore original PATH
+    export PATH="${saved_path}"
     
     local end_time
     end_time=$(date +%s)

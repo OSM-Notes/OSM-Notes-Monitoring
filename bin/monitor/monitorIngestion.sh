@@ -882,7 +882,22 @@ check_ingestion_performance() {
     local perf_script="${INGESTION_REPO_PATH}/bin/monitor/analyzeDatabasePerformance.sh"
     
     if [[ -f "${perf_script}" ]]; then
-        log_info "${COMPONENT}: Running analyzeDatabasePerformance.sh"
+        # Check if script is executable
+        if [[ ! -x "${perf_script}" ]]; then
+            log_warning "${COMPONENT}: analyzeDatabasePerformance.sh is not executable: ${perf_script}"
+            log_info "${COMPONENT}: Attempting to make script executable"
+            chmod +x "${perf_script}" 2>/dev/null || {
+                log_error "${COMPONENT}: Cannot make analyzeDatabasePerformance.sh executable. Check permissions."
+                return 1
+            }
+        fi
+        
+        log_info "${COMPONENT}: Running analyzeDatabasePerformance.sh from ${perf_script}"
+        
+        # Ensure PATH includes standard binary directories for psql and other tools
+        # This is important when script runs from cron or with limited PATH
+        local saved_path="${PATH:-}"
+        export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
         
         # Run the performance analysis script
         local start_time
@@ -891,6 +906,9 @@ check_ingestion_performance() {
         local exit_code=0
         local output
         output=$(cd "${INGESTION_REPO_PATH}" && bash "${perf_script}" 2>&1) || exit_code=$?
+        
+        # Restore original PATH
+        export PATH="${saved_path}"
         
         local end_time
         end_time=$(date +%s)
@@ -940,10 +958,29 @@ check_ingestion_performance() {
                 log_warning "${COMPONENT}: Performance check found ${warning_count} warnings"
             fi
         else
+            # Extract error message from output (first few lines)
+            local error_summary
+            error_summary=$(echo "${output}" | head -5 | tr '\n' '; ' | sed 's/; $//')
+            
             log_error "${COMPONENT}: Performance analysis failed (exit_code: ${exit_code}, duration: ${duration}s)"
+            log_error "${COMPONENT}: Script path: ${perf_script}"
+            log_error "${COMPONENT}: Error output (first 10 lines):"
+            echo "${output}" | head -10 | while IFS= read -r line; do
+                log_error "${COMPONENT}:   ${line}"
+            done
+            
             record_metric "${COMPONENT}" "performance_check_status" "0" "component=ingestion,check=analyzeDatabasePerformance"
             record_metric "${COMPONENT}" "performance_check_duration" "${duration}" "component=ingestion,check=analyzeDatabasePerformance"
-            send_alert "${COMPONENT}" "ERROR" "performance_check_failed" "Performance analysis failed: exit_code=${exit_code}, duration=${duration}s"
+            
+            # Include error summary in alert message (truncate if too long)
+            local alert_message
+            if [[ ${#error_summary} -gt 200 ]]; then
+                alert_message="Performance analysis failed: exit_code=${exit_code}, duration=${duration}s. Error: ${error_summary:0:197}..."
+            else
+                alert_message="Performance analysis failed: exit_code=${exit_code}, duration=${duration}s. Error: ${error_summary}"
+            fi
+            
+            send_alert "${COMPONENT}" "ERROR" "performance_check_failed" "${alert_message}"
         fi
     else
         log_warning "${COMPONENT}: analyzeDatabasePerformance.sh not found: ${perf_script}"
@@ -1065,6 +1102,11 @@ check_ingestion_data_quality() {
     if [[ -f "${verifier_script}" ]]; then
         log_info "${COMPONENT}: Running notesCheckVerifier.sh"
         
+        # Ensure PATH includes standard binary directories for psql and other tools
+        # This is important when script runs from cron or with limited PATH
+        local saved_path="${PATH:-}"
+        export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+        
         # Run the verifier script
         local start_time
         start_time=$(date +%s)
@@ -1072,6 +1114,9 @@ check_ingestion_data_quality() {
         local exit_code=0
         local output
         output=$(cd "${INGESTION_REPO_PATH}" && bash "${verifier_script}" 2>&1) || exit_code=$?
+        
+        # Restore original PATH
+        export PATH="${saved_path}"
         
         local end_time
         end_time=$(date +%s)
