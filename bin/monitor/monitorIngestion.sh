@@ -912,18 +912,25 @@ check_ingestion_performance() {
         
         log_info "${COMPONENT}: Running analyzeDatabasePerformance.sh from ${perf_script}"
         
-        # Ensure PATH includes standard binary directories for psql and other tools
-        # This is important when script runs from cron or with limited PATH
+        # Ensure PATH includes standard binary directories for psql, timeout, and other tools
+        # This is critical when script runs from cron or with limited PATH
+        # The script itself also uses timeout and psql, so PATH must be set
         local saved_path="${PATH:-}"
         export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
         
+        # Also export PATH in the environment for the script and its subprocesses
+        # This ensures timeout, psql, and other commands are found
+        export PATH
+        
         # Run the performance analysis script
+        # Use env to ensure PATH is passed to all subprocesses
         local start_time
         start_time=$(date +%s)
         
         local exit_code=0
         local output
-        output=$(cd "${INGESTION_REPO_PATH}" && bash "${perf_script}" 2>&1) || exit_code=$?
+        # Use env to explicitly set PATH for the script and all its subprocesses
+        output=$(cd "${INGESTION_REPO_PATH}" && env PATH="${PATH}" bash "${perf_script}" 2>&1) || exit_code=$?
         
         # Restore original PATH
         export PATH="${saved_path}"
