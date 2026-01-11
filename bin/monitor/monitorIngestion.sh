@@ -1351,7 +1351,7 @@ check_api_download_status() {
     local ingestion_log_dir="${INGESTION_REPO_PATH}/logs"
     local api_download_status=0  # 0 = unknown, 1 = success
     
-    # Check for recent API download activity in logs
+    # Method 1: Check for recent API download activity in logs
     if [[ -d "${ingestion_log_dir}" ]]; then
         # Look for API-related log entries
         local recent_api_logs
@@ -1394,35 +1394,77 @@ check_api_download_status() {
         fi
     fi
     
-    # Check for API download script execution
-    local api_script="${INGESTION_REPO_PATH}/bin/processAPINotes.sh"
-    if [[ -f "${api_script}" ]]; then
-        if [[ "${TEST_MODE:-false}" == "true" ]]; then
-            echo "DEBUG: Found API script: ${api_script}" >&2
-        fi
-        # Check if script ran recently (within last hour)
-        if [[ -x "${api_script}" ]]; then
-            local script_mtime
-            script_mtime=$(stat -c %Y "${api_script}" 2>/dev/null || stat -f %m "${api_script}" 2>/dev/null || echo "0")
+    # Method 2: Check daemon log for API activity (if using daemon)
+    if [[ ${api_download_status} -eq 0 ]]; then
+        local daemon_log_file="${DAEMON_LOG_FILE:-/var/log/osm-notes-ingestion/daemon/processAPINotesDaemon.log}"
+        if [[ -f "${daemon_log_file}" ]]; then
+            # Check if daemon log was modified recently (within last hour)
+            local log_mtime
+            log_mtime=$(stat -c %Y "${daemon_log_file}" 2>/dev/null || stat -f %m "${daemon_log_file}" 2>/dev/null || echo "0")
             local current_time
             current_time=$(date +%s)
-            local age_seconds=$((current_time - script_mtime))
+            local age_seconds=$((current_time - log_mtime))
             
-            if [[ "${TEST_MODE:-false}" == "true" ]]; then
-                echo "DEBUG: Script age: ${age_seconds}s" >&2
-            fi
-            
-            # If script was modified recently, assume it ran
             if [[ ${age_seconds} -lt 3600 ]]; then
-                if [[ "${TEST_MODE:-false}" == "true" ]]; then
-                    echo "DEBUG: Script is recent, setting api_download_status=1" >&2
+                # Check for API-related activity in daemon log (last 100 lines)
+                if tail -100 "${daemon_log_file}" 2>/dev/null | grep -qE "(API|download|downloading|notes.*API|Cycle.*completed)" 2>/dev/null; then
+                    log_debug "${COMPONENT}: Found API activity in daemon log (modified ${age_seconds}s ago)"
+                    api_download_status=1
                 fi
-                api_download_status=1
             fi
         fi
-    else
-        if [[ "${TEST_MODE:-false}" == "true" ]]; then
-            echo "DEBUG: API script not found: ${api_script}" >&2
+    fi
+    
+    # Method 3: Check for API download script execution
+    if [[ ${api_download_status} -eq 0 ]]; then
+        local api_script="${INGESTION_REPO_PATH}/bin/process/processAPINotes.sh"
+        if [[ -f "${api_script}" ]]; then
+            if [[ "${TEST_MODE:-false}" == "true" ]]; then
+                echo "DEBUG: Found API script: ${api_script}" >&2
+            fi
+            # Check if script ran recently (within last hour)
+            if [[ -x "${api_script}" ]]; then
+                local script_mtime
+                script_mtime=$(stat -c %Y "${api_script}" 2>/dev/null || stat -f %m "${api_script}" 2>/dev/null || echo "0")
+                local current_time
+                current_time=$(date +%s)
+                local age_seconds=$((current_time - script_mtime))
+                
+                if [[ "${TEST_MODE:-false}" == "true" ]]; then
+                    echo "DEBUG: Script age: ${age_seconds}s" >&2
+                fi
+                
+                # If script was modified recently, assume it ran
+                if [[ ${age_seconds} -lt 3600 ]]; then
+                    if [[ "${TEST_MODE:-false}" == "true" ]]; then
+                        echo "DEBUG: Script is recent, setting api_download_status=1" >&2
+                    fi
+                    api_download_status=1
+                fi
+            fi
+        else
+            if [[ "${TEST_MODE:-false}" == "true" ]]; then
+                echo "DEBUG: API script not found: ${api_script}" >&2
+            fi
+        fi
+    fi
+    
+    # Method 4: Check daemon metrics for recent activity
+    if [[ ${api_download_status} -eq 0 ]]; then
+        if check_database_connection 2>/dev/null; then
+            # Check if there are recent daemon cycle metrics (indicates daemon is processing)
+            local recent_cycle_query
+            recent_cycle_query="SELECT COUNT(*) FROM metrics 
+                               WHERE component = 'ingestion' 
+                                 AND metric_name = 'daemon_cycle_number' 
+                                 AND timestamp > NOW() - INTERVAL '1 hour';"
+            local recent_cycles
+            recent_cycles=$(execute_sql_query "${recent_cycle_query}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+            
+            if [[ -n "${recent_cycles}" ]] && [[ "${recent_cycles}" =~ ^[0-9]+$ ]] && [[ ${recent_cycles} -gt 0 ]]; then
+                log_debug "${COMPONENT}: Found ${recent_cycles} recent daemon cycle metrics (daemon is active)"
+                api_download_status=1
+            fi
         fi
     fi
     
