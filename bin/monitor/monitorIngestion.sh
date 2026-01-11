@@ -1774,15 +1774,18 @@ check_structured_log_metrics() {
     fi
     
     # Check for log gaps (no cycles in last hour)
-    # First check directly in log file for recent cycles (more reliable than metric)
+    # Use multiple methods to detect cycles for better reliability
     local recent_cycles_count=0
+    local cycles_found_in_log=0
+    local cycles_found_via_grep=0
+    
     if [[ -f "${daemon_log_file}" ]]; then
         # Get current time and time 1 hour ago
         local current_time
         current_time=$(date +%s)
         local one_hour_ago=$((current_time - 3600))
         
-        # Count cycles completed in last hour directly from log
+        # Method 1: Count cycles completed in last hour directly from log with timestamp parsing
         # Look for "Cycle X completed successfully" lines with timestamps in last hour
         while IFS= read -r line; do
             # Extract timestamp from log line (format: YYYY-MM-DD HH:MM:SS)
@@ -1791,21 +1794,69 @@ check_structured_log_metrics() {
                 log_timestamp=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null || echo "0")
                 if [[ ${log_timestamp} -ge ${one_hour_ago} ]] && [[ ${log_timestamp} -gt 0 ]]; then
                     if [[ "${line}" =~ Cycle[[:space:]]+[0-9]+[[:space:]]+completed[[:space:]]+successfully ]]; then
-                        recent_cycles_count=$((recent_cycles_count + 1))
+                        cycles_found_in_log=$((cycles_found_in_log + 1))
                     fi
                 fi
             fi
-        done < <(tail -1000 "${daemon_log_file}" 2>/dev/null || echo "")
+        done < <(tail -5000 "${daemon_log_file}" 2>/dev/null || echo "")
+        
+        # Method 2: Use grep to find recent cycles (more efficient for large logs)
+        # Get hour pattern for last hour
+        local hour_pattern
+        hour_pattern=$(date -d '1 hour ago' '+%Y-%m-%d %H' 2>/dev/null || date -v-1H '+%Y-%m-%d %H' 2>/dev/null || echo "")
+        if [[ -n "${hour_pattern}" ]]; then
+            # Count cycles in last hour using hour pattern
+            cycles_found_via_grep=$(grep -E "Cycle [0-9]+ completed successfully" "${daemon_log_file}" 2>/dev/null | \
+                grep -c "${hour_pattern}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+            cycles_found_via_grep=$((cycles_found_via_grep + 0))
+        fi
+        
+        # Use the maximum of both methods
+        if [[ ${cycles_found_in_log} -gt ${cycles_found_via_grep} ]]; then
+            recent_cycles_count=${cycles_found_in_log}
+        else
+            recent_cycles_count=${cycles_found_via_grep}
+        fi
+        
+        log_debug "${COMPONENT}: Cycle detection - Direct parse: ${cycles_found_in_log}, Grep pattern: ${cycles_found_via_grep}, Final count: ${recent_cycles_count}"
     fi
     
-    # Also check metric as fallback
-    local cycles_per_hour
-    cycles_per_hour=$(get_metric_value "${COMPONENT}" "log_cycles_frequency_per_hour" "component=ingestion" || echo "0")
+    # Check metrics as additional verification
+    local log_cycles_per_hour
+    log_cycles_per_hour=$(get_metric_value "${COMPONENT}" "log_cycles_frequency_per_hour" "component=ingestion" || echo "")
     
-    # Alert only if both direct check and metric show no cycles
-    if [[ ${recent_cycles_count} -eq 0 ]] && [[ -n "${cycles_per_hour}" ]] && [[ "${cycles_per_hour}" =~ ^[0-9]+$ ]] && [[ ${cycles_per_hour} -eq 0 ]]; then
-        log_warning "${COMPONENT}: No cycles detected in last hour (possible log gap) - Direct check: ${recent_cycles_count}, Metric: ${cycles_per_hour}"
-        send_alert "${COMPONENT}" "WARNING" "log_gap_detected" "No cycles detected in last hour - possible processing gap"
+    local daemon_cycles_per_hour
+    daemon_cycles_per_hour=$(get_metric_value "${COMPONENT}" "daemon_cycles_per_hour" "component=ingestion" || echo "")
+    
+    # Check last cycle timestamp from metrics
+    local last_cycle_timestamp_query
+    last_cycle_timestamp_query="SELECT MAX(timestamp) FROM metrics 
+                                WHERE component = 'ingestion' 
+                                  AND metric_name = 'daemon_cycle_number' 
+                                  AND timestamp > NOW() - INTERVAL '1 hour';"
+    local last_cycle_timestamp
+    last_cycle_timestamp=$(execute_sql_query "${last_cycle_timestamp_query}" 2>/dev/null | tr -d '[:space:]' || echo "")
+    
+    # Determine if there's a gap
+    # Alert if: no cycles found in log AND (metrics show 0 OR no recent cycle timestamp)
+    local should_alert=false
+    local alert_reason=""
+    
+    if [[ ${recent_cycles_count} -eq 0 ]]; then
+        if [[ -n "${log_cycles_per_hour}" ]] && [[ "${log_cycles_per_hour}" =~ ^[0-9]+$ ]] && [[ ${log_cycles_per_hour} -eq 0 ]]; then
+            if [[ -z "${last_cycle_timestamp}" ]]; then
+                should_alert=true
+                alert_reason="No cycles in log (${recent_cycles_count}), metric shows 0 (${log_cycles_per_hour}), and no recent cycle timestamp"
+            fi
+        elif [[ -z "${last_cycle_timestamp}" ]]; then
+            should_alert=true
+            alert_reason="No cycles in log (${recent_cycles_count}) and no recent cycle timestamp in metrics"
+        fi
+    fi
+    
+    if [[ "${should_alert}" == "true" ]]; then
+        log_warning "${COMPONENT}: No cycles detected in last hour (possible log gap) - Log cycles: ${recent_cycles_count}, log_cycles_per_hour: ${log_cycles_per_hour}, daemon_cycles_per_hour: ${daemon_cycles_per_hour}, last_cycle_timestamp: ${last_cycle_timestamp}"
+        send_alert "${COMPONENT}" "WARNING" "log_gap_detected" "No cycles detected in last hour - possible processing gap. ${alert_reason}"
     elif [[ ${recent_cycles_count} -gt 0 ]]; then
         log_debug "${COMPONENT}: Found ${recent_cycles_count} cycles in last hour (no gap detected)"
     fi
