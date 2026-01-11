@@ -34,8 +34,16 @@ Metrics related to script execution status and availability.
 - **Unit:** `count`
 - **Collection:** Collected during `check_script_execution_status()`
 - **Frequency:** Every monitoring cycle
-- **Expected Range:** 3-5 scripts
-- **Alert Threshold:** < 3 scripts found
+- **Expected Range:** 7 scripts
+- **Expected Scripts:**
+  1. `process/processAPINotes.sh` - Processes API notes
+  2. `process/processAPINotesDaemon.sh` - Daemon wrapper for API notes processing
+  3. `process/processPlanetNotes.sh` - Processes planet notes
+  4. `process/updateCountries.sh` - Updates country boundary data
+  5. `monitor/notesCheckVerifier.sh` - Verifies notes data quality
+  6. `monitor/processCheckPlanetNotes.sh` - Checks planet notes processing
+  7. `monitor/analyzeDatabasePerformance.sh` - Analyzes database performance (ingestion-specific)
+- **Alert Threshold:** ≠ 7 scripts found (must be exactly 7)
 - **Metadata:** `component=ingestion`
 
 #### `scripts_executable`
@@ -44,8 +52,8 @@ Metrics related to script execution status and availability.
 - **Unit:** `count`
 - **Collection:** Collected during `check_script_execution_status()`
 - **Frequency:** Every monitoring cycle
-- **Expected Range:** Should equal `scripts_found`
-- **Alert Threshold:** < `scripts_found`
+- **Expected Range:** Must equal 7 (all scripts must be executable)
+- **Alert Threshold:** ≠ 7 scripts executable (must be exactly 7)
 - **Metadata:** `component=ingestion`
 
 #### `scripts_running`
@@ -54,7 +62,7 @@ Metrics related to script execution status and availability.
 - **Unit:** `count`
 - **Collection:** Collected during `check_script_execution_status()`
 - **Frequency:** Every monitoring cycle
-- **Expected Range:** 0-5 (depends on scheduled execution)
+- **Expected Range:** 0-7 (depends on scheduled execution)
 - **Alert Threshold:** Unexpected number of running scripts
 - **Metadata:** `component=ingestion`
 

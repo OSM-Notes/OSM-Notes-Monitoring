@@ -18,11 +18,18 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 1. Script Execution Thresholds
 
 #### `INGESTION_SCRIPTS_FOUND_THRESHOLD`
-- **Default:** `3`
+- **Default:** `7`
 - **Unit:** Count
-- **Metric:** `scripts_found`
-- **Alert Condition:** `< threshold`
-- **Description:** Minimum number of ingestion scripts that should be found in the repository
+- **Metric:** `scripts_found` and `scripts_executable`
+- **Alert Condition:** `≠ threshold` (must be exactly 7)
+- **Description:** Exact number of ingestion scripts that must be found and executable in the repository. Expected scripts:
+  1. `process/processAPINotes.sh`
+  2. `process/processAPINotesDaemon.sh`
+  3. `process/processPlanetNotes.sh`
+  4. `process/updateCountries.sh`
+  5. `monitor/notesCheckVerifier.sh`
+  6. `monitor/processCheckPlanetNotes.sh`
+  7. `monitor/analyzeDatabasePerformance.sh`
 - **Severity:** WARNING
 - **Action:** Check repository structure and script availability
 

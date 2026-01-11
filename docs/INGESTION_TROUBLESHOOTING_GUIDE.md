@@ -251,11 +251,21 @@ ls -la ${INGESTION_REPO_PATH}/bin/
 
 3. **Check expected scripts:**
 ```bash
-for script in processAPINotes.sh processPlanetNotes.sh notesCheckVerifier.sh processCheckPlanetNotes.sh analyzeDatabasePerformance.sh; do
-    if [ -f "${INGESTION_REPO_PATH}/bin/${script}" ]; then
-        echo "✓ Found: ${script}"
+# Check scripts in process/ directory
+for script in processAPINotes.sh processAPINotesDaemon.sh processPlanetNotes.sh updateCountries.sh; do
+    if [ -f "${INGESTION_REPO_PATH}/bin/process/${script}" ]; then
+        echo "✓ Found: process/${script}"
     else
-        echo "✗ Missing: ${script}"
+        echo "✗ Missing: process/${script}"
+    fi
+done
+
+# Check scripts in monitor/ directory
+for script in notesCheckVerifier.sh processCheckPlanetNotes.sh analyzeDatabasePerformance.sh; do
+    if [ -f "${INGESTION_REPO_PATH}/bin/monitor/${script}" ]; then
+        echo "✓ Found: monitor/${script}"
+    else
+        echo "✗ Missing: monitor/${script}"
     fi
 done
 ```
@@ -421,9 +431,24 @@ echo "2. Repository Path:"
 echo
 
 echo "3. Scripts Found:"
-scripts_found=$(ls -1 ${INGESTION_REPO_PATH}/bin/*.sh 2>/dev/null | wc -l)
-echo "  Found: ${scripts_found} scripts"
-[ ${scripts_found} -ge 3 ] && echo "✓ OK" || echo "✗ WARNING: Less than 3 scripts"
+# Check for expected 7 scripts
+expected_scripts=(
+    "process/processAPINotes.sh"
+    "process/processAPINotesDaemon.sh"
+    "process/processPlanetNotes.sh"
+    "process/updateCountries.sh"
+    "monitor/notesCheckVerifier.sh"
+    "monitor/processCheckPlanetNotes.sh"
+    "monitor/analyzeDatabasePerformance.sh"
+)
+scripts_found=0
+for script in "${expected_scripts[@]}"; do
+    if [ -f "${INGESTION_REPO_PATH}/bin/${script}" ]; then
+        scripts_found=$((scripts_found + 1))
+    fi
+done
+echo "  Found: ${scripts_found}/7 expected scripts"
+[ ${scripts_found} -ge 7 ] && echo "✓ OK" || echo "✗ WARNING: Less than 7 scripts found"
 echo
 
 echo "4. Script Permissions:"

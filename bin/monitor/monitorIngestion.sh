@@ -99,10 +99,13 @@ check_script_execution_status() {
     # Define scripts with their subdirectories
     # Note: processAPINotesDaemon.sh is the daemon wrapper, but we check for processAPINotes.sh
     # as it may be invoked by the daemon or run directly
+    # Note: analyzeDatabasePerformance.sh is part of the ingestion repository as it's specific
+    # to that component's database schema and queries
     local scripts_to_check=(
         "process/processAPINotes.sh"
         "process/processAPINotesDaemon.sh"
         "process/processPlanetNotes.sh"
+        "process/updateCountries.sh"
         "monitor/notesCheckVerifier.sh"
         "monitor/processCheckPlanetNotes.sh"
         "monitor/analyzeDatabasePerformance.sh"
@@ -174,15 +177,30 @@ check_script_execution_status() {
     log_info "${COMPONENT}: Script execution status - Found: ${scripts_found}, Executable: ${scripts_executable}, Running: ${scripts_running}"
     
     # Check against thresholds
-    local scripts_found_threshold="${INGESTION_SCRIPTS_FOUND_THRESHOLD:-3}"
-    if [[ ${scripts_found} -lt ${scripts_found_threshold} ]]; then
-        log_warning "${COMPONENT}: Scripts found (${scripts_found}) below threshold (${scripts_found_threshold})"
-        send_alert "${COMPONENT}" "WARNING" "script_execution_status" "Low number of scripts found: ${scripts_found} (threshold: ${scripts_found_threshold})"
+    # Expected: 7 scripts (processAPINotes.sh, processAPINotesDaemon.sh, processPlanetNotes.sh,
+    # updateCountries.sh, notesCheckVerifier.sh, processCheckPlanetNotes.sh, analyzeDatabasePerformance.sh)
+    local expected_scripts_count="${INGESTION_SCRIPTS_FOUND_THRESHOLD:-7}"
+    
+    # Check if scripts found matches expected count
+    if [[ ${scripts_found} -ne ${expected_scripts_count} ]]; then
+        if [[ ${scripts_found} -lt ${expected_scripts_count} ]]; then
+            log_warning "${COMPONENT}: Scripts found (${scripts_found}) below expected (${expected_scripts_count})"
+            send_alert "${COMPONENT}" "WARNING" "script_execution_status" "Low number of scripts found: ${scripts_found} (expected: ${expected_scripts_count})"
+        else
+            log_warning "${COMPONENT}: More scripts found (${scripts_found}) than expected (${expected_scripts_count})"
+        fi
     fi
     
+    # Check if all found scripts are executable
     if [[ ${scripts_executable} -lt ${scripts_found} ]]; then
         log_warning "${COMPONENT}: Some scripts are not executable (${scripts_executable}/${scripts_found})"
         send_alert "${COMPONENT}" "WARNING" "script_execution_status" "Scripts executable count (${scripts_executable}) is less than scripts found (${scripts_found})"
+    fi
+    
+    # Critical check: scripts_executable must equal expected count
+    if [[ ${scripts_executable} -ne ${expected_scripts_count} ]]; then
+        log_warning "${COMPONENT}: Scripts executable (${scripts_executable}) does not match expected count (${expected_scripts_count})"
+        send_alert "${COMPONENT}" "WARNING" "script_execution_status" "Scripts executable count (${scripts_executable}) does not match expected (${expected_scripts_count}). All scripts must be executable."
     fi
     
     # Check last execution time from log files
@@ -1749,12 +1767,40 @@ check_structured_log_metrics() {
     fi
     
     # Check for log gaps (no cycles in last hour)
+    # First check directly in log file for recent cycles (more reliable than metric)
+    local recent_cycles_count=0
+    if [[ -f "${daemon_log_file}" ]]; then
+        # Get current time and time 1 hour ago
+        local current_time
+        current_time=$(date +%s)
+        local one_hour_ago=$((current_time - 3600))
+        
+        # Count cycles completed in last hour directly from log
+        # Look for "Cycle X completed successfully" lines with timestamps in last hour
+        while IFS= read -r line; do
+            # Extract timestamp from log line (format: YYYY-MM-DD HH:MM:SS)
+            if [[ "${line}" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+                local log_timestamp
+                log_timestamp=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null || echo "0")
+                if [[ ${log_timestamp} -ge ${one_hour_ago} ]] && [[ ${log_timestamp} -gt 0 ]]; then
+                    if [[ "${line}" =~ Cycle[[:space:]]+[0-9]+[[:space:]]+completed[[:space:]]+successfully ]]; then
+                        recent_cycles_count=$((recent_cycles_count + 1))
+                    fi
+                fi
+            fi
+        done < <(tail -1000 "${daemon_log_file}" 2>/dev/null || echo "")
+    fi
+    
+    # Also check metric as fallback
     local cycles_per_hour
     cycles_per_hour=$(get_metric_value "${COMPONENT}" "log_cycles_frequency_per_hour" "component=ingestion" || echo "0")
     
-    if [[ -n "${cycles_per_hour}" ]] && [[ "${cycles_per_hour}" =~ ^[0-9]+$ ]] && [[ ${cycles_per_hour} -eq 0 ]]; then
-        log_warning "${COMPONENT}: No cycles detected in last hour (possible log gap)"
+    # Alert only if both direct check and metric show no cycles
+    if [[ ${recent_cycles_count} -eq 0 ]] && [[ -n "${cycles_per_hour}" ]] && [[ "${cycles_per_hour}" =~ ^[0-9]+$ ]] && [[ ${cycles_per_hour} -eq 0 ]]; then
+        log_warning "${COMPONENT}: No cycles detected in last hour (possible log gap) - Direct check: ${recent_cycles_count}, Metric: ${cycles_per_hour}"
         send_alert "${COMPONENT}" "WARNING" "log_gap_detected" "No cycles detected in last hour - possible processing gap"
+    elif [[ ${recent_cycles_count} -gt 0 ]]; then
+        log_debug "${COMPONENT}: Found ${recent_cycles_count} cycles in last hour (no gap detected)"
     fi
     
     log_info "${COMPONENT}: Structured log metrics check completed"

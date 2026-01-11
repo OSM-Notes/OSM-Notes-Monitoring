@@ -268,24 +268,32 @@ Set up cron job to run monitoring checks periodically:
 
 **`scripts_found`**
 - **Description**: Number of ingestion scripts found in repository
-- **Expected Range**: 3-5 scripts
-- **Alert**: Triggered if < 3 scripts found
+- **Expected Range**: 7 scripts
+- **Expected Scripts**:
+  1. `process/processAPINotes.sh` - Processes API notes
+  2. `process/processAPINotesDaemon.sh` - Daemon wrapper for API notes processing
+  3. `process/processPlanetNotes.sh` - Processes planet notes
+  4. `process/updateCountries.sh` - Updates country boundary data
+  5. `monitor/notesCheckVerifier.sh` - Verifies notes data quality
+  6. `monitor/processCheckPlanetNotes.sh` - Checks planet notes processing
+  7. `monitor/analyzeDatabasePerformance.sh` - Analyzes database performance (ingestion-specific)
+- **Alert**: Triggered if ≠ 7 scripts found (must be exactly 7)
 - **Interpretation**: 
-  - Normal: 3-5 scripts found
-  - Warning: < 3 scripts (scripts may be missing or repository path incorrect)
+  - Normal: 7 scripts found
+  - Warning: < 7 scripts (scripts may be missing or repository path incorrect)
 
 **`scripts_executable`**
 - **Description**: Number of scripts with execute permissions
-- **Expected Range**: Should equal `scripts_found`
-- **Alert**: Triggered if < `scripts_found`
-- **Interpretation**: All scripts should be executable
+- **Expected Range**: Must equal 7 (all scripts must be executable)
+- **Alert**: Triggered if ≠ 7 scripts executable (must be exactly 7)
+- **Interpretation**: All 7 scripts must be executable. If less than 7, some scripts are missing execute permissions.
 
 **`scripts_running`**
 - **Description**: Number of scripts currently running
-- **Expected Range**: 0-5 (depends on scheduled execution)
+- **Expected Range**: 0-7 (depends on scheduled execution)
 - **Interpretation**: 
   - 0: No scripts running (normal if not scheduled)
-  - 1-5: Scripts actively processing (normal during execution)
+  - 1-7: Scripts actively processing (normal during execution)
 
 **`last_log_age_hours`**
 - **Description**: Age of most recent log file
