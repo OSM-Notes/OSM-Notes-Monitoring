@@ -64,6 +64,11 @@ state/
 # Generated dashboards (if auto-generated)
 dashboards/generated/
 
+# Auto-generated HTML dashboard data files (generated from database)
+dashboards/html/*_data.json
+dashboards/html/component_health.json
+dashboards/html/recent_alerts.json
+
 # Lock files
 *.lock
 
