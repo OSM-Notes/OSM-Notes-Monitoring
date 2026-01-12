@@ -88,7 +88,9 @@ install_backup_cron() {
     mkdir -p "${log_dir}" 2>/dev/null || true
     
     # Generate cron job
-    local cron_job="${schedule} ${backup_script} -d ${dbname} -c -r ${retention} >> ${log_dir}/backup.log 2>&1"
+    # Use /var/backups/osm-notes as default backup directory (matches DATA_BACKUP_DIR)
+    local backup_output_dir="/var/backups/osm-notes"
+    local cron_job="${schedule} ${backup_script} -d ${dbname} -c -r ${retention} -o ${backup_output_dir} >> ${log_dir}/backup.log 2>&1"
     
     # Get current crontab
     local current_crontab
