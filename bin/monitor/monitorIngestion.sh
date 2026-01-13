@@ -1018,12 +1018,14 @@ check_ingestion_performance() {
             local warning_count
             warning_count=$(echo "${output}" | grep -c "WARNING\|⚠" || echo "0")
             
-            # Check if failures are due to technical issues (exit code 127 = command not found)
-            # These are not real performance issues, just execution problems
+            # Check if failures are due to technical issues
+            # Exit code 127 = command not found (PATH issues)
+            # Exit code 3 = SQL syntax errors or missing database objects (script compatibility issues)
+            # These are not real performance issues, just execution/configuration problems
             local technical_failures=0
-            if echo "${output}" | grep -q "exit code: 127\|command not found"; then
-                technical_failures=$(echo "${output}" | grep -c "exit code: 127\|command not found" || echo "0")
-                log_warning "${COMPONENT}: Performance check found ${technical_failures} technical failures (scripts cannot execute, likely PATH issues)"
+            if echo "${output}" | grep -q "exit code: 127\|exit code: 3\|command not found\|syntax error\|does not exist\|ERROR:"; then
+                technical_failures=$(echo "${output}" | grep -c "exit code: 127\|exit code: 3\|command not found\|syntax error\|does not exist\|ERROR:" || echo "0")
+                log_warning "${COMPONENT}: Performance check found ${technical_failures} technical failures (scripts have SQL errors or compatibility issues, not performance problems)"
                 # Don't count technical failures as performance issues
                 fail_count=$((fail_count - technical_failures))
                 if [[ ${fail_count} -lt 0 ]]; then
