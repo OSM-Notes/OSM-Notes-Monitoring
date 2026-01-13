@@ -910,7 +910,39 @@ check_ingestion_performance() {
             }
         fi
         
+        # Check if analyzeDatabasePerformance.sh is already running to avoid concurrent executions
+        # This script can take a long time (several minutes) and we don't want multiple instances
+        local lock_file="${TMP_DIR}/analyzeDatabasePerformance.lock"
+        local lock_timeout=3600  # 1 hour - if lock is older, assume process died
+        
+        if [[ -f "${lock_file}" ]]; then
+            local lock_age
+            lock_age=$(($(date +%s) - $(stat -c %Y "${lock_file}" 2>/dev/null || echo "0")))
+            
+            if [[ ${lock_age} -lt ${lock_timeout} ]]; then
+                # Check if process is actually running
+                local lock_pid
+                lock_pid=$(cat "${lock_file}" 2>/dev/null || echo "")
+                
+                if [[ -n "${lock_pid}" ]] && ps -p "${lock_pid}" > /dev/null 2>&1; then
+                    log_info "${COMPONENT}: analyzeDatabasePerformance.sh is already running (PID: ${lock_pid}, lock age: ${lock_age}s), skipping execution"
+                    return 0
+                else
+                    # Lock file exists but process is not running - stale lock, remove it
+                    log_warning "${COMPONENT}: Stale lock file found (PID: ${lock_pid} not running), removing lock"
+                    rm -f "${lock_file}"
+                fi
+            else
+                # Lock file is too old, assume process died
+                log_warning "${COMPONENT}: Lock file is too old (${lock_age}s), assuming process died, removing lock"
+                rm -f "${lock_file}"
+            fi
+        fi
+        
         log_info "${COMPONENT}: Running analyzeDatabasePerformance.sh from ${perf_script}"
+        
+        # Create lock file with current PID
+        echo $$ > "${lock_file}"
         
         # Verify script can be read and has valid shebang
         if ! head -1 "${perf_script}" | grep -qE "^#!.*bash"; then
@@ -939,6 +971,7 @@ check_ingestion_performance() {
         if [[ ${#missing_deps[@]} -gt 0 ]]; then
             log_error "${COMPONENT}: Missing dependencies: ${missing_deps[*]}"
             log_error "${COMPONENT}: Current PATH: ${PATH}"
+            rm -f "${lock_file}"  # Remove lock on error
             send_alert "${COMPONENT}" "ERROR" "performance_check_failed" "Performance analysis failed: Missing dependencies (${missing_deps[*]}). Check PATH and install missing tools."
             export PATH="${saved_path}"  # Restore PATH before returning
             return 1
@@ -1064,6 +1097,15 @@ check_ingestion_performance() {
             elif [[ ${warning_count} -gt 0 ]]; then
                 log_warning "${COMPONENT}: Performance check found ${warning_count} warnings"
             fi
+            
+            # Remove lock file after successful execution
+            if [[ -f "${lock_file}" ]]; then
+                local lock_pid
+                lock_pid=$(cat "${lock_file}" 2>/dev/null || echo "")
+                if [[ "${lock_pid}" == "$$" ]]; then
+                    rm -f "${lock_file}"
+                fi
+            fi
         else
             # Extract error message from output (first few lines)
             local error_summary
@@ -1126,6 +1168,17 @@ check_ingestion_performance() {
     else
         log_warning "${COMPONENT}: analyzeDatabasePerformance.sh not found: ${perf_script}"
         log_info "${COMPONENT}: Skipping script-based performance check (script not available)"
+    fi
+    
+    # Remove lock file if it exists (cleanup)
+    local lock_file="${TMP_DIR}/analyzeDatabasePerformance.lock"
+    if [[ -f "${lock_file}" ]]; then
+        local lock_pid
+        lock_pid=$(cat "${lock_file}" 2>/dev/null || echo "")
+        # Only remove if it's our lock (our PID)
+        if [[ "${lock_pid}" == "$$" ]]; then
+            rm -f "${lock_file}"
+        fi
     fi
     
     log_info "${COMPONENT}: Database performance check completed"

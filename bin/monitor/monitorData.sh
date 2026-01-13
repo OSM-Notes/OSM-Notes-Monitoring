@@ -300,6 +300,20 @@ check_file_integrity() {
             continue
         fi
         
+        # Check if file is currently being written (modified in last 60 seconds)
+        # This prevents false positives when backup is still being created
+        local file_mtime
+        file_mtime=$(stat -c %Y "${backup_file}" 2>/dev/null || echo "0")
+        local current_time
+        current_time=$(date +%s)
+        local file_age=$((current_time - file_mtime))
+        
+        if [[ ${file_age} -lt 60 ]]; then
+            log_debug "${COMPONENT}: Backup file is very recent (${file_age}s old), skipping integrity check (may still be writing): ${backup_file}"
+            files_checked=$((files_checked - 1))  # Don't count files being written
+            continue
+        fi
+        
         # Check compressed files
         if [[ "${backup_file}" == *.tar.gz ]] || [[ "${backup_file}" == *.gz ]]; then
             if ! gzip -t "${backup_file}" > /dev/null 2>&1; then
