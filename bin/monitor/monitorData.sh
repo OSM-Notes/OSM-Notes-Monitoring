@@ -118,10 +118,10 @@ check_backup_freshness() {
         return 1
     fi
     
-    # Find backup files (common patterns: *.sql, *.dump, *.tar.gz, *.backup)
+    # Find backup files (common patterns: *.sql, *.sql.gz, *.dump, *.tar.gz, *.backup)
     while IFS= read -r -d '' file; do
         backup_files+=("${file}")
-    done < <(find "${backup_dir}" -type f \( -name "*.sql" -o -name "*.dump" -o -name "*.tar.gz" -o -name "*.backup" -o -name "backup_*" \) -print0 2>/dev/null || true)
+    done < <(find "${backup_dir}" -type f \( -name "*.sql" -o -name "*.sql.gz" -o -name "*.dump" -o -name "*.tar.gz" -o -name "*.backup" -o -name "backup_*" \) -print0 2>/dev/null || true)
     
     backup_count=${#backup_files[@]}
     
@@ -279,7 +279,7 @@ check_file_integrity() {
     local backup_files=()
     while IFS= read -r -d '' file; do
         backup_files+=("${file}")
-    done < <(find "${backup_dir}" -type f \( -name "*.sql" -o -name "*.dump" -o -name "*.tar.gz" -o -name "*.backup" \) -print0 2>/dev/null || true)
+    done < <(find "${backup_dir}" -type f \( -name "*.sql" -o -name "*.sql.gz" -o -name "*.dump" -o -name "*.tar.gz" -o -name "*.backup" \) -print0 2>/dev/null || true)
     
     for backup_file in "${backup_files[@]}"; do
         files_checked=$((files_checked + 1))
