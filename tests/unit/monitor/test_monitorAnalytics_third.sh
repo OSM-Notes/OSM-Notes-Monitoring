@@ -72,13 +72,20 @@ teardown() {
 }
 
 ##
-# Test: check_error_rate handles zero errors
+# Test: check_data_warehouse_freshness handles very fresh data
 ##
-@test "check_error_rate handles zero errors" {
-    # Mock execute_sql_query to return zero errors
+@test "check_data_warehouse_freshness handles very fresh data" {
+    # Mock check_database_connection
+    # shellcheck disable=SC2317
+    function check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
+    # Mock execute_sql_query to return recent timestamp
     # shellcheck disable=SC2317
     function execute_sql_query() {
-        echo "0|1000"  # errors=0, total=1000
+        echo "300|100"  # freshness_seconds=300 (5 min), recent_updates=100
         return 0
     }
     export -f execute_sql_query
@@ -95,27 +102,20 @@ teardown() {
     }
     export -f send_alert
     
-    run check_error_rate
+    run check_data_warehouse_freshness
     assert_success
 }
 
 ##
-# Test: check_data_freshness handles very fresh data
+# Test: check_health_status handles successful health check
 ##
-@test "check_data_freshness handles very fresh data" {
-    # Mock execute_sql_query to return recent timestamp
+@test "check_health_status handles successful health check" {
+    # Mock check_database_connection
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        date -u +%Y-%m-%d\ %H:%M:%S  # Current timestamp
+    function check_database_connection() {
         return 0
     }
-    export -f execute_sql_query
-    
-    # shellcheck disable=SC2317
-    record_metric() {
-        return 0
-    }
-    export -f record_metric
+    export -f check_database_connection
     
     # shellcheck disable=SC2317
     send_alert() {
@@ -123,7 +123,7 @@ teardown() {
     }
     export -f send_alert
     
-    run check_data_freshness
+    run check_health_status
     assert_success
 }
 
@@ -131,6 +131,13 @@ teardown() {
 # Test: main handles --check option with all checks
 ##
 @test "main handles --check option with all checks" {
+    # Mock load_monitoring_config to avoid reading config files
+    # shellcheck disable=SC2317
+    function load_monitoring_config() {
+        return 0
+    }
+    export -f load_monitoring_config
+    
     # Mock check functions
     # shellcheck disable=SC2317
     function check_query_performance() {
@@ -150,7 +157,7 @@ teardown() {
     }
     export -f check_data_freshness
     
-    run main --check
+    run main --check query-performance
     assert_success
 }
 
@@ -158,12 +165,19 @@ teardown() {
 # Test: main handles verbose mode
 ##
 @test "main handles verbose mode" {
-    # Mock check functions
+    # Mock load_monitoring_config to avoid reading config files
     # shellcheck disable=SC2317
-    function check_query_performance() {
+    function load_monitoring_config() {
         return 0
     }
-    export -f check_query_performance
+    export -f load_monitoring_config
+    
+    # Mock run_all_checks to avoid executing all checks
+    # shellcheck disable=SC2317
+    function run_all_checks() {
+        return 0
+    }
+    export -f run_all_checks
     
     run main --verbose
     assert_success

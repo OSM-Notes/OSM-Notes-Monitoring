@@ -67,22 +67,55 @@ run_tests() {
     fi
     
     # Run tests
+    local start_time
+    start_time=$(date +%s)
+    
     while IFS= read -r test_file; do
+        local test_start
+        test_start=$(date +%s.%N 2>/dev/null || date +%s)
         print_message "${GREEN}" "Running: $(basename "${test_file}")"
         
         # Capture exit code explicitly to avoid set -e terminating the script
         local bats_exit_code=0
         bats "${test_file}" || bats_exit_code=$?
         
+        local test_end
+        test_end=$(date +%s.%N 2>/dev/null || date +%s)
+        local test_duration
+        if command -v bc >/dev/null 2>&1; then
+            test_duration=$(echo "${test_end} - ${test_start}" | bc 2>/dev/null || echo "0")
+            test_duration=$(printf "%.2f" "${test_duration}" 2>/dev/null || echo "0")
+        else
+            test_duration=$((test_end - test_start))
+        fi
+        
         if [[ ${bats_exit_code} -ne 0 ]]; then
             failed_tests=$((failed_tests + 1))
+            print_message "${RED}" "  ✗ Failed (${test_duration}s)"
+        else
+            print_message "${GREEN}" "  ✓ Passed (${test_duration}s)"
         fi
         
         echo
     done <<< "${test_files}"
     
+    local end_time
+    end_time=$(date +%s)
+    local total_duration=$((end_time - start_time))
+    
     # Summary
     echo
+    local total_tests
+    total_tests=$(echo "${test_files}" | wc -l)
+    local passed_tests=$((total_tests - failed_tests))
+    
+    print_message "${BLUE}" "Summary:"
+    echo "  Total: ${total_tests}"
+    echo "  Passed: ${passed_tests}"
+    echo "  Failed: ${failed_tests}"
+    echo "  Duration: ${total_duration}s"
+    echo
+    
     if [[ ${failed_tests} -eq 0 ]]; then
         print_message "${GREEN}" "✓ All unit tests passed"
         return 0
