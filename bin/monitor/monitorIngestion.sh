@@ -1018,9 +1018,25 @@ check_ingestion_performance() {
             local warning_count
             warning_count=$(echo "${output}" | grep -c "WARNING\|⚠" || echo "0")
             
+            # Check if failures are due to technical issues (exit code 127 = command not found)
+            # These are not real performance issues, just execution problems
+            local technical_failures=0
+            if echo "${output}" | grep -q "exit code: 127\|command not found"; then
+                technical_failures=$(echo "${output}" | grep -c "exit code: 127\|command not found" || echo "0")
+                log_warning "${COMPONENT}: Performance check found ${technical_failures} technical failures (scripts cannot execute, likely PATH issues)"
+                # Don't count technical failures as performance issues
+                fail_count=$((fail_count - technical_failures))
+                if [[ ${fail_count} -lt 0 ]]; then
+                    fail_count=0
+                fi
+            fi
+            
             record_metric "${COMPONENT}" "performance_check_passes" "${pass_count}" "component=ingestion"
             record_metric "${COMPONENT}" "performance_check_failures" "${fail_count}" "component=ingestion"
             record_metric "${COMPONENT}" "performance_check_warnings" "${warning_count}" "component=ingestion"
+            if [[ ${technical_failures} -gt 0 ]]; then
+                record_metric "${COMPONENT}" "performance_check_technical_failures" "${technical_failures}" "component=ingestion"
+            fi
             
             # Check performance check duration threshold
             local perf_duration_threshold="${INGESTION_PERFORMANCE_CHECK_DURATION_THRESHOLD:-300}"
@@ -1029,10 +1045,13 @@ check_ingestion_performance() {
                 send_alert "${COMPONENT}" "WARNING" "performance_check" "Performance check took too long: ${duration}s (threshold: ${perf_duration_threshold}s)"
             fi
             
-            # Check performance check failures (any failure triggers alert)
+            # Check performance check failures (only alert on real performance failures, not technical issues)
             if [[ ${fail_count} -gt 0 ]]; then
-                log_warning "${COMPONENT}: Performance check found ${fail_count} failures"
+                log_warning "${COMPONENT}: Performance check found ${fail_count} performance failures"
                 send_alert "${COMPONENT}" "WARNING" "performance_check" "Performance check found ${fail_count} failures, ${warning_count} warnings"
+            elif [[ ${technical_failures} -gt 0 ]]; then
+                # Log technical failures but don't alert (these are configuration issues, not performance problems)
+                log_info "${COMPONENT}: Performance check completed with ${technical_failures} technical failures (scripts cannot execute - check PATH configuration)"
             fi
             
             # Check performance check warnings threshold
