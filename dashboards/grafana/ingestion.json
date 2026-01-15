@@ -355,7 +355,7 @@
     },
     {
       "id": 9,
-      "title": "Notes Processed Per Cycle",
+      "title": "Notes & Comments Processed Per Cycle",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
       "targets": [
@@ -382,6 +382,14 @@
           "rawQuery": true,
           "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_updated_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
           "refId": "C"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_comments_processed_per_cycle' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "D"
         }
       ],
       "fieldConfig": {
@@ -394,22 +402,29 @@
           {
             "matcher": {"id": "byFrameRefID", "options": "A"},
             "properties": [
-              {"id": "displayName", "value": "Total Processed"},
+              {"id": "displayName", "value": "Notes Total"},
               {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}
             ]
           },
           {
             "matcher": {"id": "byFrameRefID", "options": "B"},
             "properties": [
-              {"id": "displayName", "value": "New"},
+              {"id": "displayName", "value": "Notes New"},
               {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
             ]
           },
           {
             "matcher": {"id": "byFrameRefID", "options": "C"},
             "properties": [
-              {"id": "displayName", "value": "Updated"},
+              {"id": "displayName", "value": "Notes Updated"},
               {"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "D"},
+            "properties": [
+              {"id": "displayName", "value": "Comments"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "purple"}}
             ]
           }
         ]
