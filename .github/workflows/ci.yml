@@ -48,8 +48,10 @@ jobs:
           bash --version
           echo "Bash is ready"
       
-      - name: Install BATS
+      - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y bc
           git clone https://github.com/bats-core/bats-core.git /tmp/bats
           sudo /tmp/bats/install.sh /usr/local
       
