@@ -168,6 +168,15 @@ INGESTION_DATA_QUALITY_THRESHOLD=95
 # API download thresholds
 INGESTION_API_DOWNLOAD_SUCCESS_RATE_THRESHOLD=95
 
+# Performance check thresholds
+INGESTION_PERFORMANCE_CHECK_DURATION_THRESHOLD=300
+INGESTION_PERFORMANCE_CHECK_WARNINGS_THRESHOLD=10
+
+# analyzeDatabasePerformance.sh execution control
+# IMPORTANT: This script is very resource-intensive and should run monthly from ingestion project's cron
+# Set to false to disable automatic execution from OSM-Notes-Monitoring (default: false)
+INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false
+
 # Infrastructure thresholds
 INFRASTRUCTURE_DISK_THRESHOLD=90
 ```
@@ -277,6 +286,9 @@ Set up cron job to run monitoring checks periodically:
   5. `monitor/notesCheckVerifier.sh` - Verifies notes data quality
   6. `monitor/processCheckPlanetNotes.sh` - Checks planet notes processing
   7. `monitor/analyzeDatabasePerformance.sh` - Analyzes database performance (ingestion-specific)
+     - **NOTE**: Execution is disabled by default in OSM-Notes-Monitoring
+     - This script is very resource-intensive and should run monthly from ingestion project's cron
+     - Set `INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=true` to enable (NOT RECOMMENDED)
 - **Alert**: Triggered if ≠ 7 scripts found (must be exactly 7)
 - **Interpretation**: 
   - Normal: 7 scripts found

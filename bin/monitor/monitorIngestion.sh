@@ -890,7 +890,17 @@ check_ingestion_performance() {
     # Collect advanced database metrics
     check_advanced_database_metrics
     
-    # Run analyzeDatabasePerformance.sh if available
+    # Run analyzeDatabasePerformance.sh if enabled and available
+    # IMPORTANT: This script is very resource-intensive and should run only once per month
+    # from the ingestion project's cron. By default, it's disabled here.
+    local analyze_db_perf_enabled="${INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED:-false}"
+    
+    if [[ "${analyze_db_perf_enabled}" != "true" ]]; then
+        log_info "${COMPONENT}: analyzeDatabasePerformance.sh execution is disabled (should run monthly from ingestion project cron)"
+        log_debug "${COMPONENT}: Set INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=true to enable execution from monitoring"
+        return 0
+    fi
+    
     if [[ ! -d "${INGESTION_REPO_PATH}" ]]; then
         log_error "${COMPONENT}: Ingestion repository not found: ${INGESTION_REPO_PATH}"
         return 1

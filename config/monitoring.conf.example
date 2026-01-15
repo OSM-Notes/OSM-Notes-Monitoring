@@ -50,6 +50,12 @@ INGESTION_PERFORMANCE_CHECK_DURATION_THRESHOLD=300  # seconds (5 minutes) - aler
 # If analyzeDatabasePerformance.sh frequently times out, consider increasing this threshold
 INGESTION_PERFORMANCE_CHECK_WARNINGS_THRESHOLD=10  # maximum warnings in performance check
 
+# analyzeDatabasePerformance.sh Execution Control
+# IMPORTANT: analyzeDatabasePerformance.sh is a very resource-intensive script that should run
+# only once per month from the ingestion project's cron, not from this monitoring repository.
+# Set to false to disable automatic execution from OSM-Notes-Monitoring.
+INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false  # Set to true only if you want to run it from here (not recommended)
+
 # Data Quality Thresholds
 INGESTION_DATA_QUALITY_THRESHOLD=95  # percentage - minimum acceptable data quality score
 INGESTION_DATA_QUALITY_CHECK_DURATION_THRESHOLD=600  # seconds (10 minutes) - alert if check takes longer

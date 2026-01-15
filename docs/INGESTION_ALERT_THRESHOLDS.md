@@ -129,6 +129,14 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Severity:** WARNING
 - **Action:** Review performance check warnings, investigate issues
 
+#### `INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED`
+- **Default:** `false`
+- **Unit:** Boolean
+- **Description:** Enable/disable automatic execution of `analyzeDatabasePerformance.sh` from OSM-Notes-Monitoring
+- **IMPORTANT:** This script is very resource-intensive and should run **monthly from the ingestion project's cron**, not from monitoring
+- **Recommendation:** Keep this set to `false` and schedule the script in the ingestion project's cron (e.g., first day of month at 4 AM)
+- **Action:** Set to `true` only if you want to run it from monitoring (NOT RECOMMENDED)
+
 **Note:** `performance_check_failures` threshold is `> 0` (any failure triggers alert)
 
 ### 5. Data Quality Thresholds
@@ -265,6 +273,11 @@ INGESTION_DB_QUERY_TIME_THRESHOLD=1000
 # Performance Check Thresholds
 INGESTION_PERFORMANCE_CHECK_DURATION_THRESHOLD=300
 INGESTION_PERFORMANCE_CHECK_WARNINGS_THRESHOLD=10
+
+# analyzeDatabasePerformance.sh Execution Control
+# IMPORTANT: This script is very resource-intensive and should run monthly from ingestion project's cron
+# Set to false to disable automatic execution from OSM-Notes-Monitoring (default: false)
+INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false
 
 # Data Quality Thresholds
 INGESTION_DATA_QUALITY_THRESHOLD=95

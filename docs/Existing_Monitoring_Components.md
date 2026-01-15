@@ -112,15 +112,22 @@ cd /path/to/OSM-Notes-Ingestion
 - `LOG_LEVEL`: Log level
 
 **When to run:**
-- Weekly (recommended: Sunday 4 AM)
+- **Monthly** (recommended: first day of month at 4 AM) - This script is very resource-intensive
 - After database schema changes
 - When performance issues are suspected
 - Before scaling operations
 
+**IMPORTANT - Execution Location:**
+- **This script MUST be scheduled from the ingestion project's cron, NOT from OSM-Notes-Monitoring**
+- The script is too resource-intensive to run frequently from monitoring
+- OSM-Notes-Monitoring has execution disabled by default (`INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false`)
+- Set up a monthly cron job in the ingestion project to run this script
+
 **Integration with OSM-Notes-Monitoring:**
-- OSM-Notes-Monitoring should call this script for infrastructure monitoring
-- OSM-Notes-Monitoring should track performance trends
+- OSM-Notes-Monitoring does NOT execute this script by default (disabled to avoid resource overload)
+- OSM-Notes-Monitoring can track performance trends from ingestion project's execution
 - OSM-Notes-Monitoring should alert on performance degradation
+- To enable execution from monitoring (NOT RECOMMENDED), set `INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=true` in `config/monitoring.conf`
 
 ## SQL Monitoring Queries
 
