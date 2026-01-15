@@ -1,77 +1,617 @@
 {
   "id": null,
   "uid": "osm-notes-ingestion",
-  "title": "Ingestion Monitoring",
+  "title": "Ingestion Monitoring v5",
   "tags": ["osm", "monitoring", "ingestion"],
   "timezone": "browser",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 5,
   "refresh": "30s",
   "editable": true,
   "panels": [
     {
       "id": 1,
-      "title": "Script Execution Status",
+      "title": "Daemon Status",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "gridPos": {"h": 4, "w": 3, "x": 0, "y": 0},
       "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
         "editorMode": "code",
         "format": "table",
         "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'scripts_executable' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }]
-    },
-    {
-      "id": 2,
-      "title": "Database Connection Time (ms)",
-      "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connection_time_ms' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "rawSql": "SELECT metric_value::numeric as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_status' ORDER BY timestamp DESC LIMIT 1",
         "refId": "A"
       }],
       "fieldConfig": {
         "defaults": {
-          "unit": "ms",
-          "decimals": 0
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {"text": "Active", "color": "green"},
+                "0": {"text": "Inactive", "color": "red"}
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "No data",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "gray"},
+              {"value": 0, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"values": true, "calcs": ["lastNotNull"], "fields": ""},
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Daemon Uptime",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 3, "y": 0},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COALESCE((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_uptime_seconds' ORDER BY timestamp DESC LIMIT 1), 0) as value",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 7, "color": "yellow"},
+              {"value": 30, "color": "green"}
+            ]
+          }
         }
       }
     },
     {
       "id": 3,
-      "title": "Scripts Running",
-      "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "title": "Cycle Success Rate",
+      "type": "gauge",
+      "gridPos": {"h": 4, "w": 3, "x": 6, "y": 0},
       "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
         "editorMode": "code",
-        "format": "time_series",
+        "format": "table",
         "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'scripts_running' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "rawSql": "SELECT COALESCE((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycle_success_rate_percent' ORDER BY timestamp DESC LIMIT 1), 100) as value",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 80, "color": "yellow"},
+              {"value": 95, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Failed Cycles",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 9, "y": 0},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COALESCE((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycles_failed_count' ORDER BY timestamp DESC LIMIT 1), 0) as value",
         "refId": "A"
       }],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "decimals": 0
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "green"},
+              {"value": 1, "color": "yellow"},
+              {"value": 5, "color": "red"}
+            ]
+          }
         }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Daemon Restarts",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 12, "y": 0},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COALESCE((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_restarts_count' ORDER BY timestamp DESC LIMIT 1), 0) as value",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "green"},
+              {"value": 1, "color": "yellow"},
+              {"value": 3, "color": "red"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Health Status",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 15, "y": 0},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT metric_value::numeric as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'health_status' ORDER BY timestamp DESC LIMIT 1",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {"text": "Healthy", "color": "green"},
+                "0": {"text": "Unhealthy", "color": "red"}
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "No data",
+                  "color": "gray"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "gray"},
+              {"value": 0, "color": "red"},
+              {"value": 1, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Daemon Cycle Duration (with Outliers)",
+      "type": "timeseries",
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 4},
+      "targets": [
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycle_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycle_avg_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycle_min_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "C"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycle_max_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 1,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byFrameRefID", "options": "A"},
+            "properties": [
+              {"id": "displayName", "value": "Last Cycle"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "B"},
+            "properties": [
+              {"id": "displayName", "value": "Average"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "C"},
+            "properties": [
+              {"id": "displayName", "value": "Min"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "cyan"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "D"},
+            "properties": [
+              {"id": "displayName", "value": "Max"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 8,
+      "title": "Daemon Processing Rate & Cycles",
+      "type": "timeseries",
+      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 4},
+      "targets": [
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_processing_rate_notes_per_second' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycles_per_hour' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byFrameRefID", "options": "A"},
+            "properties": [
+              {"id": "displayName", "value": "Notes/sec"},
+              {"id": "unit", "value": "short"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "B"},
+            "properties": [
+              {"id": "displayName", "value": "Cycles/hour"},
+              {"id": "unit", "value": "short"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 9,
+      "title": "Notes Processed Per Cycle",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+      "targets": [
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_processed_per_cycle' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_new_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_updated_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byFrameRefID", "options": "A"},
+            "properties": [
+              {"id": "displayName", "value": "Total Processed"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "B"},
+            "properties": [
+              {"id": "displayName", "value": "New"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "C"},
+            "properties": [
+              {"id": "displayName", "value": "Updated"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 10,
+      "title": "API OSM Download Success Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_download_success_rate_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 80, "color": "yellow"},
+              {"value": 95, "color": "green"}
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 11,
+      "title": "API OSM Download Metrics",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22},
+      "targets": [
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_download_total_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_download_successful_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byFrameRefID", "options": "A"},
+            "properties": [
+              {"id": "displayName", "value": "Total Downloads"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}
+            ]
+          },
+          {
+            "matcher": {"id": "byFrameRefID", "options": "B"},
+            "properties": [
+              {"id": "displayName", "value": "Successful"},
+              {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 14,
+      "title": "Data Quality Score",
+      "type": "gauge",
+      "gridPos": {"h": 6, "w": 4, "x": 0, "y": 30},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT COALESCE((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'data_quality_score' ORDER BY timestamp DESC LIMIT 1), 0) as value",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 70, "color": "yellow"},
+              {"value": 90, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Notes Check Validator Status",
+      "type": "table",
+      "gridPos": {"h": 6, "w": 10, "x": 4, "y": 30},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT 'Validator Status' as check_type, CASE WHEN COALESCE((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'data_quality_check_status' ORDER BY timestamp DESC LIMIT 1), -1) = 1 THEN 'Passed' WHEN (SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'data_quality_check_status' ORDER BY timestamp DESC LIMIT 1) = 0 THEN 'Failed' WHEN (SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'data_quality_check_status' ORDER BY timestamp DESC LIMIT 1) = 2 THEN 'Running' ELSE 'Unknown' END as status UNION ALL SELECT 'Last Run', COALESCE(TO_CHAR((SELECT MAX(timestamp) FROM metrics WHERE component = 'ingestion' AND metric_name = 'data_quality_check_status'), 'YYYY-MM-DD HH24:MI:SS'), 'Never') UNION ALL SELECT 'Notes Not in DB', COALESCE((SELECT metric_value::text FROM metrics WHERE component = 'ingestion' AND metric_name = 'validator_notes_not_in_db_count' ORDER BY timestamp DESC LIMIT 1), 'N/A') UNION ALL SELECT 'Quality Score', COALESCE((SELECT ROUND(metric_value, 1)::text FROM metrics WHERE component = 'ingestion' AND metric_name = 'data_quality_score' ORDER BY timestamp DESC LIMIT 1), 'N/A') || '%'",
+        "refId": "A"
+      }],
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "status"},
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Passed": {"text": "Passed", "color": "green"},
+                      "Failed": {"text": "Failed", "color": "red"},
+                      "Running": {"text": "Running", "color": "yellow"},
+                      "Unknown": {"text": "Unknown", "color": "gray"}
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "title": "Cycle Success Rate Over Time",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 10, "x": 14, "y": 30},
+      "targets": [{
+        "datasource": {"type": "postgres", "uid": "PostgreSQL"},
+        "editorMode": "code",
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycle_success_rate_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "red"},
+              {"value": 80, "color": "yellow"},
+              {"value": 95, "color": "green"}
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": {"from": "now-24h", "to": "now"},
+  "timepicker": {},
+  "templating": {"list": []},
+  "annotations": {"list": []}
 }

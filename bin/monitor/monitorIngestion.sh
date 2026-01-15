@@ -1371,6 +1371,32 @@ check_ingestion_data_quality() {
                             recent_run=1
                             log_info "${COMPONENT}: notesCheckVerifier.sh completed successfully today"
                             record_metric "${COMPONENT}" "data_quality_check_status" "1" "component=ingestion,check=notesCheckVerifier"
+                            
+                            # Count notes not found in database from check tables
+                            local notes_not_in_db=0
+                            if check_database_connection; then
+                                # Query notes_check table in ingestion database (if it exists)
+                                # Note: This queries the ingestion database, not monitoring database
+                                local ingestion_db="${INGESTION_DB_NAME:-notes}"
+                                local query_notes_not_found="SELECT COUNT(*) FROM notes_check nc WHERE NOT EXISTS (SELECT 1 FROM notes n WHERE n.note_id = nc.note_id);"
+                                
+                                # Try to execute query (may fail if table doesn't exist or wrong database)
+                                # Use execute_sql_query with second parameter to specify database
+                                local result
+                                result=$(execute_sql_query "${query_notes_not_found}" "${ingestion_db}" 2>/dev/null | tr -d '[:space:]' || echo "0")
+                                
+                                if [[ -n "${result}" ]] && [[ "${result}" =~ ^[0-9]+$ ]]; then
+                                    notes_not_in_db=$((result + 0))
+                                    record_metric "${COMPONENT}" "validator_notes_not_in_db_count" "${notes_not_in_db}" "component=ingestion,check=notesCheckVerifier"
+                                    log_info "${COMPONENT}: Found ${notes_not_in_db} notes in check table not present in main database"
+                                    
+                                    if [[ ${notes_not_in_db} -gt 0 ]]; then
+                                        log_warning "${COMPONENT}: notesCheckVerifier found ${notes_not_in_db} notes not in database"
+                                    fi
+                                else
+                                    log_debug "${COMPONENT}: Could not query notes_check table (may not exist or not accessible)"
+                                fi
+                            fi
                         elif grep -qiE "error|failed|discrepancy" "${verifier_log}" 2>/dev/null; then
                             log_warning "${COMPONENT}: notesCheckVerifier.sh found issues today (check log: ${verifier_log})"
                             record_metric "${COMPONENT}" "data_quality_check_status" "0" "component=ingestion,check=notesCheckVerifier"
