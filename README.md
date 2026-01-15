@@ -311,6 +311,11 @@ For complete configuration reference, see:
 - **[Resumen Ejecutivo](./docs/Monitoring_Resumen_Ejecutivo.md)**: Executive summary (Spanish)
 - **[Existing Monitoring Components](./docs/Existing_Monitoring_Components.md)**: Integration with OSM-Notes-Ingestion monitoring scripts
 
+### Production Deployment
+
+- **[Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)**: General production deployment guide
+- **[Pre-Deployment Checklist](./docs/PRE_DEPLOYMENT_CHECKLIST.md)**: Checklist before production deployment
+
 ## Related Repositories
 
 - [OSM-Notes-Ingestion](https://github.com/OSMLatam/OSM-Notes-Ingestion) - Data ingestion
