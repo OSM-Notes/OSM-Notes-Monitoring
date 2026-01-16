@@ -212,21 +212,31 @@ parse_processing_metrics() {
     local notes_after=0
     
     while IFS= read -r line; do
-        # Match format: "| NUMBER | current notes - before" or "| NUMBER | current notes - after"
+        # Match format: timestamp | NUMBER | current notes - before/after
         if [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+current[[:space:]]+notes[[:space:]]+-[[:space:]]+before ]]; then
             notes_before="${BASH_REMATCH[1]}"
         elif [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+current[[:space:]]+notes[[:space:]]+-[[:space:]]+after ]]; then
             notes_after="${BASH_REMATCH[1]}"
         fi
+        # Also look for "Uploaded new notes" messages which are more accurate
+        # Format: "2026-01-16 02:37:45.760507+00 |   1 | Uploaded new notes"
+        if [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+Uploaded[[:space:]]+new[[:space:]]+notes ]]; then
+            local uploaded_notes="${BASH_REMATCH[1]}"
+            if [[ ${uploaded_notes} -gt 0 ]]; then
+                notes_new=${uploaded_notes}
+                # If we haven't set processed count yet, use this as processed
+                if [[ ${notes_processed} -eq 0 ]]; then
+                    notes_processed=${uploaded_notes}
+                fi
+            fi
+        fi
     done <<< "${cycle_context}"
     
-    # Calculate notes processed from before/after counts
-    if [[ ${notes_before} -gt 0 ]] && [[ ${notes_after} -ge ${notes_before} ]]; then
+    # Calculate notes processed from before/after counts (fallback if no "Uploaded new" found)
+    if [[ ${notes_processed} -eq 0 ]] && [[ ${notes_before} -gt 0 ]] && [[ ${notes_after} -ge ${notes_before} ]]; then
         local notes_diff=$((notes_after - notes_before))
         # Use the difference as notes processed if we haven't found it yet
-        if [[ ${notes_processed} -eq 0 ]]; then
-            notes_processed=${notes_diff}
-        fi
+        notes_processed=${notes_diff}
         # If difference is positive, assume they are new notes
         if [[ ${notes_diff} -gt 0 ]] && [[ ${notes_new} -eq 0 ]]; then
             notes_new=${notes_diff}
@@ -244,15 +254,21 @@ parse_processing_metrics() {
         elif [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+current[[:space:]]+comments[[:space:]]+-[[:space:]]+after ]]; then
             comments_after="${BASH_REMATCH[1]}"
         fi
+        # Also look for "Uploaded new comments" messages which are more accurate
+        # Format: "2026-01-16 02:37:45.763429+00 |   2 | Uploaded new comments"
+        if [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+Uploaded[[:space:]]+new[[:space:]]+comments ]]; then
+            local uploaded_comments="${BASH_REMATCH[1]}"
+            if [[ ${uploaded_comments} -gt 0 ]]; then
+                comments_processed=${uploaded_comments}
+            fi
+        fi
     done <<< "${cycle_context}"
     
-    # Calculate comments processed from before/after counts
-    if [[ ${comments_before} -gt 0 ]] && [[ ${comments_after} -ge ${comments_before} ]]; then
+    # Calculate comments processed from before/after counts (fallback if no "Uploaded new" found)
+    if [[ ${comments_processed} -eq 0 ]] && [[ ${comments_before} -gt 0 ]] && [[ ${comments_after} -ge ${comments_before} ]]; then
         local comments_diff=$((comments_after - comments_before))
         # Use the difference as comments processed if we haven't found it yet
-        if [[ ${comments_processed} -eq 0 ]]; then
-            comments_processed=${comments_diff}
-        fi
+        comments_processed=${comments_diff}
     fi
     
     # Calculate processing rate

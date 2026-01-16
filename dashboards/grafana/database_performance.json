@@ -1,7 +1,7 @@
 {
   "id": null,
   "uid": "osm-notes-db-performance",
-  "title": "Database Performance - Ingestion",
+  "title": "Ingestion - Database Performance",
   "tags": ["osm", "monitoring", "ingestion", "database"],
   "timezone": "browser",
   "schemaVersion": 38,
