@@ -78,11 +78,11 @@ teardown() {
 # Test: acknowledge_alert handles invalid alert ID
 ##
 @test "acknowledge_alert handles invalid alert ID" {
-    # Mock psql to return no rows
+    # Mock psql to return no rows (empty string when no rows updated)
     # shellcheck disable=SC2317
     function psql() {
         if [[ "${*}" =~ UPDATE.*alerts ]]; then
-            echo "0"  # No rows updated
+            echo ""  # Empty string when no rows updated (psql -t -A returns empty)
             return 0
         fi
         return 1
@@ -97,11 +97,11 @@ teardown() {
 # Test: resolve_alert handles invalid alert ID
 ##
 @test "resolve_alert handles invalid alert ID" {
-    # Mock psql to return no rows
+    # Mock psql to return no rows (empty string when no rows updated)
     # shellcheck disable=SC2317
     function psql() {
         if [[ "${*}" =~ UPDATE.*alerts ]]; then
-            echo "0"  # No rows updated
+            echo ""  # Empty string when no rows updated (psql -t -A returns empty)
             return 0
         fi
         return 1

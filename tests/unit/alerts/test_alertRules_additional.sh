@@ -110,44 +110,44 @@ teardown() {
 }
 
 ##
-# Test: get_template handles missing template
+# Test: show_template handles missing template
 ##
-@test "get_template handles missing template" {
-    run get_template "nonexistent_template"
-    # Should return default or empty
-    assert_success || true
+@test "show_template handles missing template" {
+    run show_template "nonexistent_template"
+    # Should fail when template doesn't exist
+    assert_failure || true
 }
 
 ##
-# Test: get_template loads template file
+# Test: show_template loads template file
 ##
-@test "get_template loads template file" {
-    local template_file="${TEST_TEMPLATES_DIR}/test_template.txt"
+@test "show_template loads template file" {
+    local template_file="${TEST_TEMPLATES_DIR}/test_template.template"
     echo "Test template content" > "${template_file}"
     
-    run get_template "test_template"
+    run show_template "test_template"
     assert_success
     assert_output --partial "Test template content"
 }
 
 ##
-# Test: load_rules handles empty file
+# Test: list_rules handles empty file
 ##
-@test "load_rules handles empty file" {
+@test "list_rules handles empty file" {
     touch "${TEST_RULES_FILE}"
     
-    run load_rules
+    run list_rules
     assert_success
 }
 
 ##
-# Test: load_rules handles invalid format gracefully
+# Test: list_rules handles invalid format gracefully
 ##
-@test "load_rules handles invalid format gracefully" {
+@test "list_rules handles invalid format gracefully" {
     echo "invalid:format:line" > "${TEST_RULES_FILE}"
     
-    run load_rules
-    # Should handle gracefully (may skip invalid lines)
+    run list_rules
+    # Should handle gracefully (may show invalid lines)
     assert_success || true
 }
 
@@ -227,15 +227,18 @@ EOF
 }
 
 ##
-# Test: load_rules handles multiple rules
+# Test: list_rules handles multiple rules
 ##
-@test "load_rules handles multiple rules" {
+@test "list_rules handles multiple rules" {
     cat > "${TEST_RULES_FILE}" << EOF
 COMPONENT1:critical:alert1:email1@example.com
 COMPONENT2:warning:alert2:email2@example.com
 COMPONENT3:info:alert3:email3@example.com
 EOF
     
-    run load_rules
+    run list_rules
     assert_success
+    assert_output --partial "COMPONENT1"
+    assert_output --partial "COMPONENT2"
+    assert_output --partial "COMPONENT3"
 }

@@ -295,11 +295,16 @@ main() {
     # Load configuration
     load_config "${CONFIG_FILE:-}"
     
+    # Strip leading -- from action if present
+    if [[ "${action}" =~ ^-- ]]; then
+        action="${action#--}"
+    fi
+    
     case "${action}" in
-        list)
+        list|--list)
             list_rules "${2:-}"
             ;;
-        add)
+        add|--add)
             if [[ $# -lt 5 ]]; then
                 echo "Error: Component, level, type, and route required"
                 usage
@@ -307,7 +312,7 @@ main() {
             fi
             add_rule "${2}" "${3}" "${4}" "${5}"
             ;;
-        remove)
+        remove|--remove)
             if [[ -z "${2:-}" ]]; then
                 echo "Error: Rule ID required"
                 usage
@@ -315,7 +320,7 @@ main() {
             fi
             remove_rule "${2}"
             ;;
-        route)
+        route|--route)
             if [[ $# -lt 4 ]]; then
                 echo "Error: Component, level, and type required"
                 usage
@@ -323,8 +328,12 @@ main() {
             fi
             get_routing "${2}" "${3}" "${4}"
             ;;
-        template)
+        template|--template|templates|--templates)
             local template_action="${2:-}"
+            # Strip leading -- from template_action if present
+            if [[ "${template_action}" =~ ^-- ]]; then
+                template_action="${template_action#--}"
+            fi
             case "${template_action}" in
                 list)
                     list_templates
@@ -337,7 +346,7 @@ main() {
                     fi
                     show_template "${3}"
                     ;;
-                add)
+                add|--add)
                     if [[ $# -lt 4 ]]; then
                         echo "Error: Template ID and content required"
                         usage
@@ -351,6 +360,22 @@ main() {
                     exit 1
                     ;;
             esac
+            ;;
+        add-template|--add-template)
+            if [[ $# -lt 3 ]]; then
+                echo "Error: Template ID and content required"
+                usage
+                exit 1
+            fi
+            add_template "${2}" "${3}"
+            ;;
+        show-template|--show-template)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: Template ID required"
+                usage
+                exit 1
+            fi
+            show_template "${2}"
             ;;
         -h|--help|help)
             usage

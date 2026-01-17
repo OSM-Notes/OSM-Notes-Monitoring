@@ -60,7 +60,7 @@ EOF
     run add_template "test_template" "Test template content"
     assert_success
     
-    assert_file_exists "${TEST_TEMPLATES_DIR}/test_template.txt"
+    assert_file_exists "${TEST_TEMPLATES_DIR}/test_template.template"
 }
 
 ##
@@ -84,7 +84,7 @@ EOF
 # Test: main handles --show-template option
 ##
 @test "main handles --show-template option" {
-    echo "Test content" > "${TEST_TEMPLATES_DIR}/test_template.txt"
+    echo "Test content" > "${TEST_TEMPLATES_DIR}/test_template.template"
     
     run main --show-template "test_template"
     assert_success

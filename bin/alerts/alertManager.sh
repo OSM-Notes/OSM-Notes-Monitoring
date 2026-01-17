@@ -422,20 +422,26 @@ show_stats() {
                  ORDER BY component, alert_level, status;"
     
     # Use PGPASSWORD only if set, otherwise let psql use default authentication
+    local exit_code=0
     if [[ -n "${PGPASSWORD:-}" ]]; then
         PGPASSWORD="${PGPASSWORD}" psql \
             -h "${dbhost}" \
             -p "${dbport}" \
             -U "${dbuser}" \
             -d "${dbname}" \
-            -c "${query}" 2>/dev/null || true
+            -c "${query}" 2>/dev/null || exit_code=$?
     else
         psql \
             -h "${dbhost}" \
             -p "${dbport}" \
             -U "${dbuser}" \
             -d "${dbname}" \
-            -c "${query}" 2>/dev/null || true
+            -c "${query}" 2>/dev/null || exit_code=$?
+    fi
+    
+    if [[ ${exit_code} -ne 0 ]]; then
+        log_error "Failed to retrieve alert statistics"
+        return 1
     fi
 }
 
@@ -487,11 +493,16 @@ main() {
     # Load configuration
     load_config "${CONFIG_FILE:-}"
     
+    # Strip leading -- from action if present
+    if [[ "${action}" =~ ^-- ]]; then
+        action="${action#--}"
+    fi
+    
     case "${action}" in
-        list)
+        list|--list)
             list_alerts "${2:-}" "${3:-}"
             ;;
-        show)
+        show|--show)
             if [[ -z "${2:-}" ]]; then
                 echo "Error: Alert ID required"
                 usage
@@ -499,7 +510,7 @@ main() {
             fi
             show_alert "${2}"
             ;;
-        acknowledge|ack)
+        acknowledge|ack|--ack)
             if [[ -z "${2:-}" ]]; then
                 echo "Error: Alert ID required"
                 usage
@@ -507,7 +518,7 @@ main() {
             fi
             acknowledge_alert "${2}" "${3:-}"
             ;;
-        resolve)
+        resolve|--resolve)
             if [[ -z "${2:-}" ]]; then
                 echo "Error: Alert ID required"
                 usage
@@ -515,10 +526,10 @@ main() {
             fi
             resolve_alert "${2}" "${3:-}"
             ;;
-        aggregate)
+        aggregate|--aggregate)
             aggregate_alerts "${2:-}" "${3:-}"
             ;;
-        history)
+        history|--history)
             if [[ -z "${2:-}" ]]; then
                 echo "Error: Component required"
                 usage
@@ -526,10 +537,10 @@ main() {
             fi
             show_history "${2}" "${3:-}"
             ;;
-        stats)
+        stats|--stats)
             show_stats "${2:-}"
             ;;
-        cleanup)
+        cleanup|--cleanup)
             cleanup_alerts "${2:-}"
             ;;
         -h|--help|help)
