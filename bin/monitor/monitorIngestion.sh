@@ -2156,21 +2156,84 @@ check_api_download_success_rate() {
     if [[ -f "${daemon_log_file}" ]]; then
         # Count API download attempts in last 24 hours - look for "__getNewNotesFromApi" function calls
         # Each cycle calls this function once to download from API
-        # Use tail to get recent entries (last ~10000 lines should cover 24 hours for 1 cycle/minute)
-        local downloads
-        downloads=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "__getNewNotesFromApi|getNewNotesFromApi" 2>/dev/null || echo "0")
-        downloads=$(echo "${downloads}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
-        downloads=$((downloads + 0))
+        # Filter by timestamp (last 24 hours) instead of fixed line count to avoid changing values during the day
+        local threshold_timestamp
+        threshold_timestamp=$(date -d '24 hours ago' '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "")
         
-        # Count successful downloads in last 24 hours - look for "Successfully downloaded notes from API"
-        # Also count "SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY" as success indicator
-        local successes
-        successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY" 2>/dev/null || echo "0")
-        successes=$(echo "${successes}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
-        successes=$((successes + 0))
-        
-        total_downloads=${downloads}
-        successful_downloads=${successes}
+        if [[ -n "${threshold_timestamp}" ]]; then
+            # Convert threshold timestamp to epoch seconds for comparison
+            local threshold_epoch
+            threshold_epoch=$(date -d "${threshold_timestamp}" +%s 2>/dev/null || echo "0")
+            
+            if [[ ${threshold_epoch} -gt 0 ]]; then
+                # Count downloads in last 24 hours by filtering lines with timestamps >= threshold
+                local downloads=0
+                while IFS= read -r line; do
+                    # Extract timestamp from log line (format: YYYY-MM-DD HH:MM:SS)
+                    if [[ "${line}" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+                        local log_timestamp="${BASH_REMATCH[1]}"
+                        # Convert log timestamp to epoch seconds
+                        local log_epoch
+                        log_epoch=$(date -d "${log_timestamp}" +%s 2>/dev/null || echo "0")
+                        # Compare timestamps (log_epoch >= threshold_epoch means within last 24 hours)
+                        if [[ ${log_epoch} -ge ${threshold_epoch} ]] && [[ ${log_epoch} -gt 0 ]]; then
+                            if [[ "${line}" =~ (__getNewNotesFromApi|getNewNotesFromApi) ]]; then
+                                downloads=$((downloads + 1))
+                            fi
+                        fi
+                    fi
+                done < <(tail -5000 "${daemon_log_file}" 2>/dev/null || echo "")
+                
+                # Count successful downloads in last 24 hours
+                local successes=0
+                while IFS= read -r line; do
+                    # Extract timestamp from log line
+                    if [[ "${line}" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+                        local log_timestamp="${BASH_REMATCH[1]}"
+                        # Convert log timestamp to epoch seconds
+                        local log_epoch
+                        log_epoch=$(date -d "${log_timestamp}" +%s 2>/dev/null || echo "0")
+                        # Compare timestamps
+                        if [[ ${log_epoch} -ge ${threshold_epoch} ]] && [[ ${log_epoch} -gt 0 ]]; then
+                            if [[ "${line}" =~ (Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY) ]]; then
+                                successes=$((successes + 1))
+                            fi
+                        fi
+                    fi
+                done < <(tail -5000 "${daemon_log_file}" 2>/dev/null || echo "")
+                
+                total_downloads=${downloads}
+                successful_downloads=${successes}
+            else
+                # Fallback: use tail -10000 if date conversion fails
+                local downloads
+                downloads=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "__getNewNotesFromApi|getNewNotesFromApi" 2>/dev/null || echo "0")
+                downloads=$(echo "${downloads}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+                downloads=$((downloads + 0))
+                
+                local successes
+                successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY" 2>/dev/null || echo "0")
+                successes=$(echo "${successes}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+                successes=$((successes + 0))
+                
+                total_downloads=${downloads}
+                successful_downloads=${successes}
+            fi
+        else
+            # Fallback: use tail -10000 if date command fails
+            local downloads
+            downloads=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "__getNewNotesFromApi|getNewNotesFromApi" 2>/dev/null || echo "0")
+            downloads=$(echo "${downloads}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+            downloads=$((downloads + 0))
+            
+            local successes
+            successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY" 2>/dev/null || echo "0")
+            successes=$(echo "${successes}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+            successes=$((successes + 0))
+            
+            total_downloads=${downloads}
+            successful_downloads=${successes}
+        fi
         
         if [[ "${TEST_MODE:-false}" == "true" ]]; then
             echo "DEBUG: ${daemon_log_file}: downloads=${total_downloads}, successes=${successful_downloads}" >&2

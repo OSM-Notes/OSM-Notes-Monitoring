@@ -308,16 +308,52 @@ parse_daemon_cycle_metrics() {
         success_rate=$((successful_cycles * 100 / total_cycle_attempts))
     fi
     
-    # Calculate cycles per hour (from last hour of logs)
+    # Calculate cycles per hour (from last 60 minutes of logs, not the previous complete hour)
+    # This fixes the issue where cycles show 0 during the first hour of the day (00:00-00:59)
+    # because the old logic was looking for the previous complete hour (23:00-23:59 of previous day)
     local cycles_per_hour=0
-    local recent_cycles
-    local hour_pattern
-    hour_pattern=$(date -d '1 hour ago' '+%Y-%m-%d %H' 2>/dev/null || echo "")
-    if [[ -n "${hour_pattern}" ]]; then
-        recent_cycles=$(grep -E "Cycle [0-9]+ completed successfully" "${log_file}" 2>/dev/null | grep -c "${hour_pattern}" 2>/dev/null || echo "0")
-    else
-        recent_cycles=0
+    local recent_cycles=0
+    
+    # Get threshold timestamp (60 minutes ago) in epoch seconds for accurate comparison
+    local threshold_epoch
+    threshold_epoch=$(date -d '60 minutes ago' +%s 2>/dev/null || echo "0")
+    
+    if [[ ${threshold_epoch} -gt 0 ]]; then
+        # Count cycles completed in the last 60 minutes by comparing timestamps
+        # Get recent cycle completion lines (last ~70 entries to cover 60+ minutes)
+        local recent_cycle_lines
+        recent_cycle_lines=$(tail -70 "${log_file}" 2>/dev/null | grep -E "Cycle [0-9]+ completed successfully" || echo "")
+        
+        if [[ -n "${recent_cycle_lines}" ]]; then
+            while IFS= read -r line; do
+                # Extract timestamp from log line (format: YYYY-MM-DD HH:MM:SS)
+                if [[ "${line}" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2})[[:space:]]+([0-9]{2}):([0-9]{2}):([0-9]{2}) ]]; then
+                    local log_date="${BASH_REMATCH[1]}"
+                    local log_time="${BASH_REMATCH[2]}:${BASH_REMATCH[3]}:${BASH_REMATCH[4]}"
+                    local log_timestamp="${log_date} ${log_time}"
+                    
+                    # Convert log timestamp to epoch seconds
+                    local log_epoch
+                    log_epoch=$(date -d "${log_timestamp}" +%s 2>/dev/null || echo "0")
+                    
+                    # If log timestamp is >= threshold (within last 60 minutes), count it
+                    if [[ ${log_epoch} -ge ${threshold_epoch} ]] && [[ ${log_epoch} -gt 0 ]]; then
+                        recent_cycles=$((recent_cycles + 1))
+                    fi
+                fi
+            done <<< "${recent_cycle_lines}"
+        fi
     fi
+    
+    # Fallback: if date command failed or no cycles found, use previous hour pattern
+    if [[ ${recent_cycles} -eq 0 ]] || [[ ${threshold_epoch} -eq 0 ]]; then
+        local hour_pattern
+        hour_pattern=$(date -d '1 hour ago' '+%Y-%m-%d %H' 2>/dev/null || echo "")
+        if [[ -n "${hour_pattern}" ]]; then
+            recent_cycles=$(grep -E "Cycle [0-9]+ completed successfully" "${log_file}" 2>/dev/null | grep -c "${hour_pattern}" 2>/dev/null || echo "0")
+        fi
+    fi
+    
     recent_cycles=$(echo "${recent_cycles}" | tr -d '[:space:]' || echo "0")
     cycles_per_hour=$((recent_cycles + 0))
     
@@ -360,16 +396,54 @@ parse_daemon_processing_metrics() {
     last_cycle_line=$(grep -E "Cycle [0-9]+ completed successfully" "${log_file}" 2>/dev/null | tail -1 || echo "")
     
     if [[ -n "${last_cycle_line}" ]]; then
-        # Extract cycle number
+        # Extract cycle number and timestamp
         local cycle_num=0
+        local cycle_timestamp=""
         if [[ "${last_cycle_line}" =~ Cycle[[:space:]]+([0-9]+) ]]; then
             cycle_num="${BASH_REMATCH[1]}"
         fi
+        # Extract timestamp from cycle completion line (format: YYYY-MM-DD HH:MM:SS)
+        if [[ "${last_cycle_line}" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+            cycle_timestamp="${BASH_REMATCH[1]}"
+        fi
         
         # Look for processing stats around this cycle
-        # Search backwards from the cycle completion line
+        # Instead of searching a fixed number of lines back, find the most recent
+        # "Uploaded new notes/comments" messages that occurred BEFORE this cycle completed
+        # This is more robust as the distance can vary significantly
+        
+        # First, try to find messages in a larger context (300 lines)
         local cycle_context
-        cycle_context=$(grep -B 50 "Cycle ${cycle_num} completed successfully" "${log_file}" 2>/dev/null | tail -50 || echo "")
+        cycle_context=$(grep -B 300 "Cycle ${cycle_num} completed successfully" "${log_file}" 2>/dev/null | tail -300 || echo "")
+        
+        # If no context found with grep -B, try alternative: find all "Uploaded new" messages
+        # that occurred before the cycle timestamp
+        if [[ -z "${cycle_context}" ]] || [[ "${cycle_context}" =~ ^[[:space:]]*$ ]]; then
+            # Extract cycle timestamp for comparison
+            local cycle_timestamp_epoch=0
+            if [[ -n "${cycle_timestamp}" ]]; then
+                cycle_timestamp_epoch=$(date -d "${cycle_timestamp}" +%s 2>/dev/null || echo "0")
+            fi
+            
+            # Get recent "Uploaded new" messages from tail of log
+            if [[ ${cycle_timestamp_epoch} -gt 0 ]]; then
+                local recent_uploaded_messages
+                recent_uploaded_messages=$(tail -500 "${log_file}" 2>/dev/null | grep -E "Uploaded new (notes|comments)" || echo "")
+                
+                # Filter messages that occurred before cycle completion
+                if [[ -n "${recent_uploaded_messages}" ]]; then
+                    while IFS= read -r line; do
+                        if [[ "${line}" =~ ([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+                            local msg_timestamp_epoch
+                            msg_timestamp_epoch=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null || echo "0")
+                            if [[ ${msg_timestamp_epoch} -lt ${cycle_timestamp_epoch} ]] && [[ ${msg_timestamp_epoch} -gt 0 ]]; then
+                                cycle_context="${cycle_context}${line}"$'\n'
+                            fi
+                        fi
+                    done <<< "${recent_uploaded_messages}"
+                fi
+            fi
+        fi
         
         # Try old format first: "Processed X notes", "X new notes", etc.
         if [[ "${cycle_context}" =~ ([0-9]+)[[:space:]]+notes[[:space:]]+processed ]]; then
@@ -410,13 +484,19 @@ parse_daemon_processing_metrics() {
             fi
             # Also look for "Uploaded new notes" messages which are more accurate
             # Format: "2026-01-16 02:37:45.760507+00 |   1 | Uploaded new notes"
+            # Note: The number may have leading spaces, so we need to handle that
             if [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+Uploaded[[:space:]]+new[[:space:]]+notes ]]; then
                 local uploaded_notes="${BASH_REMATCH[1]}"
+                uploaded_notes=$((uploaded_notes + 0))  # Convert to integer, removing leading spaces
                 if [[ ${uploaded_notes} -gt 0 ]]; then
-                    last_notes_new=${uploaded_notes}
+                    # Accumulate notes (there might be multiple "Uploaded new notes" messages in one cycle)
+                    last_notes_new=$((last_notes_new + uploaded_notes))
                     # If we haven't set processed count yet, use this as processed
                     if [[ ${last_notes_processed} -eq 0 ]]; then
                         last_notes_processed=${uploaded_notes}
+                    else
+                        # Accumulate processed count too
+                        last_notes_processed=$((last_notes_processed + uploaded_notes))
                     fi
                 fi
             fi
@@ -448,10 +528,13 @@ parse_daemon_processing_metrics() {
             fi
             # Also look for "Uploaded new comments" messages which are more accurate
             # Format: "2026-01-16 02:37:45.763429+00 |   2 | Uploaded new comments"
+            # Note: The number may have leading spaces, so we need to handle that
             if [[ "${line}" =~ \|[[:space:]]+([0-9]+)[[:space:]]+\|[[:space:]]+Uploaded[[:space:]]+new[[:space:]]+comments ]]; then
                 local uploaded_comments="${BASH_REMATCH[1]}"
+                uploaded_comments=$((uploaded_comments + 0))  # Convert to integer, removing leading spaces
                 if [[ ${uploaded_comments} -gt 0 ]]; then
-                    last_comments_processed=${uploaded_comments}
+                    # Accumulate comments (there might be multiple "Uploaded new comments" messages in one cycle)
+                    last_comments_processed=$((last_comments_processed + uploaded_comments))
                 fi
             fi
         done <<< "${cycle_context}"
@@ -477,6 +560,20 @@ parse_daemon_processing_metrics() {
     
     if [[ ${last_cycle_duration} -gt 0 ]] && [[ ${last_notes_processed} -gt 0 ]]; then
         processing_rate=$((last_notes_processed / last_cycle_duration))
+    fi
+    
+    # Ensure Notes Total is the sum of New + Updated (even if Updated is 0)
+    # This ensures consistency: Total = New + Updated
+    if [[ ${last_notes_processed} -eq 0 ]] && [[ ${last_notes_new} -gt 0 ]]; then
+        # If processed is 0 but we have new notes, set processed to new (since updated is 0)
+        last_notes_processed=${last_notes_new}
+    elif [[ ${last_notes_processed} -gt 0 ]]; then
+        # If we have processed count, ensure it equals new + updated
+        local calculated_total=$((last_notes_new + last_notes_updated))
+        if [[ ${calculated_total} -gt 0 ]] && [[ ${calculated_total} -ne ${last_notes_processed} ]]; then
+            # Use calculated total if it's different and non-zero
+            last_notes_processed=${calculated_total}
+        fi
     fi
     
     # Record metrics
