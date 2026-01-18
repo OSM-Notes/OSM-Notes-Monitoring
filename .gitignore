@@ -35,6 +35,9 @@ tests/tmp/
 coverage/
 test_coverage/
 
+# Test template files (generated during tests)
+config/alert_templates/test_template.template
+
 # Node.js dependencies (if using any)
 node_modules/
 
