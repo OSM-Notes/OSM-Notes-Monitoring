@@ -21,7 +21,7 @@ groups:
         annotations:
           summary: "High number of slow queries detected"
           description: "There are {{ $value }} slow queries (>30s) running in the Analytics database. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
 
       # Cache Hit Ratio Low
       - alert: AnalyticsCacheHitRatioLow
@@ -34,7 +34,7 @@ groups:
         annotations:
           summary: "Database cache hit ratio is low"
           description: "Cache hit ratio is {{ $value }}%, which is below the 90% threshold. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
 
       # Cache Hit Ratio Critical
       - alert: AnalyticsCacheHitRatioCritical
@@ -47,7 +47,7 @@ groups:
         annotations:
           summary: "Database cache hit ratio is critically low"
           description: "Cache hit ratio is {{ $value }}%, which is below the 80% critical threshold. Immediate action required. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
 
       # High Active Connections
       - alert: AnalyticsHighConnections
@@ -60,7 +60,7 @@ groups:
         annotations:
           summary: "High number of active database connections"
           description: "There are {{ $value }} active connections to the Analytics database, which exceeds the 80 connection threshold. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
 
       # Connection Pool Exhaustion
       - alert: AnalyticsConnectionPoolExhaustion
@@ -73,7 +73,7 @@ groups:
         annotations:
           summary: "Database connection pool near exhaustion"
           description: "There are {{ $value }} active connections, approaching the maximum pool size. Immediate action required. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
 
       # Active Locks High
       - alert: AnalyticsHighActiveLocks
@@ -86,7 +86,7 @@ groups:
         annotations:
           summary: "High number of active database locks"
           description: "There are {{ $value }} active locks in the Analytics database, which may indicate blocking queries. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
 
       # Deadlocks Detected
       - alert: AnalyticsDeadlocksDetected
@@ -99,7 +99,7 @@ groups:
         annotations:
           summary: "Database deadlocks detected"
           description: "Deadlocks have been detected in the Analytics database. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
 
       # Table Bloat High
       - alert: AnalyticsTableBloatHigh
@@ -112,7 +112,7 @@ groups:
         annotations:
           summary: "High table bloat detected"
           description: "Overall table bloat is {{ $value }}%, which exceeds the 20% threshold. Consider running VACUUM. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
 
       # Table Bloat Critical
       - alert: AnalyticsTableBloatCritical
@@ -125,7 +125,7 @@ groups:
         annotations:
           summary: "Critical table bloat detected"
           description: "Overall table bloat is {{ $value }}%, which exceeds the 30% critical threshold. Immediate VACUUM required. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
 
       # DWH Schema Size High
       - alert: AnalyticsDWHSchemaSizeHigh
@@ -138,7 +138,7 @@ groups:
         annotations:
           summary: "DWH schema size is high"
           description: "DWH schema size is {{ $value | humanize1024 }}B, which exceeds the 100GB threshold. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/CAPACITY_PLANNING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/CAPACITY_PLANNING_GUIDE.md"
 
       # Facts Table Size High
       - alert: AnalyticsFactsTableSizeHigh
@@ -151,7 +151,7 @@ groups:
         annotations:
           summary: "Facts table size is high"
           description: "Facts table total size is {{ $value | humanize1024 }}B, which exceeds the 50GB threshold. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/CAPACITY_PLANNING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/CAPACITY_PLANNING_GUIDE.md"
 
       # Long Running Query
       - alert: AnalyticsLongRunningQuery
@@ -164,7 +164,7 @@ groups:
         annotations:
           summary: "Long running query detected"
           description: "A query has been running for {{ $value }} seconds (>5 minutes). Component: {{ $labels.component }}, Query: {{ $labels.query_preview }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/QUERY_PERFORMANCE_OPTIMIZATION.md"
 
       # Blocking Queries
       - alert: AnalyticsBlockingQueries
@@ -177,7 +177,7 @@ groups:
         annotations:
           summary: "Blocking queries detected"
           description: "There are {{ $value }} queries blocking other queries in the Analytics database. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
 
 # Note: These alert rules use Prometheus query syntax
 # For use with the monitoring system's alert functions, adapt the expressions

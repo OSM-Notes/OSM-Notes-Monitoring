@@ -42,7 +42,7 @@ This system monitors the following repositories:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/OSMLatam/OSM-Notes-Monitoring.git
+git clone https://github.com/OSM-Notes/OSM-Notes-Monitoring.git
 cd OSM-Notes-Monitoring
 ```
 
@@ -318,11 +318,11 @@ For complete configuration reference, see:
 
 ## Related Repositories
 
-- [OSM-Notes-Ingestion](https://github.com/OSMLatam/OSM-Notes-Ingestion) - Data ingestion
-- [OSM-Notes-Analytics](https://github.com/OSMLatam/OSM-Notes-Analytics) - DWH and analytics
-- [OSM-Notes-WMS](https://github.com/OSMLatam/OSM-Notes-WMS) - WMS service
-- [OSM-Notes-Data](https://github.com/OSMLatam/OSM-Notes-Data) - Data backups
-- [OSM-Notes-Common](https://github.com/OSMLatam/OSM-Notes-Common) - Shared libraries
+- [OSM-Notes-Ingestion](https://github.com/OSM-Notes/OSM-Notes-Ingestion) - Data ingestion
+- [OSM-Notes-Analytics](https://github.com/OSM-Notes/OSM-Notes-Analytics) - DWH and analytics
+- [OSM-Notes-WMS](https://github.com/OSM-Notes/OSM-Notes-WMS) - WMS service
+- [OSM-Notes-Data](https://github.com/OSM-Notes/OSM-Notes-Data) - Data backups
+- [OSM-Notes-Common](https://github.com/OSM-Notes/OSM-Notes-Common) - Shared libraries
 
 ## Contributing
 

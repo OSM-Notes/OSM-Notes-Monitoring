@@ -21,7 +21,7 @@ groups:
         annotations:
           summary: "Datamart is obsolete (not updated in >24 hours)"
           description: "Datamart {{ $labels.datamart }} has not been updated in {{ $value | humanizeDuration }}. Last update was more than 24 hours ago. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Critical Obsolete Datamart Alert
       - alert: AnalyticsDatamartCriticallyObsolete
@@ -34,7 +34,7 @@ groups:
         annotations:
           summary: "Datamart is critically obsolete (not updated in >48 hours)"
           description: "Datamart {{ $labels.datamart }} has not been updated in {{ $value | humanizeDuration }}. Last update was more than 48 hours ago. Immediate action required. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Datamart Process Not Running
       - alert: AnalyticsDatamartNotRunning
@@ -47,7 +47,7 @@ groups:
         annotations:
           summary: "Datamart process is not running"
           description: "Datamart {{ $labels.datamart }} process is not running. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Datamart Execution Failed
       - alert: AnalyticsDatamartExecutionFailed
@@ -60,7 +60,7 @@ groups:
         annotations:
           summary: "Datamart execution failures detected"
           description: "Datamart {{ $labels.datamart }} has execution failures. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Low Datamart Success Rate
       - alert: AnalyticsDatamartLowSuccessRate
@@ -73,7 +73,7 @@ groups:
         annotations:
           summary: "Datamart success rate is low"
           description: "Datamart {{ $labels.datamart }} success rate is {{ $value }}%, which is below the 80% threshold. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Long Datamart Execution Duration
       - alert: AnalyticsDatamartLongExecution
@@ -86,7 +86,7 @@ groups:
         annotations:
           summary: "Datamart execution is taking too long"
           description: "Datamart {{ $labels.datamart }} execution duration is {{ $value | humanizeDuration }}, which exceeds the 1 hour threshold. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Datamart Update Gap Detected
       - alert: AnalyticsDatamartUpdateGap
@@ -99,7 +99,7 @@ groups:
         annotations:
           summary: "Datamart update gap detected"
           description: "Datamart {{ $labels.datamart }} has a gap in updates. Last update was {{ $value | humanizeDuration }} ago (>25 hours). Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Datamart Records Decreasing
       - alert: AnalyticsDatamartRecordsDecreasing
@@ -112,7 +112,7 @@ groups:
         annotations:
           summary: "Datamart records are decreasing"
           description: "Datamart {{ $labels.datamart }} record count decreased by {{ $value | abs }} in the last hour. This may indicate data loss. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Datamart Countries Processing Stalled
       - alert: AnalyticsDatamartCountriesStalled
@@ -125,7 +125,7 @@ groups:
         annotations:
           summary: "DatamartCountries processing appears stalled"
           description: "DatamartCountries has processed 0 countries in the last 10 minutes. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       # Datamart Users Initial Load Stalled
       - alert: AnalyticsDatamartUsersLoadStalled
@@ -138,7 +138,7 @@ groups:
         annotations:
           summary: "DatamartUsers initial load appears stalled"
           description: "DatamartUsers initial load progress is 0% for 30 minutes. Component: {{ $labels.component }}"
-          runbook_url: "https://github.com/OSM-Notes-Monitoring/docs/ANALYTICS_MONITORING_GUIDE.md"
+          runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
 # Note: These alert rules use Prometheus query syntax
 # For use with the monitoring system's alert functions, adapt the expressions

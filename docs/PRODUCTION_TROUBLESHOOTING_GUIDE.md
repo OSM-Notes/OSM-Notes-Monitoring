@@ -583,7 +583,7 @@ If issues persist:
 1. **Check Logs**: `/var/log/osm-notes-monitoring/`
 2. **Run Diagnostics**: `./scripts/validate_production.sh`
 3. **Review Documentation**: `docs/`
-4. **Check GitHub Issues**: https://github.com/OSMLatam/OSM-Notes-Monitoring/issues
+4. **Check GitHub Issues**: https://github.com/OSM-Notes/OSM-Notes-Monitoring/issues
 5. **Contact Support**: See project README
 
 ---

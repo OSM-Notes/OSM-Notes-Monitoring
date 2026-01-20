@@ -26,7 +26,7 @@ Before starting, ensure you have:
 
 ```bash
 # Clone the repository
-git clone https://github.com/OSMLatam/OSM-Notes-Monitoring.git
+git clone https://github.com/OSM-Notes/OSM-Notes-Monitoring.git
 cd OSM-Notes-Monitoring
 
 # Copy configuration template

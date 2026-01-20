@@ -6,7 +6,7 @@
 
 ## Paso 1: Crear el Repositorio en GitHub
 
-1. Ve a https://github.com/OSMLatam
+1. Ve a https://github.com/OSM-Notes
 2. Click en "New repository"
 3. Configuración:
    - **Name:** `OSM-Notes-Monitoring`
@@ -19,7 +19,7 @@
 
 ```bash
 # Clonar el repositorio vacío
-git clone https://github.com/OSMLatam/OSM-Notes-Monitoring.git
+git clone https://github.com/OSM-Notes/OSM-Notes-Monitoring.git
 cd OSM-Notes-Monitoring
 ```
 
@@ -252,7 +252,7 @@ git push -u origin main
 
 ## Paso 10: Verificar
 
-1. Ve a https://github.com/OSMLatam/OSM-Notes-Monitoring
+1. Ve a https://github.com/OSM-Notes/OSM-Notes-Monitoring
 2. Verifica que todos los archivos estén presentes
 3. Verifica que el README se muestre correctamente
 4. Verifica que la estructura de directorios sea correcta

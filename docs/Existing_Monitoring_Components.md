@@ -251,10 +251,10 @@ fi
 
 ## References
 
-- [OSM-Notes-Ingestion README](https://github.com/OSMLatam/OSM-Notes-Ingestion/blob/main/README.md)
-- [OSM-Notes-Ingestion Documentation](https://github.com/OSMLatam/OSM-Notes-Ingestion/blob/main/docs/Documentation.md)
-- [OSM-Notes-Ingestion Alerting System](https://github.com/OSMLatam/OSM-Notes-Ingestion/blob/main/docs/Alerting_System.md)
-- [OSM-Notes-Ingestion bin/README](https://github.com/OSMLatam/OSM-Notes-Ingestion/blob/main/bin/README.md)
+- [OSM-Notes-Ingestion README](https://github.com/OSM-Notes/OSM-Notes-Ingestion/blob/main/README.md)
+- [OSM-Notes-Ingestion Documentation](https://github.com/OSM-Notes/OSM-Notes-Ingestion/blob/main/docs/Documentation.md)
+- [OSM-Notes-Ingestion Alerting System](https://github.com/OSM-Notes/OSM-Notes-Ingestion/blob/main/docs/Alerting_System.md)
+- [OSM-Notes-Ingestion bin/README](https://github.com/OSM-Notes/OSM-Notes-Ingestion/blob/main/bin/README.md)
 
 ---
 

@@ -49,7 +49,7 @@ For a quick deployment with defaults:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/OSMLatam/OSM-Notes-Monitoring.git
+git clone https://github.com/OSM-Notes/OSM-Notes-Monitoring.git
 cd OSM-Notes-Monitoring
 
 # 2. Run complete deployment
@@ -415,7 +415,7 @@ If you encounter issues:
 1. Check logs: `/var/log/osm-notes-monitoring/`
 2. Run validation: `./scripts/validate_production.sh`
 3. Review documentation: `docs/`
-4. Check GitHub issues: https://github.com/OSMLatam/OSM-Notes-Monitoring/issues
+4. Check GitHub issues: https://github.com/OSM-Notes/OSM-Notes-Monitoring/issues
 
 ---
 
