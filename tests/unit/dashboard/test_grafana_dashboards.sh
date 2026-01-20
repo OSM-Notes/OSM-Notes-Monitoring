@@ -28,16 +28,17 @@ setup() {
 @test "overview.json has required dashboard structure" {
     assert_file_exists "${TEST_DASHBOARD_DIR}/overview.json"
     
-    # Check for dashboard object
-    run jq -e '.dashboard' "${TEST_DASHBOARD_DIR}/overview.json" > /dev/null 2>&1
-    assert_success "overview.json missing dashboard object"
-    
-    # Check for required fields
-    run jq -e '.dashboard.title' "${TEST_DASHBOARD_DIR}/overview.json" > /dev/null 2>&1
+    # Check for title (overview.json has structure at root level, not under .dashboard)
+    run jq -e '.title' "${TEST_DASHBOARD_DIR}/overview.json" > /dev/null 2>&1
     assert_success "overview.json missing title"
     
-    run jq -e '.dashboard.panels' "${TEST_DASHBOARD_DIR}/overview.json" > /dev/null 2>&1
+    # Check for panels
+    run jq -e '.panels' "${TEST_DASHBOARD_DIR}/overview.json" > /dev/null 2>&1
     assert_success "overview.json missing panels"
+    
+    # Check for schemaVersion
+    run jq -e '.schemaVersion' "${TEST_DASHBOARD_DIR}/overview.json" > /dev/null 2>&1
+    assert_success "overview.json missing schemaVersion"
 }
 
 ##

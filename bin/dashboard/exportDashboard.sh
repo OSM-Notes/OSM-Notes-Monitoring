@@ -104,8 +104,14 @@ export_grafana_dashboard() {
     
     if [[ -d "${output}" ]]; then
         # Copy to directory
-        mkdir -p "${output}/grafana"
-        cp -r "${dashboard_dir}"/* "${output}/grafana/" 2>/dev/null || true
+        # If output already ends with /grafana, don't add another grafana subdirectory
+        if [[ "${output}" == */grafana ]]; then
+            mkdir -p "${output}"
+            cp -r "${dashboard_dir}"/* "${output}/" 2>/dev/null || true
+        else
+            mkdir -p "${output}/grafana"
+            cp -r "${dashboard_dir}"/* "${output}/grafana/" 2>/dev/null || true
+        fi
         
         if [[ "${include_data}" == "true" ]]; then
             # Export metrics data
@@ -182,8 +188,14 @@ export_html_dashboard() {
     
     if [[ -d "${output}" ]]; then
         # Copy to directory
-        mkdir -p "${output}/html"
-        cp -r "${dashboard_dir}"/* "${output}/html/" 2>/dev/null || true
+        # If output already ends with /html, don't add another html subdirectory
+        if [[ "${output}" == */html ]]; then
+            mkdir -p "${output}"
+            cp -r "${dashboard_dir}"/* "${output}/" 2>/dev/null || true
+        else
+            mkdir -p "${output}/html"
+            cp -r "${dashboard_dir}"/* "${output}/html/" 2>/dev/null || true
+        fi
         
         if [[ "${include_data}" == "true" ]]; then
             # Export metrics data

@@ -214,8 +214,8 @@ setup() {
                 fi
                 # Update mock status in file
                 echo "acknowledged" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
-                # Return alert ID (RETURNING id) - only if using -t -A format
-                if [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]]; then
+                # Return alert ID (RETURNING id) - check for -t -A format in args or all_args
+                if [[ "${is_tab_format}" == "true" ]] || [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]] || [[ "${*}" =~ -t.*-A ]] || [[ "${*}" =~ -A.*-t ]]; then
                     echo "00000000-0000-0000-0000-000000000001"
                 fi
                 return 0
@@ -230,8 +230,8 @@ setup() {
                 fi
                 # Update mock status in file
                 echo "resolved" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
-                # Return alert ID (RETURNING id) - only if using -t -A format
-                if [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]]; then
+                # Return alert ID (RETURNING id) - check for -t -A format in args or all_args
+                if [[ "${is_tab_format}" == "true" ]] || [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]] || [[ "${*}" =~ -t.*-A ]] || [[ "${*}" =~ -A.*-t ]]; then
                     echo "00000000-0000-0000-0000-000000000001"
                 fi
                 return 0

@@ -273,7 +273,7 @@ teardown() {
     }
     export -f psql
     
-    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/generateMetrics.sh" --component ingestion all json
+    run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/generateMetrics.sh" ingestion json
     assert_success
 }
 

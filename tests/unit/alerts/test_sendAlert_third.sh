@@ -41,15 +41,15 @@ teardown() {
 @test "format_html handles all alert levels with colors" {
     run format_html "TEST_COMPONENT" "critical" "test" "Message"
     assert_success
-    assert_output --partial "critical"
+    assert_output --partial "[CRITICAL]"
     
     run format_html "TEST_COMPONENT" "warning" "test" "Message"
     assert_success
-    assert_output --partial "warning"
+    assert_output --partial "[WARNING]"
     
     run format_html "TEST_COMPONENT" "info" "test" "Message"
     assert_success
-    assert_output --partial "info"
+    assert_output --partial "[INFO]"
 }
 
 ##

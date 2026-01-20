@@ -238,7 +238,8 @@ record_request() {
     fi
     metadata="${metadata}}"
     
-    record_security_event "rate_limit" "${ip}" "${endpoint}" "${metadata}"
+    # Record security event, but don't fail if it errors (graceful degradation)
+    record_security_event "rate_limit" "${ip}" "${endpoint}" "${metadata}" || true
 }
 
 ##

@@ -53,7 +53,7 @@ teardown() {
 ##
 @test "format_alert_html handles warning level" {
     local html
-    html=$(format_alert_html "TEST_COMPONENT" "warning" "test_alert" "Test message")
+    html=$(format_html "TEST_COMPONENT" "warning" "test_alert" "Test message")
     
     assert [[ -n "${html}" ]]
     assert echo "${html}" | grep -q "warning"
@@ -61,7 +61,7 @@ teardown() {
 
 @test "format_alert_html handles info level" {
     local html
-    html=$(format_alert_html "TEST_COMPONENT" "info" "test_alert" "Test message")
+    html=$(format_html "TEST_COMPONENT" "info" "test_alert" "Test message")
     
     assert [[ -n "${html}" ]]
     assert echo "${html}" | grep -q "info"
@@ -72,7 +72,7 @@ teardown() {
 ##
 @test "format_alert_json includes metadata" {
     local json
-    json=$(format_alert_json "TEST_COMPONENT" "critical" "test_alert" "Test message" '{"key":"value"}')
+    json=$(format_json "TEST_COMPONENT" "critical" "test_alert" "Test message" '{"key":"value"}')
     
     assert [[ -n "${json}" ]]
     assert echo "${json}" | grep -q "key"
@@ -89,7 +89,7 @@ teardown() {
     }
     export -f send_alert
     
-    run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --json "TEST_COMPONENT" "critical" "test" "Test message"
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --format json "TEST_COMPONENT" "critical" "test" "Test message"
     assert_success
 }
 
@@ -104,7 +104,7 @@ teardown() {
     }
     export -f send_alert
     
-    run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --html "TEST_COMPONENT" "critical" "test" "Test message"
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --format html "TEST_COMPONENT" "critical" "test" "Test message"
     assert_success
 }
 
@@ -130,7 +130,7 @@ teardown() {
 ##
 @test "format_alert_html escapes special characters" {
     local html
-    html=$(format_alert_html "TEST_COMPONENT" "critical" "test_alert" "Test <script>alert('xss')</script> message")
+    html=$(format_html "TEST_COMPONENT" "critical" "test_alert" "Test <script>alert('xss')</script> message")
     
     # Should not contain unescaped script tags
     assert ! echo "${html}" | grep -q "<script>"
@@ -141,13 +141,13 @@ teardown() {
 ##
 @test "format_alert_json handles empty metadata" {
     local json
-    json=$(format_alert_json "TEST_COMPONENT" "critical" "test_alert" "Test message" "")
+    json=$(format_json "TEST_COMPONENT" "critical" "test_alert" "Test message" "")
     
     assert [[ -n "${json}" ]]
 }
 
 ##
-# Test: main handles --slack-channel option
+# Test: main handles --slack option
 ##
 @test "main handles --slack-channel option" {
     export SLACK_ENABLED="true"
@@ -160,7 +160,7 @@ teardown() {
     }
     export -f send_alert
     
-    run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --slack-channel "#test-channel" "TEST_COMPONENT" "critical" "test" "Test message"
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/alerts/sendAlert.sh" --slack "TEST_COMPONENT" "critical" "test" "Test message"
     assert_success
 }
 

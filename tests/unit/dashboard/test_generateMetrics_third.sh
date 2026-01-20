@@ -27,9 +27,9 @@ teardown() {
 }
 
 ##
-# Test: generate_metrics handles multiple components
+# Test: generate_all_metrics handles multiple components
 ##
-@test "generate_metrics handles multiple components" {
+@test "generate_all_metrics handles multiple components" {
     # Mock psql
     # shellcheck disable=SC2317
     function psql() {
@@ -38,14 +38,14 @@ teardown() {
     }
     export -f psql
     
-    run generate_metrics "ingestion,analytics"
+    run generate_all_metrics "24" "json"
     assert_success
 }
 
 ##
-# Test: generate_metrics handles CSV format
+# Test: generate_component_metrics handles CSV format
 ##
-@test "generate_metrics handles CSV format" {
+@test "generate_component_metrics handles CSV format" {
     # Mock psql
     # shellcheck disable=SC2317
     function psql() {
@@ -55,7 +55,7 @@ teardown() {
     }
     export -f psql
     
-    run generate_metrics "ingestion" "csv"
+    run generate_component_metrics "ingestion" "24" "csv"
     assert_success
 }
 

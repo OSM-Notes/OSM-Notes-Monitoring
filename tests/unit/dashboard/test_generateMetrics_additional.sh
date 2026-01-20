@@ -53,9 +53,9 @@ teardown() {
 }
 
 ##
-# Test: generate_metrics handles empty database
+# Test: generate_component_metrics handles empty database
 ##
-@test "generate_metrics handles empty database" {
+@test "generate_component_metrics handles empty database" {
     # Mock psql to return empty
     # shellcheck disable=SC2317
     function psql() {
@@ -64,14 +64,14 @@ teardown() {
     }
     export -f psql
     
-    run generate_metrics
+    run generate_component_metrics "ingestion" "24" "json"
     assert_success
 }
 
 ##
-# Test: generate_metrics handles database error
+# Test: generate_component_metrics handles database error
 ##
-@test "generate_metrics handles database error" {
+@test "generate_component_metrics handles database error" {
     # Mock psql to fail
     # shellcheck disable=SC2317
     function psql() {
@@ -79,22 +79,23 @@ teardown() {
     }
     export -f psql
     
-    run generate_metrics || true
+    run generate_component_metrics "ingestion" "24" "json" || true
     assert_success || assert_failure
 }
 
 ##
-# Test: main handles --component option
+# Test: main handles --component option via script
 ##
 @test "main handles --component option" {
-    # Mock generate_metrics
+    # Mock psql
     # shellcheck disable=SC2317
-    function generate_metrics() {
+    function psql() {
+        echo "[]"
         return 0
     }
-    export -f generate_metrics
+    export -f psql
     
-    run main --component "ingestion"
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/dashboard/generateMetrics.sh" --component ingestion json
     assert_success
 }
 

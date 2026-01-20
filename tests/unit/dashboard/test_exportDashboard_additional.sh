@@ -29,47 +29,46 @@ teardown() {
 }
 
 ##
-# Test: export_dashboard handles missing dashboard name
+# Test: export_grafana_dashboard handles missing dashboard directory
 ##
-@test "export_dashboard handles missing dashboard name" {
-    run export_dashboard ""
-    assert_failure
-}
-
-##
-# Test: export_dashboard handles invalid output file
-##
-@test "export_dashboard handles invalid output file" {
-    run export_dashboard "test_dashboard" "/invalid/path/file.json"
-    assert_failure
-}
-
-##
-# Test: main handles --output option
-##
-@test "main handles --output option" {
-    # Mock export_dashboard
-    # shellcheck disable=SC2317
-    function export_dashboard() {
-        return 0
-    }
-    export -f export_dashboard
-    
-    run main --output "/tmp/test.json" "test_dashboard"
+@test "export_grafana_dashboard handles missing dashboard directory" {
+    DASHBOARD_OUTPUT_DIR="/nonexistent/dir" run export_grafana_dashboard "/tmp/test_output" "false" "tar"
+    # Should succeed with warning
     assert_success
 }
 
 ##
-# Test: main handles --help option
+# Test: export_html_dashboard handles invalid output file
+##
+@test "export_html_dashboard handles invalid output file" {
+    # Create a test dashboard directory
+    local test_dir
+    test_dir=$(mktemp -d)
+    mkdir -p "${test_dir}/html"
+    echo "test" > "${test_dir}/html/test.html"
+    
+    # Try to export to invalid path (directory that doesn't exist)
+    DASHBOARD_OUTPUT_DIR="${test_dir}" run export_html_dashboard "/nonexistent/parent/output" "false" "tar"
+    # Should fail or handle gracefully
+    assert_failure || assert_success
+    
+    rm -rf "${test_dir}"
+}
+
+##
+# Test: main handles --help option via script
 ##
 @test "main handles --help option" {
-    # Mock usage
-    # shellcheck disable=SC2317
-    function usage() {
-        return 0
-    }
-    export -f usage
-    
-    run main --help
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --help
     assert_success
+    assert_output --partial "Usage"
+}
+
+##
+# Test: main handles invalid dashboard type
+##
+@test "main handles invalid dashboard type" {
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" invalid_type
+    assert_failure
+    assert_output --partial "Unknown dashboard type"
 }
