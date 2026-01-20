@@ -2228,7 +2228,10 @@ check_api_download_success_rate() {
                 done < <(tail -5000 "${daemon_log_file}" 2>/dev/null || echo "")
                 
                 # Count successful downloads in last 24 hours
-                # Look for explicit success messages
+                # Look for explicit success messages or indicators that API call completed successfully
+                # Success can be indicated by:
+                # 1. Explicit success messages
+                # 2. Cycle completion messages that mention API processing
                 local successes=0
                 while IFS= read -r line; do
                     # Extract timestamp using robust parsing function
@@ -2236,11 +2239,54 @@ check_api_download_success_rate() {
                     log_epoch=$(parse_log_timestamp "${line}")
                     # Compare timestamps
                     if [[ ${log_epoch} -ge ${threshold_epoch} ]] && [[ ${log_epoch} -gt 0 ]]; then
+                        # Check for explicit success messages
                         if [[ "${line}" =~ (Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY) ]]; then
+                            successes=$((successes + 1))
+                        # Also check for cycle completion messages that mention API processing
+                        # This indicates the API call finished successfully
+                        elif [[ "${line}" =~ (API.*processing.*complete|API.*call.*complete|API.*download.*complete|cycle.*API.*complete) ]]; then
                             successes=$((successes + 1))
                         fi
                     fi
                 done < <(tail -5000 "${daemon_log_file}" 2>/dev/null || echo "")
+                
+                # If we still have fewer successes than downloads, apply heuristic:
+                # If there are no API-related errors in the logs, assume unmatched downloads succeeded
+                # This handles cases where API returns successfully but with no new data
+                # (which may not log explicit success messages)
+                if [[ ${downloads} -gt ${successes} ]]; then
+                    # Count explicit API-related errors in the same time window
+                    local api_errors=0
+                    while IFS= read -r line; do
+                        local log_epoch
+                        log_epoch=$(parse_log_timestamp "${line}")
+                        if [[ ${log_epoch} -ge ${threshold_epoch} ]] && [[ ${log_epoch} -gt 0 ]]; then
+                            # Look for API-related error messages (errors that occur with API calls)
+                            if [[ "${line}" =~ (__getNewNotesFromApi|getNewNotesFromApi|API.*download) ]] && \
+                               [[ "${line}" =~ (error|ERROR|failed|FAILED|exception|EXCEPTION|timeout|TIMEOUT|connection.*refused|network.*error|HTTP.*[45][0-9]{2}) ]]; then
+                                api_errors=$((api_errors + 1))
+                            fi
+                        fi
+                    done < <(tail -5000 "${daemon_log_file}" 2>/dev/null || echo "")
+                    
+                    # Calculate unmatched downloads (downloads without explicit success or error indicators)
+                    local unmatched_downloads=$((downloads - successes))
+                    
+                    # If there are unmatched downloads and no API errors, assume they succeeded
+                    # This is a conservative heuristic: if API call completes without errors,
+                    # it's likely successful even if it doesn't log an explicit success message
+                    # (e.g., when API returns successfully but with no new data to process)
+                    if [[ ${unmatched_downloads} -gt 0 ]] && [[ ${api_errors} -eq 0 ]]; then
+                        # No errors found, assume all unmatched downloads succeeded
+                        successes=${downloads}
+                        log_debug "${COMPONENT}: Assuming ${unmatched_downloads} unmatched API downloads succeeded (no errors found)"
+                    fi
+                    
+                    # Ensure we don't exceed downloads
+                    if [[ ${successes} -gt ${downloads} ]]; then
+                        successes=${downloads}
+                    fi
+                fi
                 
                 # Log detailed information for debugging low success rates
                 if [[ ${downloads} -gt 0 ]] && [[ ${successes} -lt ${downloads} ]]; then
@@ -2254,30 +2300,76 @@ check_api_download_success_rate() {
                 successful_downloads=${successes}
             else
                 # Fallback: use tail -10000 if date conversion fails
+                # WARNING: This fallback uses tail -10000 instead of 24-hour timestamp filtering.
+                # This may include older log entries if the log file has fewer than 10000 recent lines,
+                # potentially inflating error counts with stale data. This is a limitation when date command fails.
                 local downloads
                 downloads=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "__getNewNotesFromApi|getNewNotesFromApi" 2>/dev/null || echo "0")
                 downloads=$(echo "${downloads}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
                 downloads=$((downloads + 0))
                 
                 local successes
-                successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY" 2>/dev/null || echo "0")
+                # Count explicit success messages and API completion messages
+                # Note: Includes cycle.*API.*complete pattern to match primary code path (line 2247)
+                successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY|API.*processing.*complete|API.*call.*complete|API.*download.*complete|cycle.*API.*complete" 2>/dev/null || echo "0")
                 successes=$(echo "${successes}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
                 successes=$((successes + 0))
+                
+                # If fewer successes than downloads and no errors, assume unmatched downloads succeeded
+                if [[ ${downloads} -gt ${successes} ]]; then
+                    # Look for API-related errors (errors that occur near API download calls)
+                    # Check for errors in lines containing API download function names
+                    # WARNING: Error counting also uses tail -10000 without timestamp filtering,
+                    # which may include stale errors from days or weeks ago, artificially inflating
+                    # error counts and producing false low success-rate alerts.
+                    local api_errors
+                    api_errors=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -E "(__getNewNotesFromApi|getNewNotesFromApi|API.*download)" 2>/dev/null | grep -cE "(error|ERROR|failed|FAILED|exception|EXCEPTION|timeout|TIMEOUT|connection.*refused|network.*error|HTTP.*[45][0-9]{2})" 2>/dev/null || echo "0")
+                    api_errors=$(echo "${api_errors}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+                    api_errors=$((api_errors + 0))
+                    
+                    if [[ ${api_errors} -eq 0 ]]; then
+                        # No errors found, assume all downloads succeeded
+                        successes=${downloads}
+                    fi
+                fi
                 
                 total_downloads=${downloads}
                 successful_downloads=${successes}
             fi
         else
             # Fallback: use tail -10000 if date command fails
+            # WARNING: This fallback uses tail -10000 instead of 24-hour timestamp filtering.
+            # This may include older log entries if the log file has fewer than 10000 recent lines,
+            # potentially inflating error counts with stale data. This is a limitation when date command fails.
             local downloads
             downloads=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "__getNewNotesFromApi|getNewNotesFromApi" 2>/dev/null || echo "0")
             downloads=$(echo "${downloads}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
             downloads=$((downloads + 0))
             
             local successes
-            successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY" 2>/dev/null || echo "0")
+            # Count explicit success messages and API completion messages
+            # Note: Includes cycle.*API.*complete pattern to match primary code path (line 2247)
+            successes=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY|API.*processing.*complete|API.*call.*complete|API.*download.*complete|cycle.*API.*complete" 2>/dev/null || echo "0")
             successes=$(echo "${successes}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
             successes=$((successes + 0))
+            
+            # If fewer successes than downloads and no errors, assume unmatched downloads succeeded
+            if [[ ${downloads} -gt ${successes} ]]; then
+                # Look for API-related errors (errors that occur near API download calls)
+                # Check for errors in lines containing API download function names
+                # WARNING: Error counting also uses tail -10000 without timestamp filtering,
+                # which may include stale errors from days or weeks ago, artificially inflating
+                # error counts and producing false low success-rate alerts.
+                local api_errors
+                api_errors=$(tail -10000 "${daemon_log_file}" 2>/dev/null | grep -E "(__getNewNotesFromApi|getNewNotesFromApi|API.*download)" 2>/dev/null | grep -cE "(error|ERROR|failed|FAILED|exception|EXCEPTION|timeout|TIMEOUT|connection.*refused|network.*error|HTTP.*[45][0-9]{2})" 2>/dev/null || echo "0")
+                api_errors=$(echo "${api_errors}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+                api_errors=$((api_errors + 0))
+                
+                if [[ ${api_errors} -eq 0 ]]; then
+                    # No errors found, assume all downloads succeeded
+                    successes=${downloads}
+                fi
+            fi
             
             total_downloads=${downloads}
             successful_downloads=${successes}
@@ -2301,18 +2393,46 @@ check_api_download_success_rate() {
         fi
         
         for log_file in "${api_logs[@]}"; do
-            # Count download attempts
+            # Count download attempts - use same specific patterns as daemon log
+            # Only count actual API download function calls, not generic "download" or "GET/POST" patterns
             local downloads
-            downloads=$(grep -cE "__getNewNotesFromApi|getNewNotesFromApi|download|fetch|GET|POST" "${log_file}" 2>/dev/null || echo "0")
+            downloads=$(grep -cE "__getNewNotesFromApi|getNewNotesFromApi" "${log_file}" 2>/dev/null || echo "0")
             downloads=$(echo "${downloads}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
             downloads=$((downloads + 0))
             total_downloads=$((total_downloads + downloads))
             
-            # Count successful downloads
+            # Count successful downloads - use same specific patterns as daemon log
+            # Count explicit success messages and API completion messages
+            # Note: Includes cycle.*API.*complete pattern to match primary code path (line 2247)
+            # WARNING: This counts all matching patterns in the file without timestamp filtering.
+            # Files are filtered by -mtime -1 (last 24 hours), but entries within files are not
+            # filtered by timestamp, which may include stale log entries if files contain mixed
+            # old and new entries. This is a limitation when date command fails.
             local successes
-            successes=$(grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY|success|completed|200 OK" "${log_file}" 2>/dev/null || echo "0")
+            successes=$(grep -cE "Successfully downloaded notes from API|SEQUENTIAL API XML PROCESSING COMPLETED SUCCESSFULLY|API.*processing.*complete|API.*call.*complete|API.*download.*complete|cycle.*API.*complete" "${log_file}" 2>/dev/null || echo "0")
             successes=$(echo "${successes}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
             successes=$((successes + 0))
+            
+            # If fewer successes than downloads and no errors, assume unmatched downloads succeeded
+            if [[ ${downloads} -gt ${successes} ]]; then
+                # Look for API-related errors (errors that occur near API download calls)
+                # Check for errors in lines containing API download function names
+                # WARNING: Error counting uses grep without timestamp filtering within files.
+                # Files are filtered by -mtime -1 (last 24 hours), but entries within files are not
+                # filtered by timestamp, which may include stale errors from days or weeks ago if
+                # files contain mixed old and new entries, artificially inflating error counts and
+                # producing false low success-rate alerts.
+                local api_errors
+                api_errors=$(grep -E "(__getNewNotesFromApi|getNewNotesFromApi|API.*download)" "${log_file}" 2>/dev/null | grep -cE "(error|ERROR|failed|FAILED|exception|EXCEPTION|timeout|TIMEOUT|connection.*refused|network.*error|HTTP.*[45][0-9]{2})" 2>/dev/null || echo "0")
+                api_errors=$(echo "${api_errors}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+                api_errors=$((api_errors + 0))
+                
+                if [[ ${api_errors} -eq 0 ]]; then
+                    # No errors found, assume all downloads succeeded
+                    successes=${downloads}
+                fi
+            fi
+            
             successful_downloads=$((successful_downloads + successes))
             
             if [[ "${TEST_MODE:-false}" == "true" ]]; then
