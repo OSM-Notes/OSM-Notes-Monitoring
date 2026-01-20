@@ -6,7 +6,9 @@
 
 ## Overview
 
-This guide provides strategies and tools for optimizing SQL query performance in the OSM-Notes-Monitoring system. It covers index optimization, query analysis, and performance monitoring.
+This guide provides strategies and tools for optimizing SQL query performance in the
+OSM-Notes-Monitoring system. It covers index optimization, query analysis, and performance
+monitoring.
 
 ## Table of Contents
 
@@ -24,6 +26,7 @@ This guide provides strategies and tools for optimizing SQL query performance in
 The monitoring system includes the following indexes (from `sql/init.sql`):
 
 **Metrics Table:**
+
 - `idx_metrics_component_timestamp` - Component and timestamp
 - `idx_metrics_metric_name` - Metric name
 - `idx_metrics_timestamp` - Timestamp (descending)
@@ -31,6 +34,7 @@ The monitoring system includes the following indexes (from `sql/init.sql`):
 - `idx_metrics_metadata` - GIN index on metadata JSONB
 
 **Alerts Table:**
+
 - `idx_alerts_component_status` - Component and status
 - `idx_alerts_level_created` - Alert level and creation time
 - `idx_alerts_status_created` - Status and creation time
@@ -46,6 +50,7 @@ psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
 
 **New Indexes:**
+
 - `idx_metrics_component_metric_name_timestamp` - Optimizes `get_latest_metric_value()` queries
 - `idx_alerts_active_status_created` - Partial index for active alerts (most common query)
 - `idx_alerts_component_type_level_created` - Optimizes alert deduplication queries
@@ -56,8 +61,9 @@ psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ### Index Maintenance
 
 **Check for unused indexes:**
+
 ```sql
-SELECT 
+SELECT
     schemaname,
     tablename,
     indexname,
@@ -70,8 +76,9 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 ```
 
 **Monitor index sizes:**
+
 ```sql
-SELECT 
+SELECT
     tablename,
     indexname,
     pg_size_pretty(pg_relation_size(indexrelid)) AS index_size
@@ -85,6 +92,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 ### Frequently Executed Queries
 
 **1. Get Latest Metric Value**
+
 ```sql
 SELECT metric_value
 FROM metrics
@@ -94,11 +102,13 @@ WHERE component = 'ingestion'
 ORDER BY timestamp DESC
 LIMIT 1;
 ```
+
 **Optimization:** Uses `idx_metrics_component_metric_name_timestamp`
 
 **2. Get Metrics Summary**
+
 ```sql
-SELECT 
+SELECT
     metric_name,
     AVG(metric_value) as avg_value,
     MIN(metric_value) as min_value,
@@ -109,9 +119,11 @@ WHERE component = 'ingestion'
   AND timestamp > CURRENT_TIMESTAMP - INTERVAL '24 hours'
 GROUP BY metric_name;
 ```
+
 **Optimization:** Uses `idx_metrics_component_timestamp`
 
 **3. Get Active Alerts**
+
 ```sql
 SELECT *
 FROM alerts
@@ -119,9 +131,11 @@ WHERE status = 'active'
 ORDER BY created_at DESC
 LIMIT 10;
 ```
+
 **Optimization:** Uses `idx_alerts_active_status_created` (partial index)
 
 **4. Check Duplicate Alert**
+
 ```sql
 SELECT COUNT(*)
 FROM alerts
@@ -130,6 +144,7 @@ WHERE component = 'ingestion'
   AND alert_level = 'warning'
   AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 hour';
 ```
+
 **Optimization:** Uses `idx_alerts_component_type_level_created`
 
 ### Query Performance Testing
@@ -141,6 +156,7 @@ Use `scripts/analyze_query_performance.sh` to test query performance:
 ```
 
 This script:
+
 - Analyzes index usage
 - Checks for table bloat
 - Identifies sequential scans
@@ -152,13 +168,15 @@ This script:
 ### Enable Query Statistics
 
 **Enable pg_stat_statements extension:**
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 ```
 
 **View slow queries:**
+
 ```sql
-SELECT 
+SELECT
     query,
     calls,
     mean_exec_time,
@@ -173,8 +191,9 @@ LIMIT 20;
 ### Monitor Table Bloat
 
 **Check for table bloat:**
+
 ```sql
-SELECT 
+SELECT
     schemaname,
     tablename,
     n_live_tup AS live_tuples,
@@ -189,6 +208,7 @@ ORDER BY n_dead_tup DESC;
 ```
 
 **Run VACUUM:**
+
 ```sql
 VACUUM ANALYZE metrics;
 VACUUM ANALYZE alerts;
@@ -198,8 +218,9 @@ VACUUM ANALYZE security_events;
 ### Monitor Sequential Scans
 
 **Identify tables with high sequential scan ratio:**
+
 ```sql
-SELECT 
+SELECT
     schemaname,
     tablename,
     seq_scan AS sequential_scans,
@@ -220,6 +241,7 @@ psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
 
 This script:
+
 - Creates additional indexes
 - Updates table statistics
 - Provides monitoring queries
@@ -231,6 +253,7 @@ This script:
 ```
 
 This script:
+
 - Analyzes current performance
 - Identifies optimization opportunities
 - Generates recommendations
@@ -246,14 +269,17 @@ psql -d osm_notes_monitoring -c "ANALYZE metrics; ANALYZE alerts; ANALYZE compon
 ### 1. Regular Maintenance
 
 **Daily:**
+
 - Monitor query performance
 - Check for slow queries
 
 **Weekly:**
+
 - Run `ANALYZE` on all tables
 - Review index usage statistics
 
 **Monthly:**
+
 - Run `VACUUM ANALYZE` on high-write tables
 - Review and remove unused indexes
 - Analyze query patterns
@@ -261,25 +287,27 @@ psql -d osm_notes_monitoring -c "ANALYZE metrics; ANALYZE alerts; ANALYZE compon
 ### 2. Query Optimization Tips
 
 **Use LIMIT early:**
+
 ```sql
 -- Good: LIMIT applied early
 SELECT * FROM (
-    SELECT * FROM metrics 
-    WHERE component = 'ingestion' 
-    ORDER BY timestamp DESC 
+    SELECT * FROM metrics
+    WHERE component = 'ingestion'
+    ORDER BY timestamp DESC
     LIMIT 100
 ) subquery;
 
 -- Bad: LIMIT applied after aggregation
 SELECT * FROM (
-    SELECT * FROM metrics 
+    SELECT * FROM metrics
     WHERE component = 'ingestion'
-) subquery 
-ORDER BY timestamp DESC 
+) subquery
+ORDER BY timestamp DESC
 LIMIT 100;
 ```
 
 **Use EXISTS instead of COUNT:**
+
 ```sql
 -- Good: EXISTS stops at first match
 WHERE EXISTS (SELECT 1 FROM alerts WHERE status = 'active')
@@ -289,9 +317,10 @@ WHERE (SELECT COUNT(*) FROM alerts WHERE status = 'active') > 0
 ```
 
 **Filter on indexed columns:**
+
 ```sql
 -- Good: Uses index on component and timestamp
-WHERE component = 'ingestion' 
+WHERE component = 'ingestion'
   AND timestamp > CURRENT_TIMESTAMP - INTERVAL '24 hours'
 
 -- Bad: Function on indexed column prevents index use
@@ -301,6 +330,7 @@ WHERE DATE(timestamp) = CURRENT_DATE
 ### 3. Index Guidelines
 
 **Create indexes for:**
+
 - Foreign keys
 - Frequently filtered columns
 - Columns used in JOINs
@@ -308,16 +338,17 @@ WHERE DATE(timestamp) = CURRENT_DATE
 - Columns used in WHERE clauses
 
 **Avoid indexes for:**
+
 - Very small tables (< 1000 rows)
 - Columns with low cardinality
 - Frequently updated columns (unless necessary)
 
-**Partial indexes:**
-Use partial indexes for common query patterns:
+**Partial indexes:** Use partial indexes for common query patterns:
+
 ```sql
 -- Only index active alerts (most common query)
-CREATE INDEX idx_alerts_active 
-    ON alerts(status, created_at DESC) 
+CREATE INDEX idx_alerts_active
+    ON alerts(status, created_at DESC)
     WHERE status = 'active';
 ```
 
@@ -326,51 +357,52 @@ CREATE INDEX idx_alerts_active
 ### Slow Queries
 
 **1. Check query plan:**
+
 ```sql
 EXPLAIN ANALYZE SELECT * FROM metrics WHERE component = 'ingestion';
 ```
 
-**2. Verify indexes are used:**
-Look for "Index Scan" or "Index Only Scan" in EXPLAIN output.
+**2. Verify indexes are used:** Look for "Index Scan" or "Index Only Scan" in EXPLAIN output.
 
-**3. Check for table bloat:**
-Run `VACUUM ANALYZE` if dead tuples > 10% of live tuples.
+**3. Check for table bloat:** Run `VACUUM ANALYZE` if dead tuples > 10% of live tuples.
 
 ### High Sequential Scans
 
 **1. Identify tables:**
+
 ```sql
-SELECT tablename, seq_scan, idx_scan 
-FROM pg_stat_user_tables 
+SELECT tablename, seq_scan, idx_scan
+FROM pg_stat_user_tables
 WHERE seq_scan > idx_scan * 10;
 ```
 
-**2. Create missing indexes:**
-Review queries and create appropriate indexes.
+**2. Create missing indexes:** Review queries and create appropriate indexes.
 
-**3. Update statistics:**
-Run `ANALYZE` to help query planner choose indexes.
+**3. Update statistics:** Run `ANALYZE` to help query planner choose indexes.
 
 ### Index Not Used
 
 **1. Check query plan:**
+
 ```sql
 EXPLAIN SELECT * FROM metrics WHERE component = 'ingestion';
 ```
 
 **2. Verify index exists:**
+
 ```sql
-SELECT indexname FROM pg_indexes 
+SELECT indexname FROM pg_indexes
 WHERE tablename = 'metrics' AND indexname LIKE '%component%';
 ```
 
 **3. Update statistics:**
+
 ```sql
 ANALYZE metrics;
 ```
 
-**4. Check for function calls:**
-Functions on indexed columns prevent index use:
+**4. Check for function calls:** Functions on indexed columns prevent index use:
+
 ```sql
 -- Bad: Function prevents index use
 WHERE DATE(timestamp) = CURRENT_DATE
@@ -382,16 +414,19 @@ WHERE timestamp >= CURRENT_DATE AND timestamp < CURRENT_DATE + INTERVAL '1 day'
 ## Performance Targets
 
 **Query Performance Targets:**
+
 - Simple lookups: < 10ms
 - Aggregations: < 100ms
 - Complex queries: < 500ms
 - Reports: < 2000ms
 
 **Index Usage:**
+
 - Index scan ratio: > 90%
 - Sequential scan ratio: < 10%
 
 **Table Health:**
+
 - Dead tuple ratio: < 10%
 - Cache hit ratio: > 95%
 
@@ -404,6 +439,7 @@ WHERE timestamp >= CURRENT_DATE AND timestamp < CURRENT_DATE + INTERVAL '1 day'
 ## Support
 
 For issues or questions:
+
 1. Run `scripts/analyze_query_performance.sh`
 2. Check query plans with `EXPLAIN ANALYZE`
 3. Review this guide for optimization strategies

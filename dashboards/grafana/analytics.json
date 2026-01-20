@@ -13,18 +13,20 @@
       "id": 1,
       "title": "Analytics Health Status",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT CASE status WHEN 'healthy' THEN 1 WHEN 'degraded' THEN 0.5 WHEN 'down' THEN 0 ELSE 0.25 END as value, status FROM component_health WHERE component = 'analytics'",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE status WHEN 'healthy' THEN 1 WHEN 'degraded' THEN 0.5 WHEN 'down' THEN 0 ELSE 0.25 END as value, status FROM component_health WHERE component = 'analytics'",
+          "refId": "A"
+        }
+      ],
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -43,20 +45,20 @@
             {
               "type": "value",
               "options": {
-                "0": {"text": "Down", "color": "red"},
-                "0.25": {"text": "Unknown", "color": "gray"},
-                "0.5": {"text": "Degraded", "color": "yellow"},
-                "1": {"text": "Healthy", "color": "green"}
+                "0": { "text": "Down", "color": "red" },
+                "0.25": { "text": "Unknown", "color": "gray" },
+                "0.5": { "text": "Degraded", "color": "yellow" },
+                "1": { "text": "Healthy", "color": "green" }
               }
             }
           ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "gray"},
-              {"value": 0.25, "color": "gray"},
-              {"value": 0.5, "color": "yellow"},
-              {"value": 1, "color": "green"}
+              { "value": null, "color": "gray" },
+              { "value": 0.25, "color": "gray" },
+              { "value": 0.5, "color": "yellow" },
+              { "value": 1, "color": "green" }
             ]
           },
           "unit": "short"
@@ -78,10 +80,10 @@
                   {
                     "type": "value",
                     "options": {
-                      "healthy": {"text": "Healthy", "color": "green"},
-                      "degraded": {"text": "Degraded", "color": "yellow"},
-                      "down": {"text": "Down", "color": "red"},
-                      "unknown": {"text": "Unknown", "color": "gray"}
+                      "healthy": { "text": "Healthy", "color": "green" },
+                      "degraded": { "text": "Degraded", "color": "yellow" },
+                      "down": { "text": "Down", "color": "red" },
+                      "unknown": { "text": "Unknown", "color": "gray" }
                     }
                   }
                 ]
@@ -95,7 +97,7 @@
       "id": 2,
       "title": "Key Metrics",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 18, "x": 6, "y": 0},
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 },
       "targets": [
         {
           "datasource": {
@@ -194,5 +196,5 @@
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": { "from": "now-24h", "to": "now" }
 }

@@ -9,6 +9,7 @@ This directory contains scripts for backing up and restoring the OSM-Notes-Monit
 Creates a backup of the monitoring database.
 
 **Usage:**
+
 ```bash
 # Basic backup
 ./sql/backups/backup_database.sh
@@ -27,6 +28,7 @@ Creates a backup of the monitoring database.
 ```
 
 **Options:**
+
 - `-d, --database DATABASE`: Database name (default: osm_notes_monitoring)
 - `-o, --output DIR`: Output directory (default: sql/backups)
 - `-r, --retention DAYS`: Keep backups for N days (default: 30)
@@ -35,6 +37,7 @@ Creates a backup of the monitoring database.
 - `-l, --list`: List existing backups
 
 **Backup Format:**
+
 - Filename: `{database}_{YYYYMMDD_HHMMSS}.sql` or `.sql.gz`
 - Format: Plain SQL (pg_dump format)
 - Includes: Schema and data
@@ -44,6 +47,7 @@ Creates a backup of the monitoring database.
 Restores a backup to the database.
 
 **Usage:**
+
 ```bash
 # Restore from backup
 ./sql/backups/restore_database.sh backup.sql
@@ -59,6 +63,7 @@ Restores a backup to the database.
 ```
 
 **Options:**
+
 - `-d, --database DATABASE`: Target database name (default: osm_notes_monitoring)
 - `-f, --force`: Force restore (drop existing database)
 - `-v, --verbose`: Verbose output
@@ -171,4 +176,3 @@ The restore process:
 # Restore to test database
 ./sql/backups/restore_database.sh -d osm_notes_monitoring_test -f osm_notes_monitoring_*.sql.gz
 ```
-

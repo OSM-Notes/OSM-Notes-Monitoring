@@ -7,7 +7,8 @@ SQL queries for monitoring the OSM-Notes-Ingestion component.
 
 ## Overview
 
-These queries are designed to be executed against the **ingestion database** (not the monitoring database). They provide insights into:
+These queries are designed to be executed against the **ingestion database** (not the monitoring
+database). They provide insights into:
 
 - Data freshness
 - Processing status
@@ -22,6 +23,7 @@ These queries are designed to be executed against the **ingestion database** (no
 Queries to check data freshness and update timestamps.
 
 **Queries included:**
+
 - Last update timestamp for notes
 - Last update timestamp for note comments
 - Data freshness summary across all tables
@@ -30,11 +32,13 @@ Queries to check data freshness and update timestamps.
 - Recent activity summary
 
 **Usage:**
+
 ```bash
 psql -d osm_notes -f sql/ingestion/data_freshness.sql
 ```
 
 **Key Metrics:**
+
 - `last_note_update`: Most recent note update
 - `age_seconds`: Age of most recent data
 - `notes_updated_last_hour`: Notes updated in last hour
@@ -44,6 +48,7 @@ psql -d osm_notes -f sql/ingestion/data_freshness.sql
 Queries to check processing execution status and history.
 
 **Queries included:**
+
 - Processing execution summary
 - Last successful processing execution
 - Processing failures in last 24 hours
@@ -53,6 +58,7 @@ Queries to check processing execution status and history.
 - Processing gaps detection
 
 **Usage:**
+
 ```bash
 psql -d osm_notes -f sql/ingestion/processing_status.sql
 ```
@@ -60,6 +66,7 @@ psql -d osm_notes -f sql/ingestion/processing_status.sql
 **Note:** Assumes a `processing_log` table exists. Adjust queries based on actual schema.
 
 **Key Metrics:**
+
 - `last_successful_execution`: Timestamp of last success
 - `success_rate_percent`: Success rate percentage
 - `execution_count`: Number of executions
@@ -69,6 +76,7 @@ psql -d osm_notes -f sql/ingestion/processing_status.sql
 Queries to analyze database performance.
 
 **Queries included:**
+
 - Table sizes and growth
 - Index usage statistics
 - Table statistics and bloat
@@ -79,11 +87,13 @@ Queries to analyze database performance.
 - Sequential scan vs index scan ratio
 
 **Usage:**
+
 ```bash
 psql -d osm_notes -f sql/ingestion/performance_analysis.sql
 ```
 
 **Key Metrics:**
+
 - `total_size`: Total table size
 - `cache_hit_ratio`: Database cache hit ratio
 - `index_scans`: Number of index scans
@@ -94,6 +104,7 @@ psql -d osm_notes -f sql/ingestion/performance_analysis.sql
 Queries to check data quality metrics.
 
 **Queries included:**
+
 - Missing or null data checks
 - Data completeness percentage
 - Duplicate detection
@@ -104,11 +115,13 @@ Queries to check data quality metrics.
 - Data quality score
 
 **Usage:**
+
 ```bash
 psql -d osm_notes -f sql/ingestion/data_quality.sql
 ```
 
 **Key Metrics:**
+
 - `completeness_percent`: Data completeness percentage
 - `duplicate_count`: Number of duplicates
 - `orphaned_comments`: Comments without parent notes
@@ -119,6 +132,7 @@ psql -d osm_notes -f sql/ingestion/data_quality.sql
 Queries to analyze errors and failures.
 
 **Queries included:**
+
 - Error summary from processing log
 - Most common errors
 - Error rate by hour
@@ -129,6 +143,7 @@ Queries to analyze errors and failures.
 - Error trends
 
 **Usage:**
+
 ```bash
 psql -d osm_notes -f sql/ingestion/error_analysis.sql
 ```
@@ -136,6 +151,7 @@ psql -d osm_notes -f sql/ingestion/error_analysis.sql
 **Note:** Assumes a `processing_log` table exists with error information.
 
 **Key Metrics:**
+
 - `error_count`: Number of errors
 - `error_rate_percent`: Error rate percentage
 - `recovery_seconds`: Time to recover from errors
@@ -251,6 +267,7 @@ psql -d osm_notes -f sql/ingestion/create_indexes.sql
 ### Optimization Recommendations
 
 See `optimization_recommendations.md` for detailed optimization strategies, including:
+
 - Index recommendations
 - Query rewriting strategies
 - Materialized views
@@ -259,6 +276,7 @@ See `optimization_recommendations.md` for detailed optimization strategies, incl
 ### Optimized Query Versions
 
 Optimized versions of queries are available in `optimized_queries/` directory:
+
 - `data_freshness_optimized.sql` - Optimized freshness queries
 
 These use indexes and query optimizations for better performance.
@@ -279,6 +297,7 @@ A test script is provided to validate all SQL queries:
 ```
 
 The test script:
+
 - Validates SQL query structure
 - Tests syntax (if database connection available)
 - Executes queries (if database connection available)
@@ -293,4 +312,3 @@ The test script:
 ---
 
 **Last Updated:** 2025-12-24
-

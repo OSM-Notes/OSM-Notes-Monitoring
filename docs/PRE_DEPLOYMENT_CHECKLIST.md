@@ -29,6 +29,7 @@ cd /home/notes/OSM-Notes-Monitoring
 ```
 
 **What it checks:**
+
 - Prerequisites (PostgreSQL, bash, curl, etc.)
 - Configuration files exist and are configured
 - All scripts exist and are executable
@@ -62,6 +63,7 @@ Review your current configuration. If needed, update:
 ```
 
 **Key things to configure:**
+
 - Database name and user in `etc/properties.sh`
 - Admin email in `etc/properties.sh`
 - Repository paths (INGESTION_REPO_PATH, etc.)
@@ -89,6 +91,7 @@ chmod 600 ~/.pgpass
 ```
 
 **Test connection:**
+
 ```bash
 psql -d notes_monitoring -c "SELECT 1;"
 ```
@@ -130,6 +133,7 @@ Once all checks pass, run the complete deployment:
 ```
 
 **What it does:**
+
 1. Sets up production environment
 2. Runs database migrations (with backup)
 3. Applies security hardening
@@ -139,6 +143,7 @@ Once all checks pass, run the complete deployment:
 7. Validates deployment
 
 **After deployment:**
+
 ```bash
 # Verify everything works
 ./scripts/validate_production.sh
@@ -166,6 +171,7 @@ tail -f /var/log/osm-notes-monitoring/*.log
 - [x] Memory: At least 512MB available
 
 **Verify:**
+
 ```bash
 ./scripts/pre_deployment_checklist.sh
 ```
@@ -179,16 +185,14 @@ tail -f /var/log/osm-notes-monitoring/*.log
   - [ ] Database user set
   - [ ] Admin email configured
   - [ ] Repository paths set (not `/path/to/...`)
-  
 - [ ] `config/monitoring.conf` exists and configured
   - [ ] Thresholds reviewed
-  
 - [ ] `config/alerts.conf` exists and configured
   - [ ] Email or Slack configured
-  
 - [ ] `config/security.conf` exists and configured
 
 **Verify:**
+
 ```bash
 ./scripts/configure_production.sh --review
 ```
@@ -206,6 +210,7 @@ tail -f /var/log/osm-notes-monitoring/*.log
 - [x] `sql/backups/backup_database.sh` exists
 
 **Verify:**
+
 ```bash
 # Test database connection
 psql -d notes_monitoring -c "SELECT 1;"
@@ -235,6 +240,7 @@ psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
 - [x] Scripts have valid syntax
 
 **Verify:**
+
 ```bash
 ./scripts/pre_deployment_checklist.sh
 ```
@@ -248,6 +254,7 @@ psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
 - [x] Config files have restricted permissions
 
 **Verify:**
+
 ```bash
 ./scripts/security_hardening.sh --check
 ```
@@ -261,6 +268,7 @@ psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
 - [x] Log directories created and writable
 
 **Verify:**
+
 ```bash
 df -h
 free -h
@@ -281,6 +289,7 @@ ls -ld /var/log/osm-notes-monitoring
 ### Common Issues
 
 **Database connection fails:**
+
 ```bash
 # Check .pgpass
 ls -la ~/.pgpass
@@ -294,6 +303,7 @@ sudo journalctl -u postgresql -n 50
 ```
 
 **Configuration has defaults:**
+
 ```bash
 # Review configuration
 ./scripts/configure_production.sh --review
@@ -304,6 +314,7 @@ nano config/monitoring.conf
 ```
 
 **Scripts missing:**
+
 ```bash
 # Check what's missing
 ./scripts/pre_deployment_checklist.sh | grep "✗"
@@ -321,7 +332,7 @@ When the checklist shows:
 ✅ **All checks passed** (or only minor warnings)  
 ✅ **Configuration reviewed and updated**  
 ✅ **Database connection works**  
-✅ **All scripts present**  
+✅ **All scripts present**
 
 Then you're ready to deploy:
 

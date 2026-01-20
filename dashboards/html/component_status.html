@@ -1,258 +1,265 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Component Status - OSM Notes Monitoring</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        header {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .nav-links {
-            margin-top: 15px;
-        }
-        
-        .nav-links a {
-            color: #3498db;
-            text-decoration: none;
-            margin-right: 15px;
-        }
-        
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-        
-        .component-section {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .component-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eee;
-        }
-        
-        .component-title {
-            font-size: 24px;
-            color: #2c3e50;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-badge.healthy {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-badge.degraded {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-badge.down {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-badge.unknown {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        
-        .metrics-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        
-        .metrics-table th,
-        .metrics-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .metrics-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .metrics-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .metric-name {
-            font-weight: 500;
-            color: #2c3e50;
-        }
-        
-        .metric-value {
-            font-family: 'Courier New', monospace;
-            color: #495057;
-        }
-        
-        .metric-trend {
-            font-size: 12px;
-            color: #7f8c8d;
-        }
-        
-        .trend-up {
-            color: #e74c3c;
-        }
-        
-        .trend-down {
-            color: #27ae60;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .info-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-        
-        .info-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-        
-        .refresh-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .refresh-btn:hover {
-            background: #2980b9;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .nav-links {
+        margin-top: 15px;
+      }
+
+      .nav-links a {
+        color: #3498db;
+        text-decoration: none;
+        margin-right: 15px;
+      }
+
+      .nav-links a:hover {
+        text-decoration: underline;
+      }
+
+      .component-section {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .component-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .component-title {
+        font-size: 24px;
+        color: #2c3e50;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-badge.healthy {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-badge.degraded {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-badge.down {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-badge.unknown {
+        background: #e2e3e5;
+        color: #383d41;
+      }
+
+      .metrics-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      .metrics-table th,
+      .metrics-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+
+      .metrics-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .metrics-table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .metric-name {
+        font-weight: 500;
+        color: #2c3e50;
+      }
+
+      .metric-value {
+        font-family: "Courier New", monospace;
+        color: #495057;
+      }
+
+      .metric-trend {
+        font-size: 12px;
+        color: #7f8c8d;
+      }
+
+      .trend-up {
+        color: #e74c3c;
+      }
+
+      .trend-down {
+        color: #27ae60;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .info-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+
+      .info-label {
+        font-size: 12px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+
+      .info-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+      }
+
+      .refresh-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .refresh-btn:hover {
+        background: #2980b9;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>Component Status Dashboard</h1>
-            <div class="nav-links">
-                <a href="overview.html">Overview</a>
-                <a href="health_check.html">Health Check</a>
-                <button class="refresh-btn" onclick="loadData()">Refresh</button>
-            </div>
-        </header>
-        
-        <div id="componentsContainer">
-            <div class="loading">Loading component status...</div>
+      <header>
+        <h1>Component Status Dashboard</h1>
+        <div class="nav-links">
+          <a href="overview.html">Overview</a>
+          <a href="health_check.html">Health Check</a>
+          <button class="refresh-btn" onclick="loadData()">Refresh</button>
         </div>
+      </header>
+
+      <div id="componentsContainer">
+        <div class="loading">Loading component status...</div>
+      </div>
     </div>
-    
+
     <script>
-        const components = ['ingestion', 'analytics', 'wms', 'api', 'infrastructure', 'data'];
-        
-        async function loadData() {
-            const container = document.getElementById('componentsContainer');
-            container.innerHTML = '<div class="loading">Loading component status...</div>';
-            
-            try {
-                // Load component health
-                const healthResponse = await fetch('component_health.json');
-                const healthData = await healthResponse.json();
-                
-                // Load metrics for each component
-                const componentsHtml = await Promise.all(
-                    components.map(async (component) => {
-                        try {
-                            const metricsResponse = await fetch(`${component}_data.json`);
-                            const metricsData = await metricsResponse.json();
-                            return renderComponent(component, healthData[component] || {}, metricsData);
-                        } catch (error) {
-                            return renderComponent(component, healthData[component] || {}, []);
-                        }
-                    })
-                );
-                
-                container.innerHTML = componentsHtml.join('');
-            } catch (error) {
-                console.error('Error loading data:', error);
-                container.innerHTML = '<div class="loading">Error loading data. Please check that the dashboard data files exist.</div>';
-            }
+      const components = ["ingestion", "analytics", "wms", "api", "infrastructure", "data"];
+
+      async function loadData() {
+        const container = document.getElementById("componentsContainer");
+        container.innerHTML = '<div class="loading">Loading component status...</div>';
+
+        try {
+          // Load component health
+          const healthResponse = await fetch("component_health.json");
+          const healthData = await healthResponse.json();
+
+          // Load metrics for each component
+          const componentsHtml = await Promise.all(
+            components.map(async (component) => {
+              try {
+                const metricsResponse = await fetch(`${component}_data.json`);
+                const metricsData = await metricsResponse.json();
+                return renderComponent(component, healthData[component] || {}, metricsData);
+              } catch (error) {
+                return renderComponent(component, healthData[component] || {}, []);
+              }
+            }),
+          );
+
+          container.innerHTML = componentsHtml.join("");
+        } catch (error) {
+          console.error("Error loading data:", error);
+          container.innerHTML =
+            '<div class="loading">Error loading data. Please check that the dashboard data files exist.</div>';
         }
-        
-        function renderComponent(component, health, metrics) {
-            const status = health.status || 'unknown';
-            const lastCheck = health.last_check ? new Date(health.last_check).toLocaleString() : 'Never';
-            const lastSuccess = health.last_success ? new Date(health.last_success).toLocaleString() : 'Never';
-            const errorCount = health.error_count || 0;
-            
-            // Process metrics
-            const metricsByType = groupMetrics(metrics);
-            const keyMetrics = getKeyMetrics(metricsByType);
-            
-            return `
+      }
+
+      function renderComponent(component, health, metrics) {
+        const status = health.status || "unknown";
+        const lastCheck = health.last_check
+          ? new Date(health.last_check).toLocaleString()
+          : "Never";
+        const lastSuccess = health.last_success
+          ? new Date(health.last_success).toLocaleString()
+          : "Never";
+        const errorCount = health.error_count || 0;
+
+        // Process metrics
+        const metricsByType = groupMetrics(metrics);
+        const keyMetrics = getKeyMetrics(metricsByType);
+
+        return `
                 <div class="component-section">
                     <div class="component-header">
                         <h2 class="component-title">${component.charAt(0).toUpperCase() + component.slice(1)}</h2>
@@ -278,7 +285,9 @@
                         </div>
                     </div>
                     
-                    ${keyMetrics.length > 0 ? `
+                    ${
+                      keyMetrics.length > 0
+                        ? `
                         <table class="metrics-table">
                             <thead>
                                 <tr>
@@ -291,107 +300,115 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${keyMetrics.map(metric => `
+                                ${keyMetrics
+                                  .map(
+                                    (metric) => `
                                     <tr>
                                         <td class="metric-name">${formatMetricName(metric.name)}</td>
                                         <td class="metric-value">${formatMetricValue(metric.name, metric.current)}</td>
                                         <td class="metric-value">${formatMetricValue(metric.name, metric.avg)}</td>
                                         <td class="metric-value">${formatMetricValue(metric.name, metric.min)}</td>
                                         <td class="metric-value">${formatMetricValue(metric.name, metric.max)}</td>
-                                        <td class="metric-trend">${metric.lastUpdate ? new Date(metric.lastUpdate).toLocaleString() : 'N/A'}</td>
+                                        <td class="metric-trend">${metric.lastUpdate ? new Date(metric.lastUpdate).toLocaleString() : "N/A"}</td>
                                     </tr>
-                                `).join('')}
+                                `,
+                                  )
+                                  .join("")}
                             </tbody>
                         </table>
-                    ` : '<p style="color: #7f8c8d; margin-top: 20px;">No metrics available</p>'}
+                    `
+                        : '<p style="color: #7f8c8d; margin-top: 20px;">No metrics available</p>'
+                    }
                 </div>
             `;
-        }
-        
-        function groupMetrics(metrics) {
-            const grouped = {};
-            metrics.forEach(metric => {
-                if (!grouped[metric.metric_name]) {
-                    grouped[metric.metric_name] = [];
-                }
-                if (metric.metric_value !== null && metric.metric_value !== undefined) {
-                    grouped[metric.metric_name].push({
-                        value: parseFloat(metric.metric_value),
-                        timestamp: metric.timestamp
-                    });
-                }
+      }
+
+      function groupMetrics(metrics) {
+        const grouped = {};
+        metrics.forEach((metric) => {
+          if (!grouped[metric.metric_name]) {
+            grouped[metric.metric_name] = [];
+          }
+          if (metric.metric_value !== null && metric.metric_value !== undefined) {
+            grouped[metric.metric_name].push({
+              value: parseFloat(metric.metric_value),
+              timestamp: metric.timestamp,
             });
-            return grouped;
-        }
-        
-        function getKeyMetrics(metricsByType) {
-            const keyMetrics = [];
-            
-            Object.keys(metricsByType).forEach(metricName => {
-                const values = metricsByType[metricName];
-                if (values.length > 0) {
-                    const sorted = [...values].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    const current = sorted[0].value;
-                    const numericValues = values.map(v => v.value);
-                    const avg = numericValues.reduce((a, b) => a + b, 0) / numericValues.length;
-                    const min = Math.min(...numericValues);
-                    const max = Math.max(...numericValues);
-                    
-                    keyMetrics.push({
-                        name: metricName,
-                        current: current,
-                        avg: avg,
-                        min: min,
-                        max: max,
-                        lastUpdate: sorted[0].timestamp
-                    });
-                }
+          }
+        });
+        return grouped;
+      }
+
+      function getKeyMetrics(metricsByType) {
+        const keyMetrics = [];
+
+        Object.keys(metricsByType).forEach((metricName) => {
+          const values = metricsByType[metricName];
+          if (values.length > 0) {
+            const sorted = [...values].sort(
+              (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
+            );
+            const current = sorted[0].value;
+            const numericValues = values.map((v) => v.value);
+            const avg = numericValues.reduce((a, b) => a + b, 0) / numericValues.length;
+            const min = Math.min(...numericValues);
+            const max = Math.max(...numericValues);
+
+            keyMetrics.push({
+              name: metricName,
+              current: current,
+              avg: avg,
+              min: min,
+              max: max,
+              lastUpdate: sorted[0].timestamp,
             });
-            
-            // Sort by last update (most recent first)
-            keyMetrics.sort((a, b) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
-            
-            // Return top 10 metrics
-            return keyMetrics.slice(0, 10);
+          }
+        });
+
+        // Sort by last update (most recent first)
+        keyMetrics.sort((a, b) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
+
+        // Return top 10 metrics
+        return keyMetrics.slice(0, 10);
+      }
+
+      function formatMetricName(name) {
+        return name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      }
+
+      function formatMetricValue(name, value) {
+        if (value === null || value === undefined) return "N/A";
+
+        if (name.includes("percent") || name.includes("rate")) {
+          return `${value.toFixed(1)}%`;
         }
-        
-        function formatMetricName(name) {
-            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        if (name.includes("bytes") || name.includes("size")) {
+          return formatBytes(value);
         }
-        
-        function formatMetricValue(name, value) {
-            if (value === null || value === undefined) return 'N/A';
-            
-            if (name.includes('percent') || name.includes('rate')) {
-                return `${value.toFixed(1)}%`;
-            }
-            if (name.includes('bytes') || name.includes('size')) {
-                return formatBytes(value);
-            }
-            if (name.includes('time') || name.includes('duration')) {
-                return formatDuration(value);
-            }
-            return value.toFixed(2);
+        if (name.includes("time") || name.includes("duration")) {
+          return formatDuration(value);
         }
-        
-        function formatBytes(bytes) {
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-            if (bytes === 0) return '0 B';
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-        }
-        
-        function formatDuration(seconds) {
-            if (seconds < 60) return `${seconds.toFixed(1)}s`;
-            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${(seconds % 60).toFixed(0)}s`;
-            return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-        }
-        
-        // Load data on page load
-        loadData();
-        
-        // Auto-refresh every 2 minutes
-        setInterval(loadData, 120000);
+        return value.toFixed(2);
+      }
+
+      function formatBytes(bytes) {
+        const sizes = ["B", "KB", "MB", "GB", "TB"];
+        if (bytes === 0) return "0 B";
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
+      }
+
+      function formatDuration(seconds) {
+        if (seconds < 60) return `${seconds.toFixed(1)}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${(seconds % 60).toFixed(0)}s`;
+        return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+      }
+
+      // Load data on page load
+      loadData();
+
+      // Auto-refresh every 2 minutes
+      setInterval(loadData, 120000);
     </script>
-</body>
+  </body>
 </html>

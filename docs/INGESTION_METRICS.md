@@ -7,7 +7,8 @@
 
 ## Overview
 
-This document defines all metrics collected for the OSM-Notes-Ingestion component. These metrics are stored in the `metrics` table of the monitoring database and are used for:
+This document defines all metrics collected for the OSM-Notes-Ingestion component. These metrics are
+stored in the `metrics` table of the monitoring database and are used for:
 
 - Health monitoring
 - Performance analysis
@@ -18,6 +19,7 @@ This document defines all metrics collected for the OSM-Notes-Ingestion componen
 ## Metric Naming Convention
 
 All ingestion metrics follow this naming pattern:
+
 - **Format:** `{category}_{metric_name}_{unit_suffix}`
 - **Category:** Groups related metrics (e.g., `script`, `db`, `data`, `error`)
 - **Unit Suffix:** Indicates unit type (`_count`, `_percent`, `_ms`, `_seconds`, `_hours`, `_bytes`)
@@ -29,6 +31,7 @@ All ingestion metrics follow this naming pattern:
 Metrics related to script execution status and availability.
 
 #### `scripts_found`
+
 - **Description:** Number of ingestion scripts found in the repository
 - **Type:** Counter
 - **Unit:** `count`
@@ -47,6 +50,7 @@ Metrics related to script execution status and availability.
 - **Metadata:** `component=ingestion`
 
 #### `scripts_executable`
+
 - **Description:** Number of ingestion scripts that are executable
 - **Type:** Counter
 - **Unit:** `count`
@@ -57,6 +61,7 @@ Metrics related to script execution status and availability.
 - **Metadata:** `component=ingestion`
 
 #### `scripts_running`
+
 - **Description:** Number of ingestion scripts currently running
 - **Type:** Gauge
 - **Unit:** `count`
@@ -67,6 +72,7 @@ Metrics related to script execution status and availability.
 - **Metadata:** `component=ingestion`
 
 #### `last_log_age_hours`
+
 - **Description:** Age of the most recent log file in hours
 - **Type:** Gauge
 - **Unit:** `hours`
@@ -81,6 +87,7 @@ Metrics related to script execution status and availability.
 Metrics related to errors, warnings, and log analysis.
 
 #### `error_count`
+
 - **Description:** Total number of error lines found in log files (last 24 hours)
 - **Type:** Counter
 - **Unit:** `count`
@@ -91,6 +98,7 @@ Metrics related to errors, warnings, and log analysis.
 - **Metadata:** `component=ingestion`
 
 #### `warning_count`
+
 - **Description:** Total number of warning lines found in log files (last 24 hours)
 - **Type:** Counter
 - **Unit:** `count`
@@ -101,6 +109,7 @@ Metrics related to errors, warnings, and log analysis.
 - **Metadata:** `component=ingestion`
 
 #### `error_rate_percent`
+
 - **Description:** Percentage of error lines relative to total log lines
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -112,6 +121,7 @@ Metrics related to errors, warnings, and log analysis.
 - **Metadata:** `component=ingestion`
 
 #### `warning_rate_percent`
+
 - **Description:** Percentage of warning lines relative to total log lines
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -123,6 +133,7 @@ Metrics related to errors, warnings, and log analysis.
 - **Metadata:** `component=ingestion`
 
 #### `log_lines_total`
+
 - **Description:** Total number of log lines analyzed
 - **Type:** Counter
 - **Unit:** `count`
@@ -132,6 +143,7 @@ Metrics related to errors, warnings, and log analysis.
 - **Metadata:** `component=ingestion`
 
 #### `recent_error_rate_percent`
+
 - **Description:** Error rate in the last hour (for spike detection)
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -146,6 +158,7 @@ Metrics related to errors, warnings, and log analysis.
 Metrics related to database connectivity and performance.
 
 #### `db_connection_time_ms`
+
 - **Description:** Time taken to establish database connection
 - **Type:** Gauge
 - **Unit:** `milliseconds`
@@ -156,6 +169,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_query_time_ms`
+
 - **Description:** Time taken to execute a test query (COUNT on notes table)
 - **Type:** Gauge
 - **Unit:** `milliseconds`
@@ -166,6 +180,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,query=count_notes`
 
 #### `db_table_size_bytes`
+
 - **Description:** Total size of a database table including indexes (in bytes)
 - **Type:** Gauge
 - **Unit:** `bytes`
@@ -176,6 +191,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,table={table_name}`
 
 #### `db_table_data_size_bytes`
+
 - **Description:** Size of table data excluding indexes (in bytes)
 - **Type:** Gauge
 - **Unit:** `bytes`
@@ -186,6 +202,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,table={table_name}`
 
 #### `db_index_size_bytes`
+
 - **Description:** Size of indexes for a table (in bytes)
 - **Type:** Gauge
 - **Unit:** `bytes`
@@ -196,6 +213,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,table={table_name}`
 
 #### `db_table_bloat_ratio`
+
 - **Description:** Percentage of dead tuples in a table (bloat ratio)
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -206,6 +224,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,table={table_name}`
 
 #### `db_index_scan_ratio`
+
 - **Description:** Percentage of index scans vs sequential scans for a table
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -216,6 +235,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,table={table_name}`
 
 #### `db_unused_indexes_count`
+
 - **Description:** Number of indexes that have never been used (idx_scan = 0)
 - **Type:** Gauge
 - **Unit:** `count`
@@ -226,6 +246,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_unused_indexes_size_bytes`
+
 - **Description:** Total size of unused indexes (in bytes)
 - **Type:** Gauge
 - **Unit:** `bytes`
@@ -236,7 +257,9 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_slow_queries_count`
-- **Description:** Number of queries with average execution time > 1 second (requires pg_stat_statements)
+
+- **Description:** Number of queries with average execution time > 1 second (requires
+  pg_stat_statements)
 - **Type:** Gauge
 - **Unit:** `count`
 - **Collection:** Collected during `collect_slow_queries()`
@@ -246,6 +269,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_cache_hit_ratio`
+
 - **Description:** Database cache hit ratio percentage
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -256,6 +280,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connections_total`
+
 - **Description:** Total number of database connections
 - **Type:** Gauge
 - **Unit:** `count`
@@ -266,6 +291,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connections_active`
+
 - **Description:** Number of active database connections
 - **Type:** Gauge
 - **Unit:** `count`
@@ -276,6 +302,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connections_idle`
+
 - **Description:** Number of idle database connections
 - **Type:** Gauge
 - **Unit:** `count`
@@ -286,6 +313,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connections_idle_in_transaction`
+
 - **Description:** Number of connections idle in transaction
 - **Type:** Gauge
 - **Unit:** `count`
@@ -296,6 +324,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connections_waiting`
+
 - **Description:** Number of connections waiting for locks
 - **Type:** Gauge
 - **Unit:** `count`
@@ -306,6 +335,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connections_active_by_app`
+
 - **Description:** Number of active connections by application name
 - **Type:** Gauge
 - **Unit:** `count`
@@ -316,6 +346,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion,application={app_name}`
 
 #### `db_connections_max`
+
 - **Description:** Maximum allowed database connections
 - **Type:** Gauge
 - **Unit:** `count`
@@ -326,6 +357,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_connection_usage_percent`
+
 - **Description:** Percentage of maximum connections currently in use
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -336,6 +368,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_locks_total`
+
 - **Description:** Total number of active locks
 - **Type:** Gauge
 - **Unit:** `count`
@@ -346,6 +379,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_locks_granted`
+
 - **Description:** Number of granted locks
 - **Type:** Gauge
 - **Unit:** `count`
@@ -356,6 +390,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_locks_waiting`
+
 - **Description:** Number of locks waiting to be granted
 - **Type:** Gauge
 - **Unit:** `count`
@@ -366,6 +401,7 @@ Metrics related to database connectivity and performance.
 - **Metadata:** `component=ingestion`
 
 #### `db_deadlocks_count`
+
 - **Description:** Number of deadlocks detected since last reset
 - **Type:** Counter
 - **Unit:** `count`
@@ -380,6 +416,7 @@ Metrics related to database connectivity and performance.
 Metrics from performance analysis scripts.
 
 #### `performance_check_status`
+
 - **Description:** Status of performance check execution (1=success, 0=failure)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -390,6 +427,7 @@ Metrics from performance analysis scripts.
 - **Metadata:** `component=ingestion,check=analyzeDatabasePerformance`
 
 #### `performance_check_duration`
+
 - **Description:** Duration of performance check execution
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -400,6 +438,7 @@ Metrics from performance analysis scripts.
 - **Metadata:** `component=ingestion,check=analyzeDatabasePerformance`
 
 #### `performance_check_passes`
+
 - **Description:** Number of passed checks in performance analysis
 - **Type:** Counter
 - **Unit:** `count`
@@ -409,6 +448,7 @@ Metrics from performance analysis scripts.
 - **Metadata:** `component=ingestion`
 
 #### `performance_check_failures`
+
 - **Description:** Number of failed checks in performance analysis
 - **Type:** Counter
 - **Unit:** `count`
@@ -419,6 +459,7 @@ Metrics from performance analysis scripts.
 - **Metadata:** `component=ingestion`
 
 #### `performance_check_warnings`
+
 - **Description:** Number of warnings in performance analysis
 - **Type:** Counter
 - **Unit:** `count`
@@ -433,6 +474,7 @@ Metrics from performance analysis scripts.
 Metrics related to data quality and integrity.
 
 #### `data_quality_check_status`
+
 - **Description:** Status of data quality check execution (1=success, 0=failure)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -443,6 +485,7 @@ Metrics related to data quality and integrity.
 - **Metadata:** `component=ingestion,check=notesCheckVerifier`
 
 #### `data_quality_check_duration`
+
 - **Description:** Duration of data quality check execution
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -453,6 +496,7 @@ Metrics related to data quality and integrity.
 - **Metadata:** `component=ingestion,check=notesCheckVerifier`
 
 #### `data_quality_score`
+
 - **Description:** Overall data quality score (0-100)
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -468,6 +512,7 @@ Metrics related to data quality and integrity.
 Metrics from Planet Notes processing checks.
 
 #### `planet_check_status`
+
 - **Description:** Status of Planet Notes check execution (1=success, 0=failure)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -478,6 +523,7 @@ Metrics from Planet Notes processing checks.
 - **Metadata:** `component=ingestion,check=processCheckPlanetNotes`
 
 #### `planet_check_duration`
+
 - **Description:** Duration of Planet Notes check execution
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -492,6 +538,7 @@ Metrics from Planet Notes processing checks.
 Metrics related to disk usage.
 
 #### `disk_usage_percent`
+
 - **Description:** Disk usage percentage for a specific directory
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -502,6 +549,7 @@ Metrics related to disk usage.
 - **Metadata:** `component=ingestion,directory={dir_name}`
 
 **Note:** This metric is collected for multiple directories:
+
 - Ingestion repository root
 - Logs directory
 - Monitoring logs directory
@@ -513,6 +561,7 @@ Metrics related to disk usage.
 Metrics related to component health.
 
 #### `health_status`
+
 - **Description:** Component health status (1=healthy, 0=unhealthy)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -526,13 +575,15 @@ Metrics related to component health.
 
 ### Current Implementation
 
-Metrics are collected using the `record_metric()` function (which should map to `store_metric()` from `monitoringFunctions.sh`). The function signature is:
+Metrics are collected using the `record_metric()` function (which should map to `store_metric()`
+from `monitoringFunctions.sh`). The function signature is:
 
 ```bash
 record_metric component metric_name metric_value metadata
 ```
 
 **Example:**
+
 ```bash
 record_metric "INGESTION" "error_rate_percent" "${error_rate}" "component=ingestion"
 ```
@@ -549,6 +600,7 @@ VALUES ('ingestion', 'error_rate_percent', 2.5, 'percent', '{"component":"ingest
 ### Metadata Format
 
 Metadata is stored as JSONB and should include:
+
 - `component`: Always "ingestion"
 - `check`: Name of the check function (if applicable)
 - `directory`: Directory name (for disk metrics)
@@ -558,17 +610,20 @@ Metadata is stored as JSONB and should include:
 ## Metrics Collection Schedule
 
 ### High-Frequency Metrics (Every Cycle)
+
 - Script execution metrics
 - Error and logging metrics
 - Database performance metrics
 - Health status metrics
 
 ### Medium-Frequency Metrics (Every Cycle)
+
 - Performance check metrics
 - Data quality metrics
 - Disk space metrics
 
 ### Low-Frequency Metrics (On-Demand)
+
 - Planet Notes check metrics (when script is executed)
 
 ## Metric Aggregation
@@ -601,23 +656,23 @@ get_metrics_summary "ingestion" 24
 
 ```sql
 -- Get latest error rate
-SELECT metric_value 
-FROM metrics 
-WHERE component = 'ingestion' 
+SELECT metric_value
+FROM metrics
+WHERE component = 'ingestion'
   AND metric_name = 'error_rate_percent'
-ORDER BY timestamp DESC 
+ORDER BY timestamp DESC
 LIMIT 1;
 
 -- Get average error rate in last 24 hours
 SELECT AVG(metric_value) as avg_error_rate
-FROM metrics 
-WHERE component = 'ingestion' 
+FROM metrics
+WHERE component = 'ingestion'
   AND metric_name = 'error_rate_percent'
   AND timestamp > NOW() - INTERVAL '24 hours';
 
 -- Get metrics by category
 SELECT metric_name, AVG(metric_value) as avg_value, COUNT(*) as samples
-FROM metrics 
+FROM metrics
 WHERE component = 'ingestion'
   AND timestamp > NOW() - INTERVAL '24 hours'
 GROUP BY metric_name
@@ -631,6 +686,7 @@ The following metrics are referenced in the code but functions are not yet imple
 ### Processing Latency Metrics
 
 #### `processing_latency_seconds`
+
 - **Description:** Time between data arrival and processing completion
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -639,6 +695,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Alert Threshold:** > 300 seconds (configurable via `INGESTION_LATENCY_THRESHOLD`)
 
 #### `processing_frequency_hours`
+
 - **Description:** Frequency of processing cycles
 - **Type:** Gauge
 - **Unit:** `hours`
@@ -649,6 +706,7 @@ The following metrics are referenced in the code but functions are not yet imple
 ### API Download Metrics
 
 #### `api_download_status`
+
 - **Description:** Status of last API download (1=success, 0=failure)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -657,6 +715,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Alert Threshold:** 0 (failure)
 
 #### `api_download_success_rate_percent`
+
 - **Description:** Success rate of API downloads over time period
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -665,6 +724,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Alert Threshold:** < 95%
 
 #### `api_download_duration_seconds`
+
 - **Description:** Duration of API download operations
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -673,6 +733,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Alert Threshold:** > 600 seconds
 
 #### `api_download_size_bytes`
+
 - **Description:** Size of downloaded data
 - **Type:** Gauge
 - **Unit:** `bytes`
@@ -683,6 +744,7 @@ The following metrics are referenced in the code but functions are not yet imple
 ### Advanced API Integration Metrics
 
 #### `api_response_time_ms`
+
 - **Description:** Average API response time in milliseconds
 - **Type:** Gauge
 - **Unit:** `milliseconds`
@@ -693,6 +755,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_success_rate_percent`
+
 - **Description:** Percentage of successful API requests
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -703,6 +766,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_timeout_rate_percent`
+
 - **Description:** Percentage of API requests that timed out
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -713,6 +777,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_errors_4xx_count`
+
 - **Description:** Number of HTTP 4xx errors (client errors)
 - **Type:** Counter
 - **Unit:** `count`
@@ -723,6 +788,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_errors_5xx_count`
+
 - **Description:** Number of HTTP 5xx errors (server errors)
 - **Type:** Counter
 - **Unit:** `count`
@@ -733,6 +799,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_requests_per_minute`
+
 - **Description:** Number of API requests per minute
 - **Type:** Gauge
 - **Unit:** `count`
@@ -743,6 +810,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_requests_per_hour`
+
 - **Description:** Number of API requests per hour
 - **Type:** Gauge
 - **Unit:** `count`
@@ -753,6 +821,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_rate_limit_hits_count`
+
 - **Description:** Number of times rate limit was hit
 - **Type:** Counter
 - **Unit:** `count`
@@ -763,6 +832,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_response_size_bytes`
+
 - **Description:** Average size of API responses in bytes
 - **Type:** Gauge
 - **Unit:** `bytes`
@@ -773,6 +843,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_notes_per_request`
+
 - **Description:** Average number of notes downloaded per API request
 - **Type:** Gauge
 - **Unit:** `count`
@@ -783,6 +854,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_last_note_timestamp`
+
 - **Description:** Unix timestamp of the last note received from API
 - **Type:** Gauge
 - **Unit:** `seconds` (Unix timestamp)
@@ -793,6 +865,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `api_sync_gap_seconds`
+
 - **Description:** Time difference between API last note timestamp and database last note timestamp
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -805,6 +878,7 @@ The following metrics are referenced in the code but functions are not yet imple
 ### Boundary Processing Metrics
 
 #### `boundary_countries_last_update_timestamp`
+
 - **Description:** Unix timestamp of last update to countries table
 - **Type:** Gauge
 - **Unit:** `seconds` (Unix timestamp)
@@ -815,6 +889,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `boundary_maritime_last_update_timestamp`
+
 - **Description:** Unix timestamp of last update to maritime_boundaries table
 - **Type:** Gauge
 - **Unit:** `seconds` (Unix timestamp)
@@ -825,6 +900,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `boundary_update_frequency_hours`
+
 - **Description:** Hours since last boundary update (countries or maritime)
 - **Type:** Gauge
 - **Unit:** `hours`
@@ -835,16 +911,19 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion,type={countries|maritime}`
 
 #### `boundary_notes_without_country_count`
+
 - **Description:** Number of notes without country assignment (country_id IS NULL)
 - **Type:** Gauge
 - **Unit:** `count`
 - **Collection:** Collected during `count_notes_without_country()`
 - **Frequency:** Every monitoring cycle
 - **Expected Range:** 0-10% of total notes
-- **Alert Threshold:** > 10% of total notes (configurable via `INGESTION_BOUNDARY_NO_COUNTRY_THRESHOLD`)
+- **Alert Threshold:** > 10% of total notes (configurable via
+  `INGESTION_BOUNDARY_NO_COUNTRY_THRESHOLD`)
 - **Metadata:** `component=ingestion`
 
 #### `boundary_notes_with_country_count`
+
 - **Description:** Number of notes with country assignment (country_id IS NOT NULL)
 - **Type:** Gauge
 - **Unit:** `count`
@@ -855,7 +934,9 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `boundary_notes_out_of_bounds_count`
-- **Description:** Number of notes with coordinates outside valid ranges (lat: -90 to 90, lon: -180 to 180)
+
+- **Description:** Number of notes with coordinates outside valid ranges (lat: -90 to 90, lon: -180
+  to 180)
 - **Type:** Gauge
 - **Unit:** `count`
 - **Collection:** Collected during `detect_notes_out_of_bounds()`
@@ -865,6 +946,7 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `boundary_notes_wrong_country_count`
+
 - **Description:** Total number of notes with incorrect country assignment. Includes:
   - Notes with country_id that doesn't exist in countries table (referential integrity)
   - Notes that are geographically outside their assigned country (spatial mismatch)
@@ -878,7 +960,9 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `boundary_notes_spatial_mismatch_count`
-- **Description:** Number of notes that are geographically outside their assigned country boundaries. These notes need reassignment after boundary updates when country boundaries change.
+
+- **Description:** Number of notes that are geographically outside their assigned country
+  boundaries. These notes need reassignment after boundary updates when country boundaries change.
 - **Type:** Gauge
 - **Unit:** `count`
 - **Collection:** Collected during `detect_wrong_country_assignments()` (spatial check)
@@ -888,7 +972,10 @@ The following metrics are referenced in the code but functions are not yet imple
 - **Metadata:** `component=ingestion`
 
 #### `boundary_notes_affected_by_changes_count`
-- **Description:** Number of notes that were assigned to a country before a boundary update, but after the update their coordinates fall outside the updated country boundaries. This metric helps track how many notes need reassignment after boundary updates.
+
+- **Description:** Number of notes that were assigned to a country before a boundary update, but
+  after the update their coordinates fall outside the updated country boundaries. This metric helps
+  track how many notes need reassignment after boundary updates.
 - **Type:** Gauge
 - **Unit:** `count`
 - **Collection:** Collected during `detect_notes_affected_by_boundary_changes()`
@@ -902,6 +989,7 @@ The following metrics are referenced in the code but functions are not yet imple
 Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 
 #### `log_cycle_total_duration_seconds`
+
 - **Description:** Total duration of the last completed cycle in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -912,6 +1000,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_cycle_number`
+
 - **Description:** Current cycle number from daemon logs
 - **Type:** Gauge
 - **Unit:** `count`
@@ -922,6 +1011,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_cycles_frequency_per_hour`
+
 - **Description:** Number of cycles completed per hour (calculated from log timestamps)
 - **Type:** Gauge
 - **Unit:** `count/hour`
@@ -932,6 +1022,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_cycle_success_rate_percent`
+
 - **Description:** Percentage of cycles that completed successfully vs failed
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -942,6 +1033,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_cycle_avg_duration_seconds`
+
 - **Description:** Average cycle duration over the analysis window
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -952,6 +1044,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_cycle_min_duration_seconds`
+
 - **Description:** Minimum cycle duration observed in the analysis window
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -962,6 +1055,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_cycle_max_duration_seconds`
+
 - **Description:** Maximum cycle duration observed in the analysis window
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -972,6 +1066,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_notes_processed_per_cycle`
+
 - **Description:** Number of notes processed in the last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -982,6 +1077,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_notes_new_count`
+
 - **Description:** Number of new notes inserted in the last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -992,6 +1088,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_notes_updated_count`
+
 - **Description:** Number of notes updated in the last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1002,6 +1099,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_comments_processed_per_cycle`
+
 - **Description:** Number of comments processed in the last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1012,6 +1110,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_processing_rate_notes_per_second`
+
 - **Description:** Processing rate calculated as notes processed divided by cycle duration
 - **Type:** Gauge
 - **Unit:** `notes/second`
@@ -1022,16 +1121,19 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_stage_duration_seconds`
+
 - **Description:** Average duration of a specific processing stage (from [TIMING] logs)
 - **Type:** Gauge
 - **Unit:** `seconds`
 - **Collection:** Collected during `parse_stage_timing_metrics()`
 - **Frequency:** Every monitoring cycle
 - **Expected Range:** Varies by stage (typically 0.1-10 seconds)
-- **Alert Threshold:** > 30 seconds per stage (configurable via `INGESTION_SLOW_STAGE_THRESHOLD_SECONDS`)
+- **Alert Threshold:** > 30 seconds per stage (configurable via
+  `INGESTION_SLOW_STAGE_THRESHOLD_SECONDS`)
 - **Metadata:** `component=ingestion,stage=<stage_name>`
 
 #### `log_slowest_stage_duration_seconds`
+
 - **Description:** Duration of the slowest stage in the last analysis window
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1042,6 +1144,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion,stage=<stage_name>`
 
 #### `log_analyze_cache_hits`
+
 - **Description:** Number of ANALYZE cache hits detected in logs
 - **Type:** Counter
 - **Unit:** `count`
@@ -1052,6 +1155,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_analyze_cache_misses`
+
 - **Description:** Number of ANALYZE cache misses detected in logs
 - **Type:** Counter
 - **Unit:** `count`
@@ -1062,7 +1166,9 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_analyze_cache_effectiveness`
-- **Description:** Percentage of ANALYZE operations that hit the cache (cache hits / total operations)
+
+- **Description:** Percentage of ANALYZE operations that hit the cache (cache hits / total
+  operations)
 - **Type:** Gauge
 - **Unit:** `percent`
 - **Collection:** Collected during `parse_optimization_metrics()`
@@ -1072,6 +1178,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_integrity_optimization_count`
+
 - **Description:** Number of integrity optimization operations detected (skipped checks, etc.)
 - **Type:** Counter
 - **Unit:** `count`
@@ -1082,6 +1189,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_sequence_sync_count`
+
 - **Description:** Number of sequence synchronization operations detected
 - **Type:** Counter
 - **Unit:** `count`
@@ -1092,6 +1200,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Metadata:** `component=ingestion`
 
 #### `log_optimization_time_saved_seconds`
+
 - **Description:** Total time saved by optimizations (extracted from log messages)
 - **Type:** Counter
 - **Unit:** `seconds`
@@ -1104,6 +1213,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 ### Data Processing Metrics
 
 #### `records_processed_count`
+
 - **Description:** Number of records processed in last cycle
 - **Type:** Counter
 - **Unit:** `count`
@@ -1112,6 +1222,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Alert Threshold:** 0 (no records processed)
 
 #### `processing_duration_seconds`
+
 - **Description:** Duration of processing cycle
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1120,6 +1231,7 @@ Metrics extracted from structured daemon logs using `parseStructuredLogs.sh`.
 - **Alert Threshold:** > 1800 seconds (30 minutes)
 
 #### `data_freshness_seconds`
+
 - **Description:** Age of most recent data update
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1136,6 +1248,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 ### 9.1 Daemon Status Metrics
 
 #### `daemon_status`
+
 - **Description:** Daemon service status (1=active, 0=inactive/failed)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -1146,6 +1259,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion,status={active|inactive|failed|not-found}`
 
 #### `daemon_service_enabled`
+
 - **Description:** Whether daemon service is enabled in systemd (1=enabled, 0=disabled)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -1156,6 +1270,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_pid`
+
 - **Description:** Process ID of the daemon process
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1166,6 +1281,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_uptime_seconds`
+
 - **Description:** Daemon process uptime in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1176,6 +1292,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_restarts_count`
+
 - **Description:** Number of times daemon service has been restarted
 - **Type:** Counter
 - **Unit:** `count`
@@ -1186,6 +1303,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_lock_status`
+
 - **Description:** Status of daemon lock file (1=exists, 0=not found)
 - **Type:** Gauge
 - **Unit:** `boolean` (0 or 1)
@@ -1196,6 +1314,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_lock_age_seconds`
+
 - **Description:** Age of daemon lock file in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1208,6 +1327,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 ### 9.2 Cycle Metrics
 
 #### `daemon_cycle_number`
+
 - **Description:** Last completed cycle number
 - **Type:** Counter
 - **Unit:** `count`
@@ -1218,16 +1338,19 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycle_duration_seconds`
+
 - **Description:** Duration of last completed cycle in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
 - **Collection:** Collected during `parse_daemon_cycle_metrics()`
 - **Frequency:** Every monitoring cycle
 - **Expected Range:** 5-30 seconds
-- **Alert Threshold:** > 30 seconds (configurable via `INGESTION_DAEMON_CYCLE_DURATION_THRESHOLD`) - WARNING
+- **Alert Threshold:** > 30 seconds (configurable via `INGESTION_DAEMON_CYCLE_DURATION_THRESHOLD`) -
+  WARNING
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycles_total`
+
 - **Description:** Total number of cycles completed
 - **Type:** Counter
 - **Unit:** `count`
@@ -1238,6 +1361,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycle_avg_duration_seconds`
+
 - **Description:** Average cycle duration in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1248,6 +1372,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycle_min_duration_seconds`
+
 - **Description:** Minimum cycle duration in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1258,6 +1383,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycle_max_duration_seconds`
+
 - **Description:** Maximum cycle duration in seconds
 - **Type:** Gauge
 - **Unit:** `seconds`
@@ -1268,6 +1394,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycle_success_rate_percent`
+
 - **Description:** Percentage of successful cycles
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -1278,6 +1405,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycles_per_hour`
+
 - **Description:** Number of cycles completed per hour
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1288,6 +1416,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycles_successful_count`
+
 - **Description:** Number of successful cycles
 - **Type:** Counter
 - **Unit:** `count`
@@ -1298,6 +1427,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_cycles_failed_count`
+
 - **Description:** Number of failed cycles
 - **Type:** Counter
 - **Unit:** `count`
@@ -1310,6 +1440,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 ### 9.3 Processing Metrics
 
 #### `daemon_notes_processed_per_cycle`
+
 - **Description:** Number of notes processed in last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1320,6 +1451,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_notes_new_count`
+
 - **Description:** Number of new notes processed in last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1330,6 +1462,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_notes_updated_count`
+
 - **Description:** Number of updated notes processed in last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1340,6 +1473,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_comments_processed_per_cycle`
+
 - **Description:** Number of comments processed in last cycle
 - **Type:** Gauge
 - **Unit:** `count`
@@ -1350,6 +1484,7 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 - **Metadata:** `component=ingestion`
 
 #### `daemon_processing_rate_notes_per_second`
+
 - **Description:** Processing rate in notes per second
 - **Type:** Gauge
 - **Unit:** `notes_per_second`
@@ -1391,4 +1526,3 @@ Metrics related to the daemon process (`processAPINotesDaemon.sh`).
 **Last Updated:** 2026-01-09  
 **Version:** 1.2.0  
 **Status:** Active
-

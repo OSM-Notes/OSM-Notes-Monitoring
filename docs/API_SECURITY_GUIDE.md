@@ -22,9 +22,11 @@
 
 ## Overview
 
-The API Security system provides comprehensive protection and monitoring for the OSM-Notes-API component, including:
+The API Security system provides comprehensive protection and monitoring for the OSM-Notes-API
+component, including:
 
-- **Rate Limiting**: Per-IP, per-API-key, and per-endpoint rate limiting with sliding window algorithm
+- **Rate Limiting**: Per-IP, per-API-key, and per-endpoint rate limiting with sliding window
+  algorithm
 - **DDoS Protection**: Attack detection, automatic IP blocking, and connection rate limiting
 - **Abuse Detection**: Pattern analysis, anomaly detection, and behavioral analysis
 - **IP Management**: Whitelist, blacklist, and temporary blocking management
@@ -207,6 +209,7 @@ GEOLITE_DB_PATH=/usr/share/GeoIP/GeoLite2-Country.mmdb
 ```
 
 **Note:** Geographic filtering requires:
+
 - GeoLite2 database installed (`mmdblookup` tool)
 - MaxMind GeoLite2 Country database (free, requires registration)
 
@@ -221,7 +224,8 @@ RATE_LIMIT_PER_API_KEY_PER_DAY=100000
 
 #### Per-Endpoint Rate Limiting
 
-Rate limiting can be configured per endpoint by modifying `rateLimiter.sh` or using endpoint-specific thresholds in the configuration.
+Rate limiting can be configured per endpoint by modifying `rateLimiter.sh` or using
+endpoint-specific thresholds in the configuration.
 
 ---
 
@@ -243,6 +247,7 @@ Rate limiting can be configured per endpoint by modifying `rateLimiter.sh` or us
 ```
 
 **Exit Codes:**
+
 - `0`: Request allowed
 - `1`: Rate limit exceeded
 
@@ -436,7 +441,7 @@ For detailed metric definitions, see `docs/API_SECURITY_METRICS.md`.
 
 - **Severity:** WARNING
 - **Trigger:** When rate limit is exceeded
-- **Action:** 
+- **Action:**
   - Log violation
   - Optionally block IP temporarily
   - Review IP behavior
@@ -445,7 +450,7 @@ For detailed metric definitions, see `docs/API_SECURITY_METRICS.md`.
 
 - **Severity:** CRITICAL
 - **Trigger:** When DDoS threshold is exceeded
-- **Action:** 
+- **Action:**
   - Automatically block IP
   - Send alert
   - Investigate attack source
@@ -454,18 +459,20 @@ For detailed metric definitions, see `docs/API_SECURITY_METRICS.md`.
 
 - **Severity:** WARNING
 - **Trigger:** When abuse patterns are detected
-- **Action:** 
+- **Action:**
   - Analyze abuse type
   - Optionally block IP
   - Review request patterns
 
 ### Alert Configuration
 
-Alerts are configured via thresholds in `config/security.conf`. See `docs/API_SECURITY_ALERT_THRESHOLDS.md` for detailed threshold definitions.
+Alerts are configured via thresholds in `config/security.conf`. See
+`docs/API_SECURITY_ALERT_THRESHOLDS.md` for detailed threshold definitions.
 
 ### Alert Delivery
 
 Alerts are stored in the `alerts` table and can be delivered via:
+
 - Email (via `send_alert` function)
 - Slack (if configured)
 - Custom alert handlers
@@ -481,6 +488,7 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Legitimate users report being rate limited
 
 **Solutions:**
+
 1. Check if IP is whitelisted: `./bin/security/ipBlocking.sh status <IP>`
 2. Review rate limit thresholds in `config/security.conf`
 3. Consider increasing limits for authenticated users (API keys)
@@ -491,8 +499,10 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Rate limits not being enforced
 
 **Solutions:**
+
 1. Verify security configuration is loaded: `./bin/security/rateLimiter.sh stats`
-2. Check database connection: `psql -d osm_notes_monitoring -c "SELECT COUNT(*) FROM security_events;"`
+2. Check database connection:
+   `psql -d osm_notes_monitoring -c "SELECT COUNT(*) FROM security_events;"`
 3. Verify `record_request()` is being called for each request
 4. Check logs: `tail -f logs/rate_limiter.log`
 
@@ -503,6 +513,7 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Legitimate traffic spikes triggering DDoS alerts
 
 **Solutions:**
+
 1. Review baseline traffic patterns
 2. Increase `DDOS_THRESHOLD_REQUESTS_PER_SECOND` if needed
 3. Adjust `DDOS_CHECK_WINDOW_SECONDS` for more stable detection
@@ -513,9 +524,11 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Attacks occurring but not detected
 
 **Solutions:**
+
 1. Verify DDoS monitoring is running: `./bin/security/ddosProtection.sh monitor`
 2. Check detection thresholds in `config/security.conf`
-3. Review security events: `psql -d osm_notes_monitoring -c "SELECT * FROM security_events WHERE event_type = 'ddos';"`
+3. Review security events:
+   `psql -d osm_notes_monitoring -c "SELECT * FROM security_events WHERE event_type = 'ddos';"`
 4. Adjust thresholds if too high
 
 ### Abuse Detection Issues
@@ -525,6 +538,7 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Excessive abuse detection alerts
 
 **Solutions:**
+
 1. Review abuse detection thresholds
 2. Adjust `ABUSE_RAPID_REQUEST_THRESHOLD` if too low
 3. Increase `ABUSE_PATTERN_ANALYSIS_WINDOW` for more stable detection
@@ -535,9 +549,11 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Abuse occurring but not detected
 
 **Solutions:**
+
 1. Verify abuse detection is enabled: `ABUSE_DETECTION_ENABLED=true`
 2. Review abuse detection thresholds
-3. Check security events: `psql -d osm_notes_monitoring -c "SELECT * FROM security_events WHERE event_type = 'abuse';"`
+3. Check security events:
+   `psql -d osm_notes_monitoring -c "SELECT * FROM security_events WHERE event_type = 'abuse';"`
 4. Adjust thresholds if too high
 
 ### IP Management Issues
@@ -547,6 +563,7 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** IP should be blocked but isn't
 
 **Solutions:**
+
 1. Check IP status: `./bin/security/ipBlocking.sh status <IP>`
 2. Verify IP is in blacklist: `./bin/security/ipBlocking.sh list blacklist`
 3. Check if IP is whitelisted (whitelist takes precedence)
@@ -557,10 +574,12 @@ Alerts are stored in the `alerts` table and can be delivered via:
 **Symptoms:** Legitimate IP is blocked
 
 **Solutions:**
+
 1. Check IP status: `./bin/security/ipBlocking.sh status <IP>`
 2. Remove from blacklist: `./bin/security/ipBlocking.sh remove <IP> blacklist`
 3. Remove temporary block: Wait for expiration or manually remove
-4. Add to whitelist to prevent future blocks: `./bin/security/ipBlocking.sh add <IP> whitelist "Legitimate user"`
+4. Add to whitelist to prevent future blocks:
+   `./bin/security/ipBlocking.sh add <IP> whitelist "Legitimate user"`
 
 ---
 
@@ -572,7 +591,8 @@ Alerts are stored in the `alerts` table and can be delivered via:
 2. **Use API Keys**: Provide higher limits for authenticated users via API keys
 3. **Monitor Violations**: Regularly review rate limit violations to identify abuse
 4. **Whitelist Legitimate Users**: Add high-volume legitimate users to whitelist
-5. **Progressive Blocking**: Use progressive blocking (15 min → 1 hour → 24 hours) for repeat offenders
+5. **Progressive Blocking**: Use progressive blocking (15 min → 1 hour → 24 hours) for repeat
+   offenders
 
 ### DDoS Protection
 
@@ -635,8 +655,8 @@ Alerts are stored in the `alerts` table and can be delivered via:
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review logs: `logs/rate_limiter.log`, `logs/ddos_protection.log`, `logs/abuse_detection.log`
 3. Review security events in database
 4. Consult reference documentation
-

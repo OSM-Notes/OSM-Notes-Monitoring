@@ -7,7 +7,9 @@
 
 ## Overview
 
-This document defines all metrics collected for the OSM-Notes-API security component. These metrics are stored in the `metrics` table and `security_events` table of the monitoring database and are used for:
+This document defines all metrics collected for the OSM-Notes-API security component. These metrics
+are stored in the `metrics` table and `security_events` table of the monitoring database and are
+used for:
 
 - Security monitoring
 - Attack detection
@@ -19,6 +21,7 @@ This document defines all metrics collected for the OSM-Notes-API security compo
 ## Metric Naming Convention
 
 All security metrics follow this naming pattern:
+
 - **Format:** `{category}_{metric_name}_{unit_suffix}`
 - **Category:** Groups related metrics (e.g., `rate_limit`, `ddos`, `abuse`, `ip_block`)
 - **Unit Suffix:** Indicates unit type (`_count`, `_percent`, `_per_second`, `_per_minute`)
@@ -30,6 +33,7 @@ All security metrics follow this naming pattern:
 Metrics related to rate limiting enforcement and violations.
 
 #### `rate_limit_requests_per_minute`
+
 - **Description:** Number of requests per minute for a specific IP/API-key/endpoint
 - **Type:** Gauge
 - **Unit:** `count`
@@ -40,6 +44,7 @@ Metrics related to rate limiting enforcement and violations.
 - **Metadata:** `component=security,identifier={ip|api_key|endpoint}`
 
 #### `rate_limit_requests_per_hour`
+
 - **Description:** Number of requests per hour for a specific IP/API-key/endpoint
 - **Type:** Gauge
 - **Unit:** `count`
@@ -50,6 +55,7 @@ Metrics related to rate limiting enforcement and violations.
 - **Metadata:** `component=security,identifier={ip|api_key|endpoint}`
 
 #### `rate_limit_requests_per_day`
+
 - **Description:** Number of requests per day for a specific IP/API-key/endpoint
 - **Type:** Gauge
 - **Unit:** `count`
@@ -60,6 +66,7 @@ Metrics related to rate limiting enforcement and violations.
 - **Metadata:** `component=security,identifier={ip|api_key|endpoint}`
 
 #### `rate_limit_violations`
+
 - **Description:** Number of rate limit violations detected
 - **Type:** Counter
 - **Unit:** `count`
@@ -70,6 +77,7 @@ Metrics related to rate limiting enforcement and violations.
 - **Metadata:** `component=security,ip={ip},endpoint={endpoint}`
 
 #### `rate_limit_burst_requests`
+
 - **Description:** Number of burst requests allowed within burst window
 - **Type:** Gauge
 - **Unit:** `count`
@@ -84,6 +92,7 @@ Metrics related to rate limiting enforcement and violations.
 Metrics related to DDoS attack detection and mitigation.
 
 #### `ddos_requests_per_second`
+
 - **Description:** Number of requests per second from a specific IP address
 - **Type:** Gauge
 - **Unit:** `per_second`
@@ -94,6 +103,7 @@ Metrics related to DDoS attack detection and mitigation.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `ddos_request_count`
+
 - **Description:** Total number of requests from an IP in the detection window
 - **Type:** Counter
 - **Unit:** `count`
@@ -104,6 +114,7 @@ Metrics related to DDoS attack detection and mitigation.
 - **Metadata:** `component=security,ip={ip},window={seconds}`
 
 #### `ddos_concurrent_connections`
+
 - **Description:** Number of concurrent connections from unique IPs
 - **Type:** Gauge
 - **Unit:** `count`
@@ -114,6 +125,7 @@ Metrics related to DDoS attack detection and mitigation.
 - **Metadata:** `component=security`
 
 #### `ddos_ips_blocked`
+
 - **Description:** Number of IPs automatically blocked due to DDoS detection
 - **Type:** Counter
 - **Unit:** `count`
@@ -124,6 +136,7 @@ Metrics related to DDoS attack detection and mitigation.
 - **Metadata:** `component=security,ip={ip},reason={reason}`
 
 #### `ddos_geographic_blocked`
+
 - **Description:** Number of requests blocked due to geographic filtering
 - **Type:** Counter
 - **Unit:** `count`
@@ -138,6 +151,7 @@ Metrics related to DDoS attack detection and mitigation.
 Metrics related to abuse pattern detection and behavioral analysis.
 
 #### `abuse_rapid_requests`
+
 - **Description:** Number of rapid requests detected from an IP (within 10 seconds)
 - **Type:** Counter
 - **Unit:** `count`
@@ -148,6 +162,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_error_rate_percent`
+
 - **Description:** Percentage of requests that result in errors (4xx/5xx) from an IP
 - **Type:** Gauge
 - **Unit:** `percent`
@@ -158,6 +173,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_excessive_requests`
+
 - **Description:** Number of excessive requests from an IP in a time window
 - **Type:** Counter
 - **Unit:** `count`
@@ -168,6 +184,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_pattern_matches`
+
 - **Description:** Number of known abuse patterns matched (SQL injection, XSS, etc.)
 - **Type:** Counter
 - **Unit:** `count`
@@ -178,6 +195,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip},pattern={pattern_type}`
 
 #### `abuse_anomaly_score`
+
 - **Description:** Anomaly detection score indicating unusual activity (0-100)
 - **Type:** Gauge
 - **Unit:** `score`
@@ -188,6 +206,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_baseline_requests`
+
 - **Description:** Baseline request count for an IP (used for anomaly detection)
 - **Type:** Gauge
 - **Unit:** `count`
@@ -198,6 +217,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_current_requests`
+
 - **Description:** Current request count for an IP (compared to baseline)
 - **Type:** Gauge
 - **Unit:** `count`
@@ -208,6 +228,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_behavioral_score`
+
 - **Description:** Behavioral analysis score indicating suspicious behavior (0-100)
 - **Type:** Gauge
 - **Unit:** `score`
@@ -218,6 +239,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_endpoint_diversity`
+
 - **Description:** Number of unique endpoints accessed by an IP
 - **Type:** Gauge
 - **Unit:** `count`
@@ -228,6 +250,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_user_agent_diversity`
+
 - **Description:** Number of unique user agents used by an IP
 - **Type:** Gauge
 - **Unit:** `count`
@@ -238,6 +261,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 - **Metadata:** `component=security,ip={ip}`
 
 #### `abuse_auto_blocks`
+
 - **Description:** Number of automatic IP blocks triggered by abuse detection
 - **Type:** Counter
 - **Unit:** `count`
@@ -252,6 +276,7 @@ Metrics related to abuse pattern detection and behavioral analysis.
 Metrics related to IP whitelist, blacklist, and temporary blocking.
 
 #### `ip_whitelist_count`
+
 - **Description:** Number of IPs in the whitelist
 - **Type:** Gauge
 - **Unit:** `count`
@@ -262,6 +287,7 @@ Metrics related to IP whitelist, blacklist, and temporary blocking.
 - **Metadata:** `component=security,list=whitelist`
 
 #### `ip_blacklist_count`
+
 - **Description:** Number of IPs in the blacklist
 - **Type:** Gauge
 - **Unit:** `count`
@@ -272,6 +298,7 @@ Metrics related to IP whitelist, blacklist, and temporary blocking.
 - **Metadata:** `component=security,list=blacklist`
 
 #### `ip_temp_block_count`
+
 - **Description:** Number of IPs currently temporarily blocked
 - **Type:** Gauge
 - **Unit:** `count`
@@ -282,6 +309,7 @@ Metrics related to IP whitelist, blacklist, and temporary blocking.
 - **Metadata:** `component=security,list=temp_block`
 
 #### `ip_blocks_expired`
+
 - **Description:** Number of temporary IP blocks that expired and were cleaned up
 - **Type:** Counter
 - **Unit:** `count`
@@ -296,6 +324,7 @@ Metrics related to IP whitelist, blacklist, and temporary blocking.
 Metrics related to security events recorded in the `security_events` table.
 
 #### `security_events_total`
+
 - **Description:** Total number of security events recorded
 - **Type:** Counter
 - **Unit:** `count`
@@ -306,6 +335,7 @@ Metrics related to security events recorded in the `security_events` table.
 - **Metadata:** `component=security,event_type={type}`
 
 #### `security_events_by_type`
+
 - **Description:** Number of security events grouped by event type
 - **Type:** Counter
 - **Unit:** `count`
@@ -316,6 +346,7 @@ Metrics related to security events recorded in the `security_events` table.
 - **Metadata:** `component=security,event_type={rate_limit|ddos|abuse|ip_block}`
 
 #### `security_events_by_ip`
+
 - **Description:** Number of security events grouped by IP address
 - **Type:** Counter
 - **Unit:** `count`
@@ -333,7 +364,7 @@ Most security metrics are collected by querying the `security_events` table:
 
 ```sql
 -- Example: Count rate limit violations
-SELECT COUNT(*) 
+SELECT COUNT(*)
 FROM security_events
 WHERE event_type = 'rate_limit'
   AND timestamp > CURRENT_TIMESTAMP - INTERVAL '1 hour';
@@ -342,6 +373,7 @@ WHERE event_type = 'rate_limit'
 ### Real-time Monitoring
 
 Some metrics are collected in real-time during request processing:
+
 - Rate limit checks
 - Request counting
 - Burst handling
@@ -349,6 +381,7 @@ Some metrics are collected in real-time during request processing:
 ### Periodic Analysis
 
 Some metrics require periodic analysis:
+
 - Anomaly detection (compares current vs baseline)
 - Behavioral analysis (tracks patterns over time)
 - Pattern matching (scans logs for known patterns)
@@ -358,6 +391,7 @@ Some metrics require periodic analysis:
 ### Metrics Table
 
 Standard metrics are stored in the `metrics` table with:
+
 - `component`: Always `"SECURITY"`
 - `metric_name`: One of the metric names defined above
 - `value`: Numeric value
@@ -367,6 +401,7 @@ Standard metrics are stored in the `metrics` table with:
 ### Security Events Table
 
 Security events are stored in the `security_events` table with:
+
 - `event_type`: Type of event (`rate_limit`, `ddos`, `abuse`, `ip_block`)
 - `ip_address`: IP address involved
 - `endpoint`: API endpoint (if applicable)
@@ -376,11 +411,13 @@ Security events are stored in the `security_events` table with:
 ## Metric Retention
 
 - **Metrics Table:** Retained according to `METRICS_RETENTION_DAYS` (default: 90 days)
-- **Security Events Table:** Retained according to `SECURITY_EVENTS_RETENTION_DAYS` (default: 365 days)
+- **Security Events Table:** Retained according to `SECURITY_EVENTS_RETENTION_DAYS` (default: 365
+  days)
 
 ## Metric Aggregation
 
 Metrics can be aggregated for reporting:
+
 - **By IP:** Track metrics per IP address
 - **By Endpoint:** Track metrics per API endpoint
 - **By Time Period:** Aggregate metrics by hour/day/week
@@ -394,4 +431,3 @@ Metrics can be aggregated for reporting:
 - `bin/security/ipBlocking.sh` - IP management implementation
 - `sql/init.sql` - Database schema for `security_events` and `ip_management` tables
 - `config/security.conf.example` - Security configuration with thresholds
-

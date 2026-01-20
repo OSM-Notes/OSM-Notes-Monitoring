@@ -22,4 +22,3 @@ COMMENT ON TABLE schema_migrations IS 'Tracks which database migrations have bee
 SELECT 1 FROM schema_migrations LIMIT 1;
 
 COMMIT;
-

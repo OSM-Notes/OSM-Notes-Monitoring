@@ -22,17 +22,21 @@
 
 ## Overview
 
-The Analytics Monitoring system provides comprehensive monitoring for the OSM-Notes-Analytics component, tracking:
+The Analytics Monitoring system provides comprehensive monitoring for the OSM-Notes-Analytics
+component, tracking:
 
 - **ETL Job Execution**: Verifies that ETL scripts are present, executable, and running correctly
 - **ETL Log Analysis**: Parses structured ETL logs to extract detailed execution metrics
-- **Data Warehouse Performance**: Monitors database performance (cache hit ratio, connections, slow queries, locks, bloat)
+- **Data Warehouse Performance**: Monitors database performance (cache hit ratio, connections, slow
+  queries, locks, bloat)
 - **Data Warehouse Sizes**: Tracks database and table sizes, partition sizes, and growth trends
 - **Data Mart Status**: Monitors datamart update frequency, staleness, and execution metrics
 - **Data Quality Validation**: Executes MON-001 and MON-002 validations, tracks data quality scores
 - **System Resources**: Monitors CPU, memory, disk I/O, and load for ETL and PostgreSQL processes
-- **Export Processes**: Tracks JSON/CSV exports, file sizes, validation status, and GitHub push status
-- **Cron Job Monitoring**: Verifies scheduled job executions (ETL, datamarts, exports) and detects gaps
+- **Export Processes**: Tracks JSON/CSV exports, file sizes, validation status, and GitHub push
+  status
+- **Cron Job Monitoring**: Verifies scheduled job executions (ETL, datamarts, exports) and detects
+  gaps
 - **Data Warehouse Freshness**: Monitors data freshness and recent update activity
 - **Query Performance**: Tracks slow queries and query execution times
 - **Storage Growth**: Monitors database size, table sizes, and disk usage
@@ -494,28 +498,28 @@ sudo systemctl start analytics-monitoring.timer
 ```bash
 # View all analytics metrics
 psql -d osm_notes_monitoring -c "
-  SELECT metric_name, metric_value, timestamp 
-  FROM metrics 
-  WHERE component = 'analytics' 
-  ORDER BY timestamp DESC 
+  SELECT metric_name, metric_value, timestamp
+  FROM metrics
+  WHERE component = 'analytics'
+  ORDER BY timestamp DESC
   LIMIT 20;
 "
 
 # View specific metric over time
 psql -d osm_notes_monitoring -c "
-  SELECT timestamp, metric_value 
-  FROM metrics 
-  WHERE component = 'analytics' 
+  SELECT timestamp, metric_value
+  FROM metrics
+  WHERE component = 'analytics'
     AND metric_name = 'data_warehouse_freshness_seconds'
-  ORDER BY timestamp DESC 
+  ORDER BY timestamp DESC
   LIMIT 100;
 "
 
 # Calculate average metric value
 psql -d osm_notes_monitoring -c "
   SELECT AVG(metric_value::numeric) as avg_value
-  FROM metrics 
-  WHERE component = 'analytics' 
+  FROM metrics
+  WHERE component = 'analytics'
     AND metric_name = 'etl_processing_duration_avg_seconds'
     AND timestamp > NOW() - INTERVAL '24 hours';
 "
@@ -629,24 +633,25 @@ For complete metric definitions, see **[ANALYTICS_METRICS.md](./ANALYTICS_METRIC
 ```bash
 # View active alerts
 psql -d osm_notes_monitoring -c "
-  SELECT component, alert_level, alert_type, message, created_at 
-  FROM alerts 
-  WHERE component = 'ANALYTICS' 
+  SELECT component, alert_level, alert_type, message, created_at
+  FROM alerts
+  WHERE component = 'ANALYTICS'
     AND status = 'active'
   ORDER BY created_at DESC;
 "
 
 # View alerts by level
 psql -d osm_notes_monitoring -c "
-  SELECT alert_level, COUNT(*) 
-  FROM alerts 
-  WHERE component = 'ANALYTICS' 
+  SELECT alert_level, COUNT(*)
+  FROM alerts
+  WHERE component = 'ANALYTICS'
     AND created_at > NOW() - INTERVAL '24 hours'
   GROUP BY alert_level;
 "
 ```
 
-For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](./ANALYTICS_ALERT_THRESHOLDS.md)**.
+For complete alert threshold definitions, see
+**[ANALYTICS_ALERT_THRESHOLDS.md](./ANALYTICS_ALERT_THRESHOLDS.md)**.
 
 ---
 
@@ -659,6 +664,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: Monitoring script fails with database connection errors
 
 **Solutions**:
+
 1. Verify database credentials in `config/monitoring.conf`
 2. Test connection: `psql -h $DBHOST -p $DBPORT -U $DBUSER -d $DBNAME`
 3. Check firewall rules and network connectivity
@@ -670,6 +676,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: Errors querying analytics database
 
 **Solutions**:
+
 1. Verify `ANALYTICS_DBNAME` is correct
 2. Test connection: `psql -d $ANALYTICS_DBNAME -c "SELECT 1;"`
 3. Check database exists: `psql -l | grep $ANALYTICS_DBNAME`
@@ -680,6 +687,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: Alerts about low number of ETL scripts
 
 **Solutions**:
+
 1. Verify `ANALYTICS_REPO_PATH` is correct
 2. Check script locations: `ls -la $ANALYTICS_REPO_PATH/bin/`
 3. Verify scripts have execute permissions: `chmod +x $ANALYTICS_REPO_PATH/bin/*.sh`
@@ -690,6 +698,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: No metrics in database
 
 **Solutions**:
+
 1. Check monitoring script logs: `tail -f logs/monitorAnalytics.log`
 2. Verify `ANALYTICS_ENABLED=true` in configuration
 3. Test database write permissions
@@ -701,6 +710,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: Slow query alerts or high query performance metrics
 
 **Solutions**:
+
 1. Review slow queries: Check `pg_stat_statements` if available
 2. Analyze query execution plans: `EXPLAIN ANALYZE <query>`
 3. Check for missing indexes
@@ -712,6 +722,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: Alerts about stale data
 
 **Solutions**:
+
 1. Check ETL job execution status
 2. Review ETL logs for errors
 3. Verify ETL jobs are scheduled correctly
@@ -723,6 +734,7 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 **Symptoms**: CRITICAL or WARNING disk usage alerts
 
 **Solutions**:
+
 1. Check actual disk usage: `df -h`
 2. Identify large tables: Query `pg_total_relation_size()`
 3. Review data retention policies
@@ -761,9 +773,9 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 - Monitor database size and growth
 - Create indexes on frequently queried columns:
   ```sql
-  CREATE INDEX idx_metrics_component_timestamp 
+  CREATE INDEX idx_metrics_component_timestamp
     ON metrics(component, timestamp DESC);
-  CREATE INDEX idx_alerts_component_status 
+  CREATE INDEX idx_alerts_component_status
     ON alerts(component, status, created_at DESC);
   ```
 - Set up database backups
@@ -831,7 +843,8 @@ For complete alert threshold definitions, see **[ANALYTICS_ALERT_THRESHOLDS.md](
 
 - **[Monitoring_SETUP_Guide.md](./Monitoring_SETUP_Guide.md)**: Initial setup guide
 - **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)**: Database schema documentation
-- **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System architecture overview
+- **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System
+  architecture overview
 
 ### Scripts
 
@@ -903,4 +916,3 @@ If you encounter issues or have questions:
 
 **Last Updated**: 2025-12-27  
 **Version**: 1.0.0
-

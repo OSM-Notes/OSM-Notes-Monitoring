@@ -13,18 +13,20 @@
       "id": 1,
       "title": "API Success Rate (%)",
       "type": "gauge",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_success_rate_percent' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_success_rate_percent' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -33,9 +35,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "red"},
-              {"value": 95, "color": "yellow"},
-              {"value": 100, "color": "green"}
+              { "value": 0, "color": "red" },
+              { "value": 95, "color": "yellow" },
+              { "value": 100, "color": "green" }
             ]
           }
         }
@@ -45,18 +47,20 @@
       "id": 2,
       "title": "API Response Time (ms)",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_response_time_ms' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_response_time_ms' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
@@ -68,7 +72,7 @@
       "id": 3,
       "title": "API Requests Rate",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "targets": [
         {
           "datasource": {
@@ -104,7 +108,7 @@
       "id": 4,
       "title": "HTTP Errors",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "targets": [
         {
           "datasource": {
@@ -143,18 +147,20 @@
       "id": 5,
       "title": "API Response Time Trend",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_response_time_ms' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_response_time_ms' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
@@ -166,18 +172,20 @@
       "id": 6,
       "title": "Rate Limit Hits",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_rate_limit_hits_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_rate_limit_hits_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -189,18 +197,20 @@
       "id": 7,
       "title": "API Sync Gap (seconds)",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_sync_gap_seconds' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_sync_gap_seconds' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -208,9 +218,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 3600, "color": "yellow"},
-              {"value": 7200, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 3600, "color": "yellow" },
+              { "value": 7200, "color": "red" }
             ]
           }
         }
@@ -220,7 +230,7 @@
       "id": 8,
       "title": "API Throughput",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "targets": [
         {
           "datasource": {
@@ -256,18 +266,20 @@
       "id": 9,
       "title": "API Success Rate Trend",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_success_rate_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_success_rate_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -275,9 +287,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "red"},
-              {"value": 95, "color": "yellow"},
-              {"value": 100, "color": "green"}
+              { "value": 0, "color": "red" },
+              { "value": 95, "color": "yellow" },
+              { "value": 100, "color": "green" }
             ]
           }
         }
@@ -287,18 +299,20 @@
       "id": 10,
       "title": "Timeout Rate (%)",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_timeout_rate_percent' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'api_timeout_rate_percent' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -307,5 +321,5 @@
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": { "from": "now-24h", "to": "now" }
 }

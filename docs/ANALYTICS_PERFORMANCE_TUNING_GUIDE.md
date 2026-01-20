@@ -1,6 +1,7 @@
 # Analytics Performance Tuning Guide
 
-> **Purpose:** Comprehensive guide for optimizing analytics monitoring and data warehouse performance  
+> **Purpose:** Comprehensive guide for optimizing analytics monitoring and data warehouse
+> performance  
 > **Version:** 1.0.0  
 > **Date:** 2025-12-27  
 > **Status:** Active
@@ -23,6 +24,7 @@
 ## Overview
 
 This guide provides comprehensive strategies and techniques for optimizing the performance of:
+
 - Analytics monitoring queries
 - ETL job execution
 - Data warehouse operations
@@ -91,7 +93,7 @@ WHERE component = 'analytics'
 
 ```sql
 -- Database size trend
-SELECT 
+SELECT
   DATE_TRUNC('day', timestamp) as day,
   AVG(metric_value::numeric) as avg_size_bytes
 FROM metrics
@@ -111,7 +113,7 @@ Enable `pg_stat_statements` extension for detailed query analysis:
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
 -- View slowest queries
-SELECT 
+SELECT
   query,
   calls,
   mean_exec_time,
@@ -137,7 +139,7 @@ SELECT pg_stat_statements_reset();
 
 ```sql
 -- Find tables with high sequential scans
-SELECT 
+SELECT
   schemaname,
   tablename,
   seq_scan,
@@ -150,7 +152,7 @@ ORDER BY seq_tup_read DESC
 LIMIT 20;
 
 -- Find unused indexes
-SELECT 
+SELECT
   schemaname,
   tablename,
   indexname,
@@ -166,34 +168,34 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 
 ```sql
 -- Index on frequently queried columns
-CREATE INDEX IF NOT EXISTS idx_data_warehouse_updated_at 
+CREATE INDEX IF NOT EXISTS idx_data_warehouse_updated_at
   ON test_data_warehouse(updated_at DESC);
 
 -- Index on foreign keys
-CREATE INDEX IF NOT EXISTS idx_data_mart_name 
+CREATE INDEX IF NOT EXISTS idx_data_mart_name
   ON test_data_mart(mart_name);
 
 -- Composite index for common query patterns
-CREATE INDEX IF NOT EXISTS idx_data_warehouse_timestamp_value 
+CREATE INDEX IF NOT EXISTS idx_data_warehouse_timestamp_value
   ON test_data_warehouse(data_timestamp, data_value);
 
 -- Partial index for filtered queries
-CREATE INDEX IF NOT EXISTS idx_recent_updates 
-  ON test_data_warehouse(updated_at) 
+CREATE INDEX IF NOT EXISTS idx_recent_updates
+  ON test_data_warehouse(updated_at)
   WHERE updated_at > CURRENT_TIMESTAMP - INTERVAL '7 days';
 ```
 
 ### 2. Query Rewriting
 
-#### Avoid SELECT *
+#### Avoid SELECT \*
 
 ```sql
 -- Bad: Selects all columns
 SELECT * FROM test_data_warehouse WHERE id = 1;
 
 -- Good: Select only needed columns
-SELECT id, data_timestamp, data_value 
-FROM test_data_warehouse 
+SELECT id, data_timestamp, data_value
+FROM test_data_warehouse
 WHERE id = 1;
 ```
 
@@ -204,8 +206,8 @@ WHERE id = 1;
 SELECT * FROM test_data_warehouse ORDER BY updated_at DESC LIMIT 10;
 
 -- Good: Uses index efficiently
-SELECT * FROM test_data_warehouse 
-ORDER BY updated_at DESC 
+SELECT * FROM test_data_warehouse
+ORDER BY updated_at DESC
 LIMIT 10;
 ```
 
@@ -228,7 +230,7 @@ CREATE INDEX IF NOT EXISTS idx_join_column ON table1(join_column);
 ```sql
 -- Analyze query execution plan
 EXPLAIN ANALYZE
-SELECT 
+SELECT
   mart_name,
   COUNT(*) as record_count,
   MAX(last_update) as last_update
@@ -237,6 +239,7 @@ GROUP BY mart_name;
 ```
 
 **Key things to look for:**
+
 - **Seq Scan**: Consider adding index
 - **High cost**: Optimize query or add index
 - **Nested Loop**: May be slow for large datasets
@@ -251,7 +254,7 @@ GROUP BY mart_name;
 -- log_min_duration_statement = 1000  # Log queries > 1 second
 
 -- View slow queries from logs
-SELECT 
+SELECT
   query,
   mean_exec_time,
   calls,
@@ -278,21 +281,21 @@ OFFSET=0
 while true; do
     # Process batch
     psql -d analytics_db -c "
-        UPDATE test_data_warehouse 
-        SET processed = true 
+        UPDATE test_data_warehouse
+        SET processed = true
         WHERE id IN (
-            SELECT id FROM test_data_warehouse 
-            WHERE processed = false 
+            SELECT id FROM test_data_warehouse
+            WHERE processed = false
             LIMIT ${BATCH_SIZE} OFFSET ${OFFSET}
         );
     "
-    
+
     # Check if done
     COUNT=$(psql -d analytics_db -t -c "SELECT COUNT(*) FROM test_data_warehouse WHERE processed = false;")
     if [ "$COUNT" -eq 0 ]; then
         break
     fi
-    
+
     OFFSET=$((OFFSET + BATCH_SIZE))
 done
 ```
@@ -328,11 +331,11 @@ CREATE TABLE IF NOT EXISTS etl_state (
 );
 
 -- Process only new/updated records
-SELECT * 
+SELECT *
 FROM source_table
 WHERE updated_at > (
-    SELECT last_processed_timestamp 
-    FROM etl_state 
+    SELECT last_processed_timestamp
+    FROM etl_state
     WHERE job_name = 'data_warehouse_etl'
 )
 ORDER BY updated_at;
@@ -349,8 +352,8 @@ INSERT INTO target_table VALUES (...);
 -- ... many times
 
 -- Good: Bulk insert
-INSERT INTO target_table 
-SELECT ... FROM source_table 
+INSERT INTO target_table
+SELECT ... FROM source_table
 WHERE conditions;
 ```
 
@@ -359,15 +362,15 @@ WHERE conditions;
 ```bash
 # Export data
 psql -d analytics_db -c "
-    COPY (SELECT * FROM source_table) 
-    TO '/tmp/data.csv' 
+    COPY (SELECT * FROM source_table)
+    TO '/tmp/data.csv'
     WITH CSV HEADER;
 "
 
 # Import data
 psql -d analytics_db -c "
-    COPY target_table 
-    FROM '/tmp/data.csv' 
+    COPY target_table
+    FROM '/tmp/data.csv'
     WITH CSV HEADER;
 "
 ```
@@ -430,11 +433,11 @@ CREATE TABLE data_warehouse_partitioned (
 ) PARTITION BY RANGE (data_timestamp);
 
 -- Create partitions
-CREATE TABLE data_warehouse_2025_01 
+CREATE TABLE data_warehouse_2025_01
     PARTITION OF data_warehouse_partitioned
     FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
 
-CREATE TABLE data_warehouse_2025_02 
+CREATE TABLE data_warehouse_2025_02
     PARTITION OF data_warehouse_partitioned
     FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
 ```
@@ -511,7 +514,7 @@ WHERE data_timestamp < CURRENT_TIMESTAMP - INTERVAL '1 year';
 ```sql
 -- Large text columns are automatically compressed
 -- Ensure TEXT columns use TOAST
-ALTER TABLE test_data_warehouse 
+ALTER TABLE test_data_warehouse
 ALTER COLUMN data_value SET STORAGE EXTENDED;
 ```
 
@@ -534,7 +537,7 @@ REINDEX DATABASE analytics_db;
 
 ```sql
 -- Check table sizes
-SELECT 
+SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,
@@ -546,7 +549,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
 LIMIT 20;
 
 -- Check database size
-SELECT 
+SELECT
     pg_database.datname,
     pg_size_pretty(pg_database_size(pg_database.datname)) AS size
 FROM pg_database
@@ -644,7 +647,7 @@ CREATE TABLE performance_baselines (
 );
 
 -- Compare current performance to baseline
-SELECT 
+SELECT
     m.metric_name,
     m.current_value,
     b.baseline_value,
@@ -699,12 +702,15 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 ### Issue: Slow Queries
 
 **Symptoms:**
+
 - Query execution time > 2 seconds
 - High CPU usage during queries
 - Timeout errors
 
 **Investigation:**
+
 1. Identify slow queries:
+
    ```sql
    SELECT query, mean_exec_time, calls
    FROM pg_stat_statements
@@ -713,6 +719,7 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
    ```
 
 2. Analyze query plan:
+
    ```sql
    EXPLAIN ANALYZE <slow_query>;
    ```
@@ -725,6 +732,7 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
    ```
 
 **Resolution:**
+
 1. Add missing indexes
 2. Rewrite inefficient queries
 3. Optimize JOINs
@@ -736,13 +744,16 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 ### Issue: High ETL Duration
 
 **Symptoms:**
+
 - ETL jobs taking longer than expected
 - Alerts for duration thresholds
 
 **Investigation:**
+
 1. Check ETL duration trends:
+
    ```sql
-   SELECT 
+   SELECT
      DATE_TRUNC('hour', timestamp) as hour,
      AVG(metric_value::numeric) as avg_duration
    FROM metrics
@@ -757,6 +768,7 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 4. Analyze data volume trends
 
 **Resolution:**
+
 1. Optimize ETL queries
 2. Process in smaller batches
 3. Parallelize independent operations
@@ -768,14 +780,17 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 ### Issue: Database Size Growth
 
 **Symptoms:**
+
 - Database size alerts
 - Disk space warnings
 - Slow queries on large tables
 
 **Investigation:**
+
 1. Check table sizes:
+
    ```sql
-   SELECT 
+   SELECT
      tablename,
      pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
    FROM pg_tables
@@ -786,6 +801,7 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 3. Identify old data
 
 **Resolution:**
+
 1. Archive old data
 2. Implement data retention policies
 3. Partition large tables
@@ -797,12 +813,15 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 ### Issue: High Monitoring Overhead
 
 **Symptoms:**
+
 - Monitoring queries slow
 - System resource usage high
 - Monitoring alerts delayed
 
 **Investigation:**
+
 1. Measure monitoring execution time:
+
    ```bash
    time ./bin/monitor/monitorAnalytics.sh
    ```
@@ -811,6 +830,7 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 3. Review monitoring frequency
 
 **Resolution:**
+
 1. Reduce monitoring frequency
 2. Optimize monitoring queries
 3. Cache expensive queries
@@ -823,14 +843,14 @@ JOIN performance_baselines b ON m.metric_name = b.metric_name;
 
 ### Performance Targets
 
-| Metric | Target | Warning | Critical |
-|--------|--------|---------|----------|
-| Simple Query Time | < 100ms | > 500ms | > 2000ms |
-| Complex Query Time | < 500ms | > 2000ms | > 5000ms |
-| ETL Average Duration | < 30 min | > 1 hour | > 2 hours |
-| ETL Max Duration | < 1 hour | > 2 hours | > 4 hours |
+| Metric               | Target       | Warning      | Critical     |
+| -------------------- | ------------ | ------------ | ------------ |
+| Simple Query Time    | < 100ms      | > 500ms      | > 2000ms     |
+| Complex Query Time   | < 500ms      | > 2000ms     | > 5000ms     |
+| ETL Average Duration | < 30 min     | > 1 hour     | > 2 hours    |
+| ETL Max Duration     | < 1 hour     | > 2 hours    | > 4 hours    |
 | Database Size Growth | < 10GB/month | > 20GB/month | > 50GB/month |
-| Monitoring Overhead | < 1% CPU | > 5% CPU | > 10% CPU |
+| Monitoring Overhead  | < 1% CPU     | > 5% CPU     | > 10% CPU    |
 
 ### Useful Commands
 
@@ -859,7 +879,7 @@ psql -d analytics_db -c "
 
 # Check table bloat
 psql -d analytics_db -c "
-  SELECT 
+  SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,
@@ -882,4 +902,3 @@ psql -d analytics_db -c "
 
 **Last Updated**: 2025-12-27  
 **Version**: 1.0.0
-

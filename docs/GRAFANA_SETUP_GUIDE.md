@@ -7,9 +7,11 @@
 
 ## Overview
 
-This guide covers installing and configuring Grafana for the OSM Notes Monitoring system. Grafana provides advanced visualization capabilities for monitoring all OSM Notes components.
+This guide covers installing and configuring Grafana for the OSM Notes Monitoring system. Grafana
+provides advanced visualization capabilities for monitoring all OSM Notes components.
 
-**Note:** This guide is for the **OSM-Notes-Monitoring Grafana** deployment. For API-specific Grafana setup, see [OSM-Notes-API Monitoring Documentation](../OSM-Notes-API/docs/MONITORING.md).
+**Note:** This guide is for the **OSM-Notes-Monitoring Grafana** deployment. For API-specific
+Grafana setup, see [OSM-Notes-API Monitoring Documentation](../OSM-Notes-API/docs/MONITORING.md).
 
 ---
 
@@ -27,6 +29,7 @@ This guide covers installing and configuring Grafana for the OSM Notes Monitorin
 ### Option 1: Docker (Recommended)
 
 **Quick Start:**
+
 ```bash
 # Create Grafana data directory
 mkdir -p /var/lib/grafana
@@ -45,8 +48,9 @@ docker run -d \
 **With Docker Compose:**
 
 Create `docker-compose.yml`:
+
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   grafana:
@@ -69,6 +73,7 @@ volumes:
 ```
 
 Start:
+
 ```bash
 docker-compose up -d grafana
 ```
@@ -76,6 +81,7 @@ docker-compose up -d grafana
 ### Option 2: Package Installation
 
 **Ubuntu/Debian:**
+
 ```bash
 # Add Grafana repository
 sudo apt-get install -y software-properties-common
@@ -92,6 +98,7 @@ sudo systemctl enable grafana-server
 ```
 
 **CentOS/RHEL:**
+
 ```bash
 # Add Grafana repository
 cat <<EOF | sudo tee /etc/yum.repos.d/grafana.repo
@@ -168,6 +175,7 @@ sudo systemctl enable grafana-server
 ### Step 2: Configure Connection
 
 **Basic Settings:**
+
 - **Name**: `PostgreSQL` (or descriptive name)
 - **Host**: `localhost:5432` (or your DB host:port)
 - **Database**: `osm_notes_monitoring`
@@ -176,6 +184,7 @@ sudo systemctl enable grafana-server
 - **SSL Mode**: `disable` (or `require` for production)
 
 **Advanced Settings:**
+
 - **Max open connections**: `100`
 - **Max idle connections**: `100`
 - **Connection max lifetime**: `14400` (4 hours)
@@ -193,6 +202,7 @@ sudo systemctl enable grafana-server
 ### Step 4: Configure Time Series
 
 **PostgreSQL Options:**
+
 - **TimescaleDB**: Enable if using TimescaleDB extension
 - **Version**: Select PostgreSQL version (12+)
 
@@ -203,19 +213,20 @@ sudo systemctl enable grafana-server
 ### Automatic Provisioning
 
 **Create provisioning directory:**
+
 ```bash
 mkdir -p /etc/grafana/provisioning/dashboards
 ```
 
-**Create dashboard provider:**
-`/etc/grafana/provisioning/dashboards/dashboard.yml`:
+**Create dashboard provider:** `/etc/grafana/provisioning/dashboards/dashboard.yml`:
+
 ```yaml
 apiVersion: 1
 
 providers:
-  - name: 'OSM Notes Monitoring'
+  - name: "OSM Notes Monitoring"
     orgId: 1
-    folder: ''
+    folder: ""
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
@@ -225,6 +236,7 @@ providers:
 ```
 
 **Copy dashboards:**
+
 ```bash
 # Copy dashboard JSON files
 cp dashboards/grafana/*.json /etc/grafana/provisioning/dashboards/
@@ -252,14 +264,15 @@ docker restart osm-notes-grafana
 **Default:** Username/password authentication
 
 **Change default password:**
+
 1. Go to **Administration** → **Users**
 2. Click on `admin` user
 3. Change password
 
 ### LDAP Authentication (Optional)
 
-**Configure LDAP:**
-`/etc/grafana/ldap.toml`:
+**Configure LDAP:** `/etc/grafana/ldap.toml`:
+
 ```toml
 [[servers]]
 host = "ldap.example.com"
@@ -278,6 +291,7 @@ email = "mail"
 ```
 
 **Enable in Grafana:**
+
 1. Go to **Configuration** → **Authentication** → **LDAP**
 2. Enable LDAP
 3. Configure LDAP settings
@@ -285,6 +299,7 @@ email = "mail"
 ### OAuth Authentication (Optional)
 
 **Configure OAuth provider:**
+
 1. Go to **Configuration** → **Authentication**
 2. Select OAuth provider (Google, GitHub, etc.)
 3. Configure client ID and secret
@@ -297,6 +312,7 @@ email = "mail"
 ### Import Dashboards
 
 **Available Dashboards:**
+
 - `overview.json` - System overview
 - `ingestion.json` - Ingestion monitoring
 - `analytics.json` - Analytics monitoring
@@ -305,6 +321,7 @@ email = "mail"
 - `infrastructure.json` - Infrastructure monitoring
 
 **Import Steps:**
+
 1. Go to **Dashboards** → **Import**
 2. Upload JSON file
 3. Select PostgreSQL data source
@@ -314,6 +331,7 @@ email = "mail"
 ### Configure Dashboard Variables
 
 **Add time range variable:**
+
 1. Open dashboard
 2. Click **Dashboard settings** (gear icon)
 3. Go to **Variables** tab
@@ -326,6 +344,7 @@ email = "mail"
 ### Set Default Time Range
 
 **Dashboard settings:**
+
 1. Open dashboard
 2. Click **Dashboard settings**
 3. Go to **General** tab
@@ -339,6 +358,7 @@ email = "mail"
 ### Configure Alert Channels
 
 **Email Channel:**
+
 1. Go to **Alerting** → **Notification channels**
 2. Click **Add channel**
 3. Select **Email**
@@ -348,6 +368,7 @@ email = "mail"
    - **Send on all alerts**: Enable
 
 **Slack Channel:**
+
 1. Click **Add channel**
 2. Select **Slack**
 3. Configure:
@@ -358,6 +379,7 @@ email = "mail"
 ### Create Alert Rules
 
 **In Dashboard Panel:**
+
 1. Edit panel
 2. Go to **Alert** tab
 3. Click **Create Alert**
@@ -374,6 +396,7 @@ email = "mail"
 ### Database Query Optimization
 
 **Enable query caching:**
+
 ```ini
 [database]
 query_cache_enabled = true
@@ -381,6 +404,7 @@ query_cache_max_size = 1000
 ```
 
 **Optimize PostgreSQL:**
+
 ```sql
 -- Create indexes for common queries
 CREATE INDEX idx_metrics_component_timestamp ON metrics(component, timestamp DESC);
@@ -390,12 +414,14 @@ CREATE INDEX idx_metrics_metric_name ON metrics(metric_name);
 ### Grafana Performance
 
 **Increase query timeout:**
+
 ```ini
 [datasources]
 query_timeout = 60s
 ```
 
 **Limit data points:**
+
 - Use appropriate time ranges
 - Aggregate data when possible
 - Limit number of series in queries
@@ -403,16 +429,17 @@ query_timeout = 60s
 ### Resource Limits
 
 **Docker:**
+
 ```yaml
 services:
   grafana:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 2G
         reservations:
-          cpus: '1'
+          cpus: "1"
           memory: 1G
 ```
 
@@ -423,20 +450,22 @@ services:
 ### Change Default Credentials
 
 **First login:**
+
 - Change `admin` password immediately
 - Use strong password (12+ characters, mixed case, numbers, symbols)
 
 ### Enable HTTPS
 
 **Using Reverse Proxy (Nginx):**
+
 ```nginx
 server {
     listen 443 ssl;
     server_name grafana.example.com;
-    
+
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
-    
+
     location / {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
@@ -446,6 +475,7 @@ server {
 ```
 
 **Grafana Configuration:**
+
 ```ini
 [server]
 protocol = https
@@ -456,12 +486,14 @@ cert_key = /path/to/key.pem
 ### Restrict Access
 
 **Firewall Rules:**
+
 ```bash
 # Allow only specific IPs
 sudo ufw allow from 192.168.1.0/24 to any port 3000
 ```
 
 **Grafana IP Whitelist:**
+
 ```ini
 [server]
 ip_whitelist = 192.168.1.0/24,10.0.0.0/8
@@ -470,6 +502,7 @@ ip_whitelist = 192.168.1.0/24,10.0.0.0/8
 ### Disable Sign-Up
 
 **Configuration:**
+
 ```ini
 [users]
 allow_sign_up = false
@@ -482,6 +515,7 @@ allow_sign_up = false
 ### Backup Dashboards
 
 **Export dashboards:**
+
 ```bash
 # Use export script
 ./bin/dashboard/exportDashboard.sh grafana /backup/grafana_dashboards
@@ -493,6 +527,7 @@ curl -u admin:password http://localhost:3000/api/dashboards/db/overview > overvi
 ### Backup Grafana Data
 
 **Docker:**
+
 ```bash
 # Backup Grafana data directory
 docker exec osm-notes-grafana tar -czf /tmp/grafana_backup.tar.gz /var/lib/grafana
@@ -500,6 +535,7 @@ docker cp osm-notes-grafana:/tmp/grafana_backup.tar.gz ./grafana_backup.tar.gz
 ```
 
 **Package Installation:**
+
 ```bash
 # Backup Grafana data
 sudo tar -czf grafana_backup.tar.gz /var/lib/grafana
@@ -508,6 +544,7 @@ sudo tar -czf grafana_backup.tar.gz /var/lib/grafana
 ### Restore
 
 **Restore dashboards:**
+
 ```bash
 # Use import script
 ./bin/dashboard/importDashboard.sh /backup/grafana_dashboards.tar.gz grafana
@@ -517,6 +554,7 @@ sudo tar -czf grafana_backup.tar.gz /var/lib/grafana
 ```
 
 **Restore Grafana data:**
+
 ```bash
 # Extract backup
 tar -xzf grafana_backup.tar.gz
@@ -535,6 +573,7 @@ sudo systemctl restart grafana-server
 ### Grafana Won't Start
 
 **Check logs:**
+
 ```bash
 # Docker
 docker logs osm-notes-grafana
@@ -544,6 +583,7 @@ sudo journalctl -u grafana-server -f
 ```
 
 **Common issues:**
+
 - Port 3000 already in use
 - Permission issues on data directory
 - Configuration file errors
@@ -551,12 +591,14 @@ sudo journalctl -u grafana-server -f
 ### Can't Connect to PostgreSQL
 
 **Verify connection:**
+
 ```bash
 # Test database connection
 psql -h localhost -U postgres -d osm_notes_monitoring -c "SELECT 1;"
 ```
 
 **Check:**
+
 - Database is running
 - Credentials are correct
 - Network connectivity
@@ -565,16 +607,18 @@ psql -h localhost -U postgres -d osm_notes_monitoring -c "SELECT 1;"
 ### Dashboards Show No Data
 
 **Verify:**
+
 1. Data source is configured correctly
 2. Metrics exist in database: `SELECT COUNT(*) FROM metrics;`
 3. Time range includes data
 4. SQL queries are correct
 
 **Test query:**
+
 ```sql
-SELECT timestamp, metric_value 
-FROM metrics 
-WHERE component = 'ingestion' 
+SELECT timestamp, metric_value
+FROM metrics
+WHERE component = 'ingestion'
   AND timestamp > NOW() - INTERVAL '24 hours'
 LIMIT 10;
 ```
@@ -582,6 +626,7 @@ LIMIT 10;
 ### Performance Issues
 
 **Optimize:**
+
 1. Add database indexes
 2. Reduce time range
 3. Aggregate data
@@ -595,18 +640,21 @@ LIMIT 10;
 ### Regular Tasks
 
 **Weekly:**
+
 - Review dashboard performance
 - Check for slow queries
 - Verify alerts are working
 - Review user access
 
 **Monthly:**
+
 - Update Grafana version
 - Review and optimize queries
 - Clean up old dashboards
 - Audit user permissions
 
 **Quarterly:**
+
 - Review dashboard effectiveness
 - Update dashboards as needed
 - Performance tuning
@@ -615,6 +663,7 @@ LIMIT 10;
 ### Updates
 
 **Docker:**
+
 ```bash
 # Pull latest image
 docker pull grafana/grafana:latest
@@ -634,6 +683,7 @@ docker run -d \
 ```
 
 **Package:**
+
 ```bash
 # Update package
 sudo apt-get update
@@ -648,11 +698,13 @@ sudo systemctl restart grafana-server
 ## Reference
 
 ### Related Documentation
+
 - [Grafana Architecture](./GRAFANA_ARCHITECTURE.md) - Dual Grafana deployment
 - [Dashboard Guide](./DASHBOARD_GUIDE.md) - Using dashboards
 - [Dashboard Customization Guide](./DASHBOARD_CUSTOMIZATION_GUIDE.md) - Customizing dashboards
 
 ### External Resources
+
 - [Grafana Official Documentation](https://grafana.com/docs/)
 - [PostgreSQL Data Source](https://grafana.com/docs/grafana/latest/datasources/postgres/)
 - [Grafana Docker Hub](https://hub.docker.com/r/grafana/grafana)
@@ -661,4 +713,6 @@ sudo systemctl restart grafana-server
 
 ## Summary
 
-Grafana provides powerful visualization capabilities for OSM Notes Monitoring. Install using Docker for easiest setup, configure PostgreSQL data source, import dashboards, and set up authentication. Regular maintenance ensures optimal performance and security.
+Grafana provides powerful visualization capabilities for OSM Notes Monitoring. Install using Docker
+for easiest setup, configure PostgreSQL data source, import dashboards, and set up authentication.
+Regular maintenance ensures optimal performance and security.

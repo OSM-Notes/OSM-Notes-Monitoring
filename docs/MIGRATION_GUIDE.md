@@ -18,7 +18,8 @@ Guide for migrating from OSM-Notes-Ingestion monitoring to OSM-Notes-Monitoring.
 
 ## Overview
 
-This guide covers migrating monitoring functionality from OSM-Notes-Ingestion to OSM-Notes-Monitoring. The migration process is designed to be:
+This guide covers migrating monitoring functionality from OSM-Notes-Ingestion to
+OSM-Notes-Monitoring. The migration process is designed to be:
 
 - **Non-disruptive**: Existing monitoring continues to work
 - **Reversible**: Can rollback if needed
@@ -43,7 +44,8 @@ This guide covers migrating monitoring functionality from OSM-Notes-Ingestion to
 
 ### Approach
 
-OSM-Notes-Monitoring calls OSM-Notes-Ingestion scripts directly. No code migration is required. The migration involves:
+OSM-Notes-Monitoring calls OSM-Notes-Ingestion scripts directly. No code migration is required. The
+migration involves:
 
 1. **Deploying OSM-Notes-Monitoring** alongside existing monitoring
 2. **Configuring OSM-Notes-Monitoring** to call OSM-Notes-Ingestion scripts
@@ -92,6 +94,7 @@ Analyze what needs to be migrated:
 ```
 
 This shows:
+
 - Scripts found in OSM-Notes-Ingestion
 - Integration status
 - Recommended changes
@@ -113,11 +116,13 @@ Create backup before migration:
 Configure OSM-Notes-Monitoring to use OSM-Notes-Ingestion scripts:
 
 1. **Update Properties** (`etc/properties.sh`):
+
    ```bash
    INGESTION_REPO_PATH="/path/to/OSM-Notes-Ingestion"
    ```
 
 2. **Verify Script Paths**:
+
    ```bash
    # Check scripts exist
    ls -la /path/to/OSM-Notes-Ingestion/bin/monitor/
@@ -131,7 +136,8 @@ Configure OSM-Notes-Monitoring to use OSM-Notes-Ingestion scripts:
 
 ### Step 4: Update References (Optional)
 
-Update script references in OSM-Notes-Ingestion (optional, see [INTEGRATION_CHANGES.md](./INTEGRATION_CHANGES.md)):
+Update script references in OSM-Notes-Ingestion (optional, see
+[INTEGRATION_CHANGES.md](./INTEGRATION_CHANGES.md)):
 
 ```bash
 ./scripts/migrate_from_ingestion.sh --update-references /path/to/OSM-Notes-Ingestion
@@ -197,11 +203,13 @@ psql -d notes_monitoring -c "SELECT * FROM alerts ORDER BY created_at DESC LIMIT
 Monitor the system closely for the first few days:
 
 1. **Check Logs Daily**:
+
    ```bash
    tail -f /var/log/osm-notes-monitoring/*.log
    ```
 
 2. **Review Metrics**:
+
    ```bash
    psql -d notes_monitoring -c "SELECT component, COUNT(*) FROM metrics GROUP BY component;"
    ```
@@ -261,7 +269,8 @@ cp etc/properties.sh.backup etc/properties.sh
 
 ## Integration Changes
 
-For recommended changes in OSM-Notes-Ingestion, see [INTEGRATION_CHANGES.md](./INTEGRATION_CHANGES.md).
+For recommended changes in OSM-Notes-Ingestion, see
+[INTEGRATION_CHANGES.md](./INTEGRATION_CHANGES.md).
 
 ### Optional Enhancements
 
@@ -281,6 +290,7 @@ These are **optional** - OSM-Notes-Monitoring works without them.
 **Error**: `Script not found: /path/to/OSM-Notes-Ingestion/bin/monitor/...`
 
 **Solution**:
+
 1. Verify path in `etc/properties.sh`
 2. Check script exists: `ls -la /path/to/OSM-Notes-Ingestion/bin/monitor/`
 3. Verify permissions: Scripts should be executable
@@ -290,6 +300,7 @@ These are **optional** - OSM-Notes-Monitoring works without them.
 **Error**: Monitoring scripts fail with errors
 
 **Solution**:
+
 1. Test scripts manually: `./path/to/OSM-Notes-Ingestion/bin/monitor/notesCheckVerifier.sh`
 2. Check dependencies: Scripts may need environment variables
 3. Review logs: Check for error messages
@@ -300,6 +311,7 @@ These are **optional** - OSM-Notes-Monitoring works without them.
 **Error**: No metrics in database
 
 **Solution**:
+
 1. Check script execution: `./bin/monitor/monitorIngestion.sh`
 2. Verify database connection: `psql -d notes_monitoring -c "SELECT 1;"`
 3. Check logs: `tail -f /var/log/osm-notes-monitoring/ingestion.log`

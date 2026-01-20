@@ -2,7 +2,9 @@
 
 **Centralized Monitoring, Alerting, and API Security for OpenStreetMap Notes**
 
-This repository provides centralized monitoring, alerting, and security for the entire OSM Notes ecosystem. It monitors all components, provides unified dashboards, and protects the API against abuse and attacks.
+This repository provides centralized monitoring, alerting, and security for the entire OSM Notes
+ecosystem. It monitors all components, provides unified dashboards, and protects the API against
+abuse and attacks.
 
 ## Overview
 
@@ -20,7 +22,8 @@ OSM-Notes-Monitoring is the operational command center for the OSM Notes ecosyst
 This system monitors the following repositories:
 
 - **OSM-Notes-Ingestion**: Data ingestion status, processing health, data quality
-  - Integrates with existing monitoring scripts: `notesCheckVerifier.sh`, `processCheckPlanetNotes.sh`, `analyzeDatabasePerformance.sh`
+  - Integrates with existing monitoring scripts: `notesCheckVerifier.sh`,
+    `processCheckPlanetNotes.sh`, `analyzeDatabasePerformance.sh`
   - See [Existing Monitoring Components](./docs/Existing_Monitoring_Components.md) for details
 - **OSM-Notes-Analytics**: DWH/ETL job status, data freshness, query performance
 - **OSM-Notes-WMS**: Service availability, response times, tile generation
@@ -41,18 +44,21 @@ This system monitors the following repositories:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/OSM-Notes/OSM-Notes-Monitoring.git
 cd OSM-Notes-Monitoring
 ```
 
 2. Configure monitoring:
+
 ```bash
 cp etc/properties.sh.example etc/properties.sh
 # Edit etc/properties.sh with your configuration
 ```
 
 3. Set up monitoring database:
+
 ```bash
 # Create monitoring database (this project's own database)
 # Development: osm_notes_monitoring
@@ -77,11 +83,16 @@ psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
 
 **Note:** This project requires:
-- **Its own database** (`osm_notes_monitoring` / `notes_monitoring`) to store metrics, alerts, and security events
-- **Access to monitored databases** (`notes` for ingestion, `notes_dwh` for analytics) to read data for monitoring
-- Configure `INGESTION_DBNAME` and `ANALYTICS_DBNAME` in `etc/properties.sh` if different from defaults
+
+- **Its own database** (`osm_notes_monitoring` / `notes_monitoring`) to store metrics, alerts, and
+  security events
+- **Access to monitored databases** (`notes` for ingestion, `notes_dwh` for analytics) to read data
+  for monitoring
+- Configure `INGESTION_DBNAME` and `ANALYTICS_DBNAME` in `etc/properties.sh` if different from
+  defaults
 
 4. Configure alerts:
+
 ```bash
 # Edit config/alerts.conf
 export ADMIN_EMAIL="admin@example.com"
@@ -91,17 +102,24 @@ export SEND_ALERT_EMAIL="true"
 ## Architecture
 
 For detailed architecture documentation, see:
+
 - [Monitoring Architecture Proposal](./docs/Monitoring_Architecture_Proposal.md)
 - [API Security Design](./docs/API_Security_Design.md)
 - [Monitoring Resumen Ejecutivo](./docs/Monitoring_Resumen_Ejecutivo.md) (Spanish)
-- [Existing Monitoring Components](./docs/Existing_Monitoring_Components.md): Integration with OSM-Notes-Ingestion monitoring scripts
+- [Existing Monitoring Components](./docs/Existing_Monitoring_Components.md): Integration with
+  OSM-Notes-Ingestion monitoring scripts
 - [Grafana Architecture](./docs/GRAFANA_ARCHITECTURE.md): Dual Grafana deployment (API + Monitoring)
-- [Query Performance Optimization](./docs/QUERY_PERFORMANCE_OPTIMIZATION.md): SQL query optimization guide
+- [Query Performance Optimization](./docs/QUERY_PERFORMANCE_OPTIMIZATION.md): SQL query optimization
+  guide
 - [Security Audit Guide](./docs/SECURITY_AUDIT_GUIDE.md): Code-level security checks
-- [Vulnerability Scanning Guide](./docs/VULNERABILITY_SCANNING_GUIDE.md): Automated vulnerability detection
-- [Penetration Testing Guide](./docs/PENETRATION_TESTING_GUIDE.md): Security penetration testing procedures
-- [Code Coverage Instrumentation](./docs/CODE_COVERAGE_INSTRUMENTATION.md): Using bashcov for real coverage measurement
-- [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md): Understanding estimated vs instrumented coverage and how to improve it
+- [Vulnerability Scanning Guide](./docs/VULNERABILITY_SCANNING_GUIDE.md): Automated vulnerability
+  detection
+- [Penetration Testing Guide](./docs/PENETRATION_TESTING_GUIDE.md): Security penetration testing
+  procedures
+- [Code Coverage Instrumentation](./docs/CODE_COVERAGE_INSTRUMENTATION.md): Using bashcov for real
+  coverage measurement
+- [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md): Understanding estimated vs
+  instrumented coverage and how to improve it
 
 ## Features
 
@@ -176,12 +194,14 @@ OSM-Notes-Monitoring/
     └── mock_commands/     # Mock commands for testing
 ```
 
-**Note:** 
+**Note:**
+
 - `config/dashboards/` contains configuration files for dashboards
 - `dashboards/` contains the actual dashboard files (Grafana JSON, HTML)
 - `etc/properties.sh` is the main system configuration file (copy from `.example`)
 - `config/monitoring.conf` contains monitoring-specific settings (copy from `.example`)
-- `config/alerts.conf` and `config/security.conf` are component-specific configurations (copy from `.example`)
+- `config/alerts.conf` and `config/security.conf` are component-specific configurations (copy from
+  `.example`)
 
 ## Usage
 
@@ -216,6 +236,7 @@ open dashboards/html/overview.html
 This project uses **two complementary methods** to measure code coverage:
 
 ### Quick Coverage Check (Estimated)
+
 ```bash
 bash scripts/generate_coverage_report.sh
 # Fast: Shows estimated coverage based on test file presence
@@ -223,6 +244,7 @@ bash scripts/generate_coverage_report.sh
 ```
 
 ### Detailed Coverage Analysis (Instrumented)
+
 ```bash
 # Run in background (takes hours)
 bash scripts/run_bashcov_background.sh start
@@ -236,6 +258,7 @@ bash scripts/run_bashcov_background.sh status
 ```
 
 ### Combined Report (Both Side by Side)
+
 ```bash
 bash scripts/generate_coverage_combined.sh
 # Shows estimated vs instrumented coverage comparison
@@ -243,9 +266,11 @@ bash scripts/generate_coverage_combined.sh
 ```
 
 **Understanding the Numbers:**
+
 - **Estimated (80%)**: "We have tests for 80% of scripts" - Fast, optimistic
 - **Instrumented (27%)**: "27% of code lines are executed during tests" - Slow, accurate
-- **Gap (53%)**: Normal for unit tests with mocks - indicates tests exist but don't execute full code paths
+- **Gap (53%)**: Normal for unit tests with mocks - indicates tests exist but don't execute full
+  code paths
 
 For detailed explanation, see: [Code Coverage Explanation](./docs/COVERAGE_EXPLANATION.md)
 
@@ -254,6 +279,7 @@ For detailed explanation, see: [Code Coverage Explanation](./docs/COVERAGE_EXPLA
 ### Quick Setup
 
 Generate configuration files:
+
 ```bash
 # Interactive mode (recommended)
 ./scripts/generate_config.sh -i
@@ -273,10 +299,14 @@ Generate configuration files:
 ### Documentation
 
 For complete configuration reference, see:
-- **[Configuration Reference](./docs/CONFIGURATION_REFERENCE.md)**: All configuration options documented
+
+- **[Configuration Reference](./docs/CONFIGURATION_REFERENCE.md)**: All configuration options
+  documented
 - **[Logging Guide](./docs/LOGGING.md)**: Logging setup, rotation, and best practices
-- **[Logging Best Practices](./docs/LOGGING_BEST_PRACTICES.md)**: Comprehensive logging guidelines and patterns
-- **[Adapting Scripts](./docs/ADAPTING_SCRIPTS.md)**: Guide for adapting existing scripts to use shared libraries
+- **[Logging Best Practices](./docs/LOGGING_BEST_PRACTICES.md)**: Comprehensive logging guidelines
+  and patterns
+- **[Adapting Scripts](./docs/ADAPTING_SCRIPTS.md)**: Guide for adapting existing scripts to use
+  shared libraries
 
 ## Documentation
 
@@ -296,25 +326,32 @@ For complete configuration reference, see:
 
 ### Component Monitoring
 
-- **[Ingestion Monitoring Guide](./docs/INGESTION_MONITORING_GUIDE.md)**: Monitor ingestion component
-- **[Analytics Monitoring Guide](./docs/ANALYTICS_MONITORING_GUIDE.md)**: Monitor analytics/DWH component
+- **[Ingestion Monitoring Guide](./docs/INGESTION_MONITORING_GUIDE.md)**: Monitor ingestion
+  component
+- **[Analytics Monitoring Guide](./docs/ANALYTICS_MONITORING_GUIDE.md)**: Monitor analytics/DWH
+  component
 - **[WMS Monitoring Guide](./docs/WMS_MONITORING_GUIDE.md)**: Monitor WMS service
-- **[Infrastructure Monitoring Guide](./docs/INFRASTRUCTURE_MONITORING_GUIDE.md)**: Monitor infrastructure
+- **[Infrastructure Monitoring Guide](./docs/INFRASTRUCTURE_MONITORING_GUIDE.md)**: Monitor
+  infrastructure
 - **[API Security Guide](./docs/API_SECURITY_GUIDE.md)**: API security features
 
 ### Architecture and Development
 
-- **[Architecture Proposal](./docs/Monitoring_Architecture_Proposal.md)**: Complete system architecture
+- **[Architecture Proposal](./docs/Monitoring_Architecture_Proposal.md)**: Complete system
+  architecture
 - **[API Security Design](./docs/API_Security_Design.md)**: Security and protection mechanisms
-- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)**: Detailed implementation plan with testing and standards
+- **[Implementation Plan](./docs/IMPLEMENTATION_PLAN.md)**: Detailed implementation plan with
+  testing and standards
 - **[Coding Standards](./docs/CODING_STANDARDS.md)**: Coding standards and best practices
 - **[Resumen Ejecutivo](./docs/Monitoring_Resumen_Ejecutivo.md)**: Executive summary (Spanish)
-- **[Existing Monitoring Components](./docs/Existing_Monitoring_Components.md)**: Integration with OSM-Notes-Ingestion monitoring scripts
+- **[Existing Monitoring Components](./docs/Existing_Monitoring_Components.md)**: Integration with
+  OSM-Notes-Ingestion monitoring scripts
 
 ### Production Deployment
 
 - **[Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)**: General production deployment guide
-- **[Pre-Deployment Checklist](./docs/PRE_DEPLOYMENT_CHECKLIST.md)**: Checklist before production deployment
+- **[Pre-Deployment Checklist](./docs/PRE_DEPLOYMENT_CHECKLIST.md)**: Checklist before production
+  deployment
 
 ## Related Repositories
 
@@ -330,7 +367,8 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](./LICENSE)
+file for details.
 
 ## Status
 
@@ -341,4 +379,3 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 **Author:** Andres Gomez (AngocA)  
 **Version:** 1.0.0  
 **Last Updated:** 2026-01-09
-

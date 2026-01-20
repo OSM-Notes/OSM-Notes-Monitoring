@@ -7,7 +7,9 @@
 
 ## Overview
 
-This runbook provides detailed information about each ETL monitoring alert type for the OSM-Notes-Analytics component, including:
+This runbook provides detailed information about each ETL monitoring alert type for the
+OSM-Notes-Analytics component, including:
+
 - What the alert means
 - What causes it
 - How to investigate
@@ -17,21 +19,25 @@ This runbook provides detailed information about each ETL monitoring alert type 
 ## Alert Severity Levels
 
 ### CRITICAL
+
 - **Response Time:** Immediate (within 15 minutes)
 - **Impact:** System is non-functional or data is at risk
 - **Action:** Escalate immediately, investigate root cause
 
 ### ERROR
+
 - **Response Time:** Within 30 minutes
 - **Impact:** Error condition detected, may affect data quality
 - **Action:** Investigate and resolve promptly
 
 ### WARNING
+
 - **Response Time:** Within 1 hour
 - **Impact:** Performance degradation or potential issues
 - **Action:** Investigate and resolve, monitor closely
 
 ### INFO
+
 - **Response Time:** Within 24 hours
 - **Impact:** Informational, no immediate action required
 - **Action:** Review and document, may indicate trends
@@ -49,10 +55,12 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_scripts_found`
 
 **What it means:**
+
 - Fewer ETL scripts than expected are found in the analytics repository
 - Expected minimum scripts based on `ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD` (default: 2)
 
 **Common Causes:**
+
 - Scripts were deleted or moved
 - Repository path is incorrect
 - File system issues
@@ -60,6 +68,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Scripts renamed or restructured
 
 **Investigation Steps:**
+
 1. Check `ANALYTICS_REPO_PATH` configuration:
    ```bash
    echo $ANALYTICS_REPO_PATH
@@ -77,6 +86,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 6. Check file system health
 
 **Resolution:**
+
 1. Restore missing scripts from backup or version control
 2. Update repository:
    ```bash
@@ -95,6 +105,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 6. Restart monitoring after fixing
 
 **Prevention:**
+
 - Use version control for all ETL scripts
 - Regular backups of repository
 - Monitor repository path configuration
@@ -112,10 +123,12 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_scripts_executable`
 
 **What it means:**
+
 - Some ETL scripts exist but are not executable
 - Scripts cannot be run due to missing execute permissions
 
 **Common Causes:**
+
 - File permissions changed accidentally
 - Scripts copied without preserving permissions
 - File system issues
@@ -123,6 +136,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Deployment process issues
 
 **Investigation Steps:**
+
 1. Check script permissions:
    ```bash
    ls -la ${ANALYTICS_REPO_PATH}/bin/*.sh
@@ -133,6 +147,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 5. Check deployment logs
 
 **Resolution:**
+
 1. Make scripts executable:
    ```bash
    chmod +x ${ANALYTICS_REPO_PATH}/bin/*.sh
@@ -149,6 +164,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 5. Restart monitoring after fixing
 
 **Prevention:**
+
 - Use deployment scripts that preserve permissions
 - Document permission requirements
 - Regular permission audits
@@ -165,10 +181,12 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_last_execution_age`
 
 **What it means:**
+
 - No ETL jobs have executed recently
 - Last execution exceeds `ANALYTICS_ETL_LAST_EXECUTION_AGE_THRESHOLD` (default: 3600s = 1 hour)
 
 **Common Causes:**
+
 - ETL jobs not scheduled or scheduled incorrectly
 - ETL jobs failing silently
 - Scheduler service down
@@ -176,6 +194,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Resource constraints preventing execution
 
 **Investigation Steps:**
+
 1. Check ETL job logs:
    ```bash
    ls -lt ${ANALYTICS_LOG_DIR}/*.log | head -5
@@ -201,6 +220,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 6. Verify ETL job configuration
 
 **Resolution:**
+
 1. Manually trigger ETL job to test:
    ```bash
    ${ANALYTICS_REPO_PATH}/bin/etl_job.sh
@@ -221,6 +241,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Prevention:**
+
 - Monitor ETL job execution regularly
 - Set up alerts for ETL job failures
 - Document ETL job schedules
@@ -240,10 +261,12 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_error_count`
 
 **What it means:**
+
 - ETL jobs are encountering errors during execution
 - Error count exceeds acceptable threshold
 
 **Common Causes:**
+
 - Data quality issues
 - Database connection problems
 - Resource constraints (memory, disk)
@@ -252,6 +275,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Network issues
 
 **Investigation Steps:**
+
 1. Check ETL error logs:
    ```bash
    grep -i error ${ANALYTICS_LOG_DIR}/*.log | tail -50
@@ -274,6 +298,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 6. Check external service status
 
 **Resolution:**
+
 1. Fix data quality issues if identified
 2. Resolve database connection problems
 3. Free up resources if constrained
@@ -283,6 +308,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 7. Add retry logic for transient failures
 
 **Prevention:**
+
 - Implement robust error handling
 - Add data validation checks
 - Monitor resource usage
@@ -301,10 +327,12 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_failure_count`
 
 **What it means:**
+
 - ETL jobs are failing completely (not just errors, but job failures)
 - Failure count exceeds acceptable threshold
 
 **Common Causes:**
+
 - Critical errors causing job termination
 - Script syntax errors
 - Missing dependencies
@@ -313,6 +341,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Database locks
 
 **Investigation Steps:**
+
 1. Check ETL failure logs:
    ```bash
    grep -i "failed\|failure\|fatal" ${ANALYTICS_LOG_DIR}/*.log | tail -50
@@ -337,6 +366,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Resolution:**
+
 1. Fix critical errors identified in logs
 2. Correct syntax errors
 3. Install missing dependencies
@@ -347,6 +377,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 8. Add monitoring for critical dependencies
 
 **Prevention:**
+
 - Comprehensive testing before deployment
 - Code review process
 - Dependency management
@@ -360,17 +391,21 @@ This runbook provides detailed information about each ETL monitoring alert type 
 
 #### Alert: Long-running ETL job detected
 
-**Alert Message:** `Long-running ETL job detected: script.sh has been running for Xs (threshold: Ys)`
+**Alert Message:**
+`Long-running ETL job detected: script.sh has been running for Xs (threshold: Ys)`
 
 **Severity:** WARNING
 
 **Alert Type:** `etl_duration`
 
 **What it means:**
-- An ETL job has been running longer than `ANALYTICS_ETL_DURATION_THRESHOLD` (default: 3600s = 1 hour)
+
+- An ETL job has been running longer than `ANALYTICS_ETL_DURATION_THRESHOLD` (default: 3600s = 1
+  hour)
 - Job may be stuck or processing large data volumes
 
 **Common Causes:**
+
 - Large data volumes to process
 - Inefficient queries or processing
 - Resource constraints slowing execution
@@ -379,6 +414,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Network latency issues
 
 **Investigation Steps:**
+
 1. Check running ETL processes:
    ```bash
    ps aux | grep -E "etl|extract|load|transform" | grep -v grep
@@ -397,8 +433,8 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 5. Check database activity:
    ```sql
-   SELECT pid, state, query, query_start 
-   FROM pg_stat_activity 
+   SELECT pid, state, query, query_start
+   FROM pg_stat_activity
    WHERE application_name LIKE '%etl%';
    ```
 6. Check for blocking locks:
@@ -407,6 +443,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Resolution:**
+
 1. If legitimate long-running job:
    - Increase threshold: `ANALYTICS_ETL_DURATION_THRESHOLD=7200`
    - Optimize job for better performance
@@ -424,6 +461,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    - Add indexes if needed
 
 **Prevention:**
+
 - Set realistic duration thresholds
 - Monitor job performance trends
 - Optimize queries regularly
@@ -442,10 +480,13 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_avg_duration`
 
 **What it means:**
-- Average ETL processing duration over recent period exceeds `ANALYTICS_ETL_AVG_DURATION_THRESHOLD` (default: 1800s = 30 minutes)
+
+- Average ETL processing duration over recent period exceeds `ANALYTICS_ETL_AVG_DURATION_THRESHOLD`
+  (default: 1800s = 30 minutes)
 - Indicates overall performance degradation
 
 **Common Causes:**
+
 - Increasing data volumes
 - System performance degradation
 - Inefficient queries becoming slower
@@ -454,9 +495,10 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Network latency
 
 **Investigation Steps:**
+
 1. Check average duration trend:
    ```sql
-   SELECT 
+   SELECT
      DATE_TRUNC('hour', timestamp) as hour,
      AVG(metric_value::numeric) as avg_duration
    FROM metrics
@@ -470,13 +512,14 @@ This runbook provides detailed information about each ETL monitoring alert type 
 3. Review system performance metrics
 4. Check database performance:
    ```sql
-   SELECT * FROM pg_stat_statements 
-   ORDER BY mean_exec_time DESC 
+   SELECT * FROM pg_stat_statements
+   ORDER BY mean_exec_time DESC
    LIMIT 10;
    ```
 5. Review resource usage trends
 
 **Resolution:**
+
 1. Optimize slow queries
 2. Add indexes if needed
 3. Scale up resources if constrained
@@ -489,6 +532,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Prevention:**
+
 - Regular performance monitoring
 - Query optimization reviews
 - Capacity planning
@@ -506,10 +550,13 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `etl_max_duration`
 
 **What it means:**
-- Maximum ETL processing duration exceeds `ANALYTICS_ETL_MAX_DURATION_THRESHOLD` (default: 7200s = 2 hours)
+
+- Maximum ETL processing duration exceeds `ANALYTICS_ETL_MAX_DURATION_THRESHOLD` (default: 7200s = 2
+  hours)
 - Indicates at least one job is taking very long
 
 **Common Causes:**
+
 - Very large data volumes
 - Complex transformations
 - Inefficient processing
@@ -517,6 +564,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Database performance issues
 
 **Investigation Steps:**
+
 1. Identify which job is taking longest:
    ```bash
    grep -i "duration" ${ANALYTICS_LOG_DIR}/*.log | sort -k2 -rn | head -10
@@ -527,6 +575,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 5. Review processing complexity
 
 **Resolution:**
+
 1. Optimize longest-running job
 2. Split large jobs into smaller batches
 3. Optimize queries and transformations
@@ -538,6 +587,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Prevention:**
+
 - Regular job performance reviews
 - Optimize before deploying
 - Monitor data volume growth
@@ -557,10 +607,12 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `data_warehouse_freshness`
 
 **What it means:**
+
 - Data warehouse data is stale
 - Time since last update exceeds `ANALYTICS_DATA_FRESHNESS_THRESHOLD` (default: 3600s = 1 hour)
 
 **Common Causes:**
+
 - ETL jobs not running
 - ETL jobs failing
 - Data source issues
@@ -568,6 +620,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - Processing delays
 
 **Investigation Steps:**
+
 1. Check last update timestamp:
    ```sql
    SELECT MAX(updated_at) as last_update,
@@ -580,6 +633,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 5. Verify database connectivity
 
 **Resolution:**
+
 1. Trigger ETL job manually if needed
 2. Fix ETL job failures
 3. Resolve data source issues
@@ -591,6 +645,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Prevention:**
+
 - Monitor ETL job execution
 - Set up alerts for ETL failures
 - Monitor data source availability
@@ -608,19 +663,22 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `data_warehouse_recent_updates`
 
 **What it means:**
+
 - No updates detected in data warehouse in the last hour
 - Indicates ETL jobs may not be processing data
 
 **Common Causes:**
+
 - ETL jobs not running
 - ETL jobs processing but not updating warehouse
 - Data source empty
 - Filtering out all data
 
 **Investigation Steps:**
+
 1. Check recent update count:
    ```sql
-   SELECT COUNT(*) 
+   SELECT COUNT(*)
    FROM <data_warehouse_table>
    WHERE updated_at > CURRENT_TIMESTAMP - INTERVAL '1 hour';
    ```
@@ -629,12 +687,14 @@ This runbook provides detailed information about each ETL monitoring alert type 
 4. Check data source
 
 **Resolution:**
+
 1. Trigger ETL job
 2. Fix ETL job issues
 3. Verify data source has data
 4. Review ETL filtering logic
 
 **Prevention:**
+
 - Monitor update frequency
 - Set up alerts for ETL execution
 - Regular data source checks
@@ -652,19 +712,22 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `data_mart_update_age`
 
 **What it means:**
+
 - A data mart has not been updated recently
 - Update age exceeds `ANALYTICS_DATA_MART_UPDATE_AGE_THRESHOLD` (default: 3600s = 1 hour)
 
 **Common Causes:**
+
 - ETL jobs not updating data mart
 - Data mart ETL job failures
 - Dependencies blocking updates
 - Resource constraints
 
 **Investigation Steps:**
+
 1. Identify stale data mart:
    ```sql
-   SELECT mart_name, 
+   SELECT mart_name,
           last_update,
           EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - last_update))::bigint as age_seconds
    FROM <data_mart_table>
@@ -675,6 +738,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 4. Check dependencies
 
 **Resolution:**
+
 1. Trigger data mart update
 2. Fix ETL job failures
 3. Resolve dependencies
@@ -682,6 +746,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 5. Adjust threshold if needed
 
 **Prevention:**
+
 - Monitor data mart update frequency
 - Set up alerts for ETL failures
 - Document dependencies
@@ -698,18 +763,21 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `data_mart_stale_count`
 
 **What it means:**
+
 - Multiple data marts are stale
 - Number exceeds acceptable threshold
 
 **Common Causes:**
+
 - Widespread ETL job failures
 - System-wide issues
 - Resource constraints affecting all marts
 
 **Investigation Steps:**
+
 1. Count stale marts:
    ```sql
-   SELECT COUNT(*) 
+   SELECT COUNT(*)
    FROM <data_mart_table>
    WHERE last_update < CURRENT_TIMESTAMP - INTERVAL '1 hour';
    ```
@@ -718,12 +786,14 @@ This runbook provides detailed information about each ETL monitoring alert type 
 4. Check for system-wide issues
 
 **Resolution:**
+
 1. Fix system-wide issues
 2. Trigger updates for all marts
 3. Resolve resource constraints
 4. Review ETL job scheduling
 
 **Prevention:**
+
 - Monitor system health
 - Set up alerts for system issues
 - Regular resource monitoring
@@ -740,28 +810,33 @@ This runbook provides detailed information about each ETL monitoring alert type 
 **Alert Type:** `data_mart_failure`
 
 **What it means:**
+
 - Data mart update jobs are failing
 - Failures detected in update process
 
 **Common Causes:**
+
 - Data quality issues
 - Database errors
 - Code bugs
 - Resource constraints
 
 **Investigation Steps:**
+
 1. Identify failing marts
 2. Review error logs
 3. Check database errors
 4. Review update job code
 
 **Resolution:**
+
 1. Fix data quality issues
 2. Resolve database errors
 3. Fix code bugs
 4. Resolve resource constraints
 
 **Prevention:**
+
 - Comprehensive testing
 - Data validation
 - Error handling
@@ -774,11 +849,13 @@ This runbook provides detailed information about each ETL monitoring alert type 
 ### Database Connection Issues
 
 **Symptoms:**
+
 - Alerts about database connection failures
 - Metrics not being collected
 - Queries timing out
 
 **Investigation:**
+
 1. Test connection:
    ```bash
    psql -h $DBHOST -p $DBPORT -U $DBUSER -d $ANALYTICS_DBNAME -c "SELECT 1;"
@@ -793,6 +870,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
    ```
 
 **Resolution:**
+
 1. Restart PostgreSQL if needed
 2. Fix network connectivity
 3. Verify credentials
@@ -803,15 +881,17 @@ This runbook provides detailed information about each ETL monitoring alert type 
 ### Performance Issues
 
 **Symptoms:**
+
 - Slow query alerts
 - High duration metrics
 - System resource alerts
 
 **Investigation:**
+
 1. Check query performance:
    ```sql
-   SELECT * FROM pg_stat_statements 
-   ORDER BY mean_exec_time DESC 
+   SELECT * FROM pg_stat_statements
+   ORDER BY mean_exec_time DESC
    LIMIT 10;
    ```
 2. Check system resources:
@@ -823,6 +903,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 3. Review slow queries
 
 **Resolution:**
+
 1. Optimize slow queries
 2. Add indexes
 3. Scale resources
@@ -833,6 +914,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 ## Alert Response Checklist
 
 ### For CRITICAL Alerts:
+
 - [ ] Acknowledge alert immediately
 - [ ] Escalate to on-call engineer
 - [ ] Check system status
@@ -843,6 +925,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - [ ] Document incident
 
 ### For ERROR Alerts:
+
 - [ ] Acknowledge alert within 30 minutes
 - [ ] Check error logs
 - [ ] Identify affected components
@@ -852,6 +935,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - [ ] Document resolution
 
 ### For WARNING Alerts:
+
 - [ ] Acknowledge alert within 1 hour
 - [ ] Review metrics and trends
 - [ ] Investigate if needed
@@ -860,6 +944,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 - [ ] Document if recurring
 
 ### For INFO Alerts:
+
 - [ ] Review within 24 hours
 - [ ] Document trends
 - [ ] Take action if needed
@@ -870,30 +955,35 @@ This runbook provides detailed information about each ETL monitoring alert type 
 ## Prevention Strategies
 
 ### 1. Proactive Monitoring
+
 - Set up dashboards for key metrics
 - Regular review of trends
 - Capacity planning
 - Performance monitoring
 
 ### 2. Regular Maintenance
+
 - Database maintenance (VACUUM, ANALYZE)
 - Log rotation
 - Old data archival
 - Index optimization
 
 ### 3. Testing
+
 - Test ETL jobs before deployment
 - Performance testing
 - Load testing
 - Failure scenario testing
 
 ### 4. Documentation
+
 - Document ETL job schedules
 - Document dependencies
 - Document thresholds
 - Document resolution procedures
 
 ### 5. Automation
+
 - Automated deployment
 - Automated testing
 - Automated monitoring
@@ -904,6 +994,7 @@ This runbook provides detailed information about each ETL monitoring alert type 
 ## Reference
 
 ### Related Documentation
+
 - **[ANALYTICS_MONITORING_GUIDE.md](./ANALYTICS_MONITORING_GUIDE.md)**: Complete monitoring guide
 - **[ANALYTICS_METRICS.md](./ANALYTICS_METRICS.md)**: Metric definitions
 - **[ANALYTICS_ALERT_THRESHOLDS.md](./ANALYTICS_ALERT_THRESHOLDS.md)**: Alert thresholds
@@ -925,18 +1016,18 @@ psql -d $ANALYTICS_DBNAME -c "SELECT 1;"
 
 # Check recent metrics
 psql -d osm_notes_monitoring -c "
-  SELECT metric_name, metric_value, timestamp 
-  FROM metrics 
-  WHERE component = 'analytics' 
-  ORDER BY timestamp DESC 
+  SELECT metric_name, metric_value, timestamp
+  FROM metrics
+  WHERE component = 'analytics'
+  ORDER BY timestamp DESC
   LIMIT 20;
 "
 
 # Check active alerts
 psql -d osm_notes_monitoring -c "
-  SELECT alert_level, alert_type, message, created_at 
-  FROM alerts 
-  WHERE component = 'ANALYTICS' 
+  SELECT alert_level, alert_type, message, created_at
+  FROM alerts
+  WHERE component = 'ANALYTICS'
     AND status = 'active'
   ORDER BY created_at DESC;
 "
@@ -946,4 +1037,3 @@ psql -d osm_notes_monitoring -c "
 
 **Last Updated**: 2025-12-27  
 **Version**: 1.0.0
-

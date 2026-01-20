@@ -22,7 +22,8 @@
 
 ## Overview
 
-The WMS Monitoring system provides comprehensive monitoring for the OSM-Notes-WMS component, tracking:
+The WMS Monitoring system provides comprehensive monitoring for the OSM-Notes-WMS component,
+tracking:
 
 - **Service Availability**: Verifies that WMS service is responding to HTTP requests
 - **Health Checks**: Monitors HTTP health endpoint status
@@ -59,6 +60,7 @@ Before setting up WMS monitoring, ensure you have:
 3. **Bash Environment**: Bash 4.0 or higher
 
 4. **curl**: Command-line tool for HTTP requests
+
    ```bash
    # Install curl if not available
    sudo apt-get install curl  # Debian/Ubuntu
@@ -277,20 +279,20 @@ sudo systemctl start wms-monitoring.timer
 ```bash
 # View all WMS metrics
 psql -d osm_notes_monitoring -c "
-  SELECT metric_name, metric_value, timestamp 
-  FROM metrics 
-  WHERE component = 'wms' 
-  ORDER BY timestamp DESC 
+  SELECT metric_name, metric_value, timestamp
+  FROM metrics
+  WHERE component = 'wms'
+  ORDER BY timestamp DESC
   LIMIT 20;
 "
 
 # View service availability trend
 psql -d osm_notes_monitoring -c "
-  SELECT 
+  SELECT
     DATE_TRUNC('hour', timestamp) as hour,
     AVG(metric_value::numeric) as availability_percent
-  FROM metrics 
-  WHERE component = 'wms' 
+  FROM metrics
+  WHERE component = 'wms'
     AND metric_name = 'service_availability'
   GROUP BY hour
   ORDER BY hour DESC
@@ -299,12 +301,12 @@ psql -d osm_notes_monitoring -c "
 
 # View response time statistics
 psql -d osm_notes_monitoring -c "
-  SELECT 
+  SELECT
     AVG(metric_value::numeric) as avg_response_time_ms,
     MIN(metric_value::numeric) as min_response_time_ms,
     MAX(metric_value::numeric) as max_response_time_ms
-  FROM metrics 
-  WHERE component = 'wms' 
+  FROM metrics
+  WHERE component = 'wms'
     AND metric_name = 'response_time_ms'
     AND timestamp > NOW() - INTERVAL '24 hours';
 "
@@ -319,7 +321,8 @@ For complete metric definitions, see **[WMS_METRICS.md](./WMS_METRICS.md)**.
 ### Alert Levels
 
 - **CRITICAL**: Immediate action required (e.g., service unavailable, health check failed)
-- **WARNING**: Warning condition detected (e.g., response time exceeded, error rate high, cache hit rate low)
+- **WARNING**: Warning condition detected (e.g., response time exceeded, error rate high, cache hit
+  rate low)
 
 ### Alert Types
 
@@ -350,24 +353,25 @@ For complete metric definitions, see **[WMS_METRICS.md](./WMS_METRICS.md)**.
 ```bash
 # View active alerts
 psql -d osm_notes_monitoring -c "
-  SELECT component, alert_level, alert_type, message, created_at 
-  FROM alerts 
-  WHERE component = 'WMS' 
+  SELECT component, alert_level, alert_type, message, created_at
+  FROM alerts
+  WHERE component = 'WMS'
     AND status = 'active'
   ORDER BY created_at DESC;
 "
 
 # View alerts by level
 psql -d osm_notes_monitoring -c "
-  SELECT alert_level, COUNT(*) 
-  FROM alerts 
-  WHERE component = 'WMS' 
+  SELECT alert_level, COUNT(*)
+  FROM alerts
+  WHERE component = 'WMS'
     AND created_at > NOW() - INTERVAL '24 hours'
   GROUP BY alert_level;
 "
 ```
 
-For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_ALERT_THRESHOLDS.md)**.
+For complete alert threshold definitions, see
+**[WMS_ALERT_THRESHOLDS.md](./WMS_ALERT_THRESHOLDS.md)**.
 
 ---
 
@@ -380,6 +384,7 @@ For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_
 **Symptoms**: Alerts about service being unavailable
 
 **Solutions**:
+
 1. Check if WMS service is running:
    ```bash
    systemctl status wms-service
@@ -403,6 +408,7 @@ For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_
 **Symptoms**: Health check alerts
 
 **Solutions**:
+
 1. Test health endpoint manually:
    ```bash
    curl http://localhost:8080/health
@@ -417,6 +423,7 @@ For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_
 **Symptoms**: Response time alerts
 
 **Solutions**:
+
 1. Check server load:
    ```bash
    top
@@ -436,6 +443,7 @@ For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_
 **Symptoms**: Error rate alerts
 
 **Solutions**:
+
 1. Review WMS error logs:
    ```bash
    tail -f /var/log/wms/error.log
@@ -450,9 +458,12 @@ For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_
 
 **Symptoms**: Cache hit rate alerts
 
-**Note**: Cache hit rate alerts are only generated when there is actual cache activity (requests with hits or misses). If you see 0% hit rate with 0 hits and 0 misses, this indicates no recent activity, which is normal during low-traffic periods and will not trigger an alert.
+**Note**: Cache hit rate alerts are only generated when there is actual cache activity (requests
+with hits or misses). If you see 0% hit rate with 0 hits and 0 misses, this indicates no recent
+activity, which is normal during low-traffic periods and will not trigger an alert.
 
 **Solutions**:
+
 1. Check cache configuration
 2. Review cache size and eviction policies
 3. Check for cache invalidation issues
@@ -538,7 +549,8 @@ For complete alert threshold definitions, see **[WMS_ALERT_THRESHOLDS.md](./WMS_
 
 - **[Monitoring_SETUP_Guide.md](./Monitoring_SETUP_Guide.md)**: Initial setup guide
 - **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)**: Database schema documentation
-- **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System architecture overview
+- **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System
+  architecture overview
 
 ### Scripts
 
@@ -576,4 +588,3 @@ If you encounter issues or have questions:
 
 **Last Updated**: 2025-12-27  
 **Version**: 1.0.0
-

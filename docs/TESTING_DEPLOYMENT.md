@@ -24,6 +24,7 @@ Run a quick validation to verify all scripts and configuration:
 ```
 
 This checks:
+
 - Prerequisites (bash, psql, curl)
 - Configuration files exist
 - Scripts syntax is valid
@@ -39,6 +40,7 @@ Run the complete test suite:
 ```
 
 This includes:
+
 - Prerequisites check
 - Configuration testing
 - Script syntax validation
@@ -67,6 +69,7 @@ To clean up after testing:
 ```
 
 Verifies:
+
 - Configuration template files exist
 - Config generation script works
 - Config validation script works
@@ -78,6 +81,7 @@ Verifies:
 ```
 
 Verifies:
+
 - All deployment scripts have valid syntax
 - Scripts are executable
 - Scripts can be found
@@ -91,6 +95,7 @@ Verifies:
 **WARNING**: This creates a test database and may require cleanup.
 
 Verifies:
+
 - Database can be created
 - Schema can be initialized
 - Migrations can be run
@@ -217,6 +222,7 @@ Test the complete deployment:
 **Error**: Cannot connect to database
 
 **Solution**:
+
 ```bash
 # Check PostgreSQL is running
 systemctl status postgresql
@@ -230,6 +236,7 @@ psql -d osm_notes_monitoring_test -c "SELECT 1;"
 **Error**: Syntax error in script
 
 **Solution**:
+
 ```bash
 # Check syntax manually
 bash -n scripts/production_setup.sh
@@ -243,6 +250,7 @@ nano scripts/production_setup.sh
 **Error**: File not found
 
 **Solution**:
+
 ```bash
 # Verify file exists
 ls -la sql/init.sql

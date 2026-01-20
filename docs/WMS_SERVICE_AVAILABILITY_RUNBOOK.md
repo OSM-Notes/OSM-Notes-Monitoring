@@ -1,6 +1,7 @@
 # WMS Service Availability Runbook
 
-> **Purpose:** Comprehensive guide for understanding and responding to WMS service availability alerts  
+> **Purpose:** Comprehensive guide for understanding and responding to WMS service availability
+> alerts  
 > **Version:** 1.0.0  
 > **Date:** 2025-12-27  
 > **Status:** Active
@@ -8,6 +9,7 @@
 ## Overview
 
 This runbook provides detailed information about each WMS monitoring alert type, including:
+
 - What the alert means
 - What causes it
 - How to investigate
@@ -17,11 +19,13 @@ This runbook provides detailed information about each WMS monitoring alert type,
 ## Alert Severity Levels
 
 ### CRITICAL
+
 - **Response Time:** Immediate (within 15 minutes)
 - **Impact:** Service is non-functional
 - **Action:** Escalate immediately, investigate root cause
 
 ### WARNING
+
 - **Response Time:** Within 1 hour
 - **Impact:** Performance degradation or potential issues
 - **Action:** Investigate and resolve, monitor closely
@@ -39,10 +43,12 @@ This runbook provides detailed information about each WMS monitoring alert type,
 **Alert Type:** `service_unavailable`
 
 **What it means:**
+
 - WMS service is not responding to HTTP requests
 - Service may be down, unreachable, or experiencing issues
 
 **Common Causes:**
+
 - Service process crashed or stopped
 - Service not started
 - Network connectivity issues
@@ -51,6 +57,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 - Port conflict
 
 **Investigation Steps:**
+
 1. Check if service is running:
    ```bash
    systemctl status wms-service
@@ -83,6 +90,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
    ```
 
 **Resolution:**
+
 1. Start service if stopped:
    ```bash
    systemctl start wms-service
@@ -98,6 +106,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 7. Scale resources if overloaded
 
 **Prevention:**
+
 - Set up service auto-restart
 - Monitor service health regularly
 - Set up high availability
@@ -117,16 +126,19 @@ This runbook provides detailed information about each WMS monitoring alert type,
 **Alert Type:** `health_check_failed`
 
 **What it means:**
+
 - Health check endpoint returned unhealthy status or error
 - Service may be partially functional but unhealthy
 
 **Common Causes:**
+
 - Service dependencies failing (database, cache, etc.)
 - Service in degraded state
 - Health endpoint misconfigured
 - Service overloaded
 
 **Investigation Steps:**
+
 1. Test health endpoint manually:
    ```bash
    curl http://localhost:8080/health
@@ -143,6 +155,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Review service logs for health-related errors
 
 **Resolution:**
+
 1. Fix dependency issues (database, cache, etc.)
 2. Restart service if needed
 3. Fix health endpoint configuration
@@ -150,6 +163,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Review and fix underlying issues
 
 **Prevention:**
+
 - Implement comprehensive health checks
 - Monitor dependencies
 - Set up dependency health checks
@@ -168,10 +182,12 @@ This runbook provides detailed information about each WMS monitoring alert type,
 **Alert Type:** `response_time_exceeded`
 
 **What it means:**
+
 - WMS response time exceeds configured threshold
 - Service may be slow or overloaded
 
 **Common Causes:**
+
 - High server load
 - Network latency
 - Slow database queries
@@ -179,6 +195,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 - Service overloaded
 
 **Investigation Steps:**
+
 1. Check server load:
    ```bash
    top
@@ -200,6 +217,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Check service logs for performance issues
 
 **Resolution:**
+
 1. Scale resources if constrained
 2. Optimize slow operations
 3. Reduce server load
@@ -208,6 +226,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 6. Consider load balancing
 
 **Prevention:**
+
 - Monitor resource usage
 - Set up auto-scaling
 - Optimize queries regularly
@@ -225,10 +244,12 @@ This runbook provides detailed information about each WMS monitoring alert type,
 **Alert Type:** `tile_generation_slow`
 
 **What it means:**
+
 - Tile generation is taking longer than expected
 - May indicate performance issues
 
 **Common Causes:**
+
 - Large data volumes
 - Complex rendering
 - Resource constraints
@@ -236,6 +257,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 - Cache issues
 
 **Investigation Steps:**
+
 1. Check tile generation logs
 2. Review data source performance
 3. Check cache effectiveness
@@ -243,6 +265,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Test tile generation manually
 
 **Resolution:**
+
 1. Optimize tile generation
 2. Improve cache strategy
 3. Scale resources
@@ -250,6 +273,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Review rendering logic
 
 **Prevention:**
+
 - Monitor tile generation performance
 - Optimize rendering
 - Effective caching
@@ -268,10 +292,12 @@ This runbook provides detailed information about each WMS monitoring alert type,
 **Alert Type:** `error_rate_exceeded`
 
 **What it means:**
+
 - Error rate exceeds configured threshold
 - Service may be experiencing issues
 
 **Common Causes:**
+
 - Service bugs
 - Data quality issues
 - Dependency failures
@@ -279,6 +305,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 - Configuration errors
 
 **Investigation Steps:**
+
 1. Review error logs:
    ```bash
    grep -i error /var/log/wms/*.log | tail -50
@@ -292,6 +319,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Check dependencies
 
 **Resolution:**
+
 1. Fix identified bugs
 2. Resolve data quality issues
 3. Fix dependency issues
@@ -300,6 +328,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 6. Rollback recent changes if needed
 
 **Prevention:**
+
 - Comprehensive testing
 - Code reviews
 - Gradual deployments
@@ -319,11 +348,15 @@ This runbook provides detailed information about each WMS monitoring alert type,
 **Alert Type:** `cache_hit_rate_low`
 
 **What it means:**
+
 - Cache hit rate is below threshold
 - Cache may not be effective
-- **Note:** This alert only triggers when there is actual cache activity (hits + misses > 0). If you see 0% with 0 hits and 0 misses, there's no recent activity, which is normal and won't trigger an alert.
+- **Note:** This alert only triggers when there is actual cache activity (hits + misses > 0). If you
+  see 0% with 0 hits and 0 misses, there's no recent activity, which is normal and won't trigger an
+  alert.
 
 **Common Causes:**
+
 - Cache size too small
 - Cache eviction too aggressive
 - Cache invalidation issues
@@ -332,6 +365,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 - GeoServer cache statistics not being collected (check `WMS_LOG_DIR` configuration)
 
 **Investigation Steps:**
+
 1. Check cache configuration
 2. Review cache size and usage
 3. Check eviction policies
@@ -339,6 +373,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Monitor cache statistics
 
 **Resolution:**
+
 1. Increase cache size if needed
 2. Adjust eviction policies
 3. Fix cache invalidation
@@ -346,6 +381,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 5. Review cache configuration
 
 **Prevention:**
+
 - Monitor cache performance
 - Regular cache tuning
 - Effective cache strategy
@@ -358,10 +394,12 @@ This runbook provides detailed information about each WMS monitoring alert type,
 ### Service Won't Start
 
 **Symptoms:**
+
 - Service fails to start
 - Start command returns error
 
 **Investigation:**
+
 1. Check service logs:
    ```bash
    journalctl -u wms-service -n 100
@@ -371,6 +409,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 4. Check file permissions
 
 **Resolution:**
+
 1. Fix configuration errors
 2. Install missing dependencies
 3. Fix file permissions
@@ -381,10 +420,12 @@ This runbook provides detailed information about each WMS monitoring alert type,
 ### High Resource Usage
 
 **Symptoms:**
+
 - High CPU or memory usage
 - Service slow or unresponsive
 
 **Investigation:**
+
 1. Check resource usage:
    ```bash
    top -p $(pgrep -f wms)
@@ -393,6 +434,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 3. Review service configuration
 
 **Resolution:**
+
 1. Optimize resource-intensive operations
 2. Scale resources
 3. Adjust service configuration
@@ -403,6 +445,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 ## Alert Response Checklist
 
 ### For CRITICAL Alerts:
+
 - [ ] Acknowledge alert immediately
 - [ ] Escalate to on-call engineer
 - [ ] Check service status
@@ -413,6 +456,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 - [ ] Document incident
 
 ### For WARNING Alerts:
+
 - [ ] Acknowledge alert within 1 hour
 - [ ] Review metrics and trends
 - [ ] Investigate if needed
@@ -425,30 +469,35 @@ This runbook provides detailed information about each WMS monitoring alert type,
 ## Prevention Strategies
 
 ### 1. Proactive Monitoring
+
 - Set up dashboards for key metrics
 - Regular review of trends
 - Capacity planning
 - Performance monitoring
 
 ### 2. High Availability
+
 - Set up service auto-restart
 - Implement load balancing
 - Set up failover mechanisms
 - Regular failover testing
 
 ### 3. Regular Maintenance
+
 - Regular service restarts
 - Log rotation
 - Configuration reviews
 - Dependency updates
 
 ### 4. Testing
+
 - Load testing
 - Failure scenario testing
 - Health check testing
 - Performance testing
 
 ### 5. Documentation
+
 - Document service dependencies
 - Document alert procedures
 - Document resolution steps
@@ -459,6 +508,7 @@ This runbook provides detailed information about each WMS monitoring alert type,
 ## Reference
 
 ### Related Documentation
+
 - **[WMS_MONITORING_GUIDE.md](./WMS_MONITORING_GUIDE.md)**: Complete monitoring guide
 - **[WMS_METRICS.md](./WMS_METRICS.md)**: Metric definitions
 - **[WMS_ALERT_THRESHOLDS.md](./WMS_ALERT_THRESHOLDS.md)**: Alert thresholds
@@ -495,4 +545,3 @@ df -h
 
 **Last Updated**: 2025-12-27  
 **Version**: 1.0.0
-

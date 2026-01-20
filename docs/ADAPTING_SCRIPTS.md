@@ -3,7 +3,8 @@
 > **Last Updated:** 2025-12-24  
 > **Version:** 1.0.0
 
-Guide for adapting existing OSM-Notes-Ingestion scripts to use OSM-Notes-Monitoring shared libraries.
+Guide for adapting existing OSM-Notes-Ingestion scripts to use OSM-Notes-Monitoring shared
+libraries.
 
 ## Table of Contents
 
@@ -18,7 +19,8 @@ Guide for adapting existing OSM-Notes-Ingestion scripts to use OSM-Notes-Monitor
 
 ## Overview
 
-OSM-Notes-Monitoring provides shared libraries that can be used by scripts in OSM-Notes-Ingestion and other repositories. These libraries provide:
+OSM-Notes-Monitoring provides shared libraries that can be used by scripts in OSM-Notes-Ingestion
+and other repositories. These libraries provide:
 
 - **Centralized logging** with consistent format
 - **Unified alerting** (email, Slack)
@@ -29,7 +31,8 @@ OSM-Notes-Monitoring provides shared libraries that can be used by scripts in OS
 
 ### Current Integration Approach
 
-Currently, OSM-Notes-Monitoring calls existing scripts from OSM-Notes-Ingestion without modification. For deeper integration, scripts can be adapted to use shared libraries.
+Currently, OSM-Notes-Monitoring calls existing scripts from OSM-Notes-Ingestion without
+modification. For deeper integration, scripts can be adapted to use shared libraries.
 
 ---
 
@@ -193,6 +196,7 @@ validate_all_configs
 **File:** `bin/lib/loggingFunctions.sh`
 
 **Functions:**
+
 - `init_logging(log_file, script_name)` - Initialize logging
 - `log_debug(message)` - Log debug message
 - `log_info(message)` - Log info message
@@ -200,6 +204,7 @@ validate_all_configs
 - `log_error(message)` - Log error message
 
 **Example:**
+
 ```bash
 source "${PROJECT_ROOT}/bin/lib/loggingFunctions.sh"
 init_logging "${LOG_DIR}/script.log" "my_script"
@@ -212,11 +217,13 @@ log_error "Script failed: ${error}"
 **File:** `bin/lib/monitoringFunctions.sh`
 
 **Functions:**
+
 - `check_database_connection()` - Check DB connectivity
 - `execute_sql_query(query)` - Execute SQL query
 - `store_metric(component, name, value, unit, metadata)` - Store metric
 
 **Example:**
+
 ```bash
 source "${PROJECT_ROOT}/bin/lib/monitoringFunctions.sh"
 if check_database_connection; then
@@ -230,9 +237,11 @@ fi
 **File:** `bin/lib/alertFunctions.sh`
 
 **Functions:**
+
 - `send_alert(level, component, message)` - Send alert
 
 **Example:**
+
 ```bash
 source "${PROJECT_ROOT}/bin/lib/alertFunctions.sh"
 send_alert "WARNING" "INGESTION" "High error rate: ${rate}%"
@@ -244,10 +253,12 @@ send_alert "ERROR" "INGESTION" "Processing failed: ${error}"
 **File:** `bin/lib/configFunctions.sh`
 
 **Functions:**
+
 - `load_all_configs()` - Load all configurations
 - `validate_all_configs()` - Validate configurations
 
 **Example:**
+
 ```bash
 source "${PROJECT_ROOT}/bin/lib/configFunctions.sh"
 load_all_configs
@@ -261,9 +272,11 @@ fi
 **File:** `bin/lib/metricsFunctions.sh`
 
 **Functions:**
+
 - `record_metric(component, name, value, metadata)` - Record metric
 
 **Example:**
+
 ```bash
 source "${PROJECT_ROOT}/bin/lib/metricsFunctions.sh"
 record_metric "INGESTION" "processing_time" "${duration}" "component=ingestion"
@@ -276,6 +289,7 @@ record_metric "INGESTION" "processing_time" "${duration}" "component=ingestion"
 ### Example 1: Simple Script Migration
 
 **Before:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -297,6 +311,7 @@ echo "INFO: Processing completed"
 ```
 
 **After:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -321,6 +336,7 @@ log_info "Processing completed"
 ### Example 2: Script with Metrics
 
 **Before:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -334,6 +350,7 @@ echo "Processed in ${duration} seconds"
 ```
 
 **After:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -356,6 +373,7 @@ record_metric "INGESTION" "processing_duration" "${duration}" "component=ingesti
 ### Example 3: Script with Database Operations
 
 **Before:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -367,6 +385,7 @@ psql -h "${DBHOST}" -U "${DBUSER}" -d "${DBNAME}" -c "SELECT COUNT(*) FROM notes
 ```
 
 **After:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -487,6 +506,7 @@ log_info "Using shared libraries"
 **Problem:** Script can't find shared libraries
 
 **Solution:**
+
 ```bash
 # Check PROJECT_ROOT path
 echo "PROJECT_ROOT: ${PROJECT_ROOT}"
@@ -500,6 +520,7 @@ ls -la "${PROJECT_ROOT}/bin/lib/loggingFunctions.sh"
 **Problem:** Configuration variables not available
 
 **Solution:**
+
 ```bash
 # Load configuration explicitly
 load_all_configs
@@ -513,6 +534,7 @@ validate_all_configs
 **Problem:** Log messages not appearing
 
 **Solution:**
+
 ```bash
 # Initialize logging first
 init_logging "${LOG_DIR}/script.log" "script_name"
@@ -527,4 +549,3 @@ ls -la "${LOG_DIR}/script.log"
 ---
 
 **Last Updated:** 2025-12-24
-

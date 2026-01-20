@@ -23,12 +23,14 @@ Both dashboard types provide visibility into the health and performance of all O
 The overview dashboard provides a high-level view of all components.
 
 **Features:**
+
 - Component health status at a glance
 - Key metrics for each component
 - Recent alerts summary
 - Auto-refresh every 5 minutes
 
 **Access:**
+
 ```bash
 # Generate metrics data
 ./bin/dashboard/updateDashboard.sh html
@@ -38,6 +40,7 @@ open dashboards/html/overview.html
 ```
 
 **Data Files Required:**
+
 - `overview_data.json` - Aggregated metrics for all components
 - `component_health.json` - Health status for each component
 - `recent_alerts.json` - Recent alerts across all components
@@ -47,12 +50,14 @@ open dashboards/html/overview.html
 Detailed view of each component's status and metrics.
 
 **Features:**
+
 - Individual component cards
 - Detailed metrics tables
 - Health status indicators
 - Last check timestamps
 
 **Access:**
+
 ```bash
 # Ensure component data files exist
 ./bin/dashboard/updateDashboard.sh html
@@ -62,7 +67,9 @@ open dashboards/html/component_status.html
 ```
 
 **Data Files Required:**
-- `{component}_data.json` - Metrics for each component (ingestion, analytics, wms, api, infrastructure, data)
+
+- `{component}_data.json` - Metrics for each component (ingestion, analytics, wms, api,
+  infrastructure, data)
 - `component_health.json` - Health status
 
 ### Health Check Dashboard (`dashboards/html/health_check.html`)
@@ -70,12 +77,14 @@ open dashboards/html/component_status.html
 Quick health check page for rapid status assessment.
 
 **Features:**
+
 - Overall system health indicator
 - Component status grid
 - Quick statistics
 - Auto-refresh every minute
 
 **Access:**
+
 ```bash
 # Update health data
 ./bin/dashboard/updateDashboard.sh html
@@ -85,6 +94,7 @@ open dashboards/html/health_check.html
 ```
 
 **Data Files Required:**
+
 - `component_health.json` - Health status for all components
 
 ---
@@ -96,6 +106,7 @@ open dashboards/html/health_check.html
 High-level view of the entire OSM Notes ecosystem.
 
 **Panels:**
+
 - Component Health Status
 - Error Rate Trends (Last 24h)
 - Active Alerts Table
@@ -103,6 +114,7 @@ High-level view of the entire OSM Notes ecosystem.
 **Data Source:** PostgreSQL (`osm_notes_monitoring` database)
 
 **Import:**
+
 1. Open Grafana
 2. Go to Dashboards → Import
 3. Upload `dashboards/grafana/overview.json`
@@ -114,6 +126,7 @@ High-level view of the entire OSM Notes ecosystem.
 #### Ingestion Dashboard (`dashboards/grafana/ingestion.json`)
 
 Monitors the ingestion component:
+
 - Script execution status
 - Error rates
 - Database query performance
@@ -121,6 +134,7 @@ Monitors the ingestion component:
 #### Analytics Dashboard (`dashboards/grafana/analytics.json`)
 
 Monitors the analytics component:
+
 - ETL job status
 - Data warehouse freshness
 - Query performance
@@ -129,6 +143,7 @@ Monitors the analytics component:
 #### WMS Dashboard (`dashboards/grafana/wms.json`)
 
 Monitors the WMS component:
+
 - Service availability
 - Response times
 - Cache hit rates
@@ -137,6 +152,7 @@ Monitors the WMS component:
 #### API/Security Dashboard (`dashboards/grafana/api.json`)
 
 Monitors the API and security:
+
 - Security events
 - Rate limiting statistics
 - DDoS protection status
@@ -145,6 +161,7 @@ Monitors the API and security:
 #### Infrastructure Dashboard (`dashboards/grafana/infrastructure.json`)
 
 Monitors infrastructure:
+
 - Server resources (CPU, memory, disk)
 - Network connectivity
 - Database health
@@ -159,6 +176,7 @@ Monitors infrastructure:
 Generates metrics data in various formats.
 
 **Usage:**
+
 ```bash
 # Generate JSON metrics for a component
 ./bin/dashboard/generateMetrics.sh ingestion json
@@ -180,6 +198,7 @@ Generates metrics data in various formats.
 ```
 
 **Output Formats:**
+
 - **JSON**: Raw metrics data as JSON array
 - **CSV**: Metrics as comma-separated values
 - **Dashboard**: Aggregated metrics optimized for dashboard display
@@ -189,6 +208,7 @@ Generates metrics data in various formats.
 Updates dashboard data files from the database.
 
 **Usage:**
+
 ```bash
 # Update HTML dashboards
 ./bin/dashboard/updateDashboard.sh html
@@ -207,6 +227,7 @@ Updates dashboard data files from the database.
 ```
 
 **Update Logic:**
+
 - Checks file modification time
 - Updates if data is older than `DASHBOARD_UPDATE_INTERVAL` (default: 5 minutes)
 - Use `--force` to update regardless of age
@@ -216,6 +237,7 @@ Updates dashboard data files from the database.
 Exports dashboard configurations and data.
 
 **Usage:**
+
 ```bash
 # Export HTML dashboards to directory
 ./bin/dashboard/exportDashboard.sh html /path/to/backup
@@ -234,6 +256,7 @@ Exports dashboard configurations and data.
 ```
 
 **Export Formats:**
+
 - **Directory**: Copy files to specified directory
 - **Tar**: Create `.tar.gz` archive
 - **Zip**: Create `.zip` archive (requires `zip` command)
@@ -243,6 +266,7 @@ Exports dashboard configurations and data.
 Imports dashboard configurations and data.
 
 **Usage:**
+
 ```bash
 # Import from directory
 ./bin/dashboard/importDashboard.sh /path/to/backup grafana
@@ -264,6 +288,7 @@ Imports dashboard configurations and data.
 ```
 
 **Import Sources:**
+
 - Directory with dashboard files
 - Tar archive (`.tar.gz`, `.tgz`)
 - Zip archive (`.zip`)
@@ -362,6 +387,7 @@ Environment="DASHBOARD_OUTPUT_DIR=/path/to/dashboards"
 ```
 
 Enable timer:
+
 ```bash
 sudo systemctl enable dashboard-update.timer
 sudo systemctl start dashboard-update.timer
@@ -374,6 +400,7 @@ sudo systemctl start dashboard-update.timer
 ### HTML Dashboards
 
 **Local Access:**
+
 ```bash
 # Start simple HTTP server
 cd dashboards/html
@@ -384,6 +411,7 @@ open http://localhost:8080/overview.html
 ```
 
 **Production Access:**
+
 - Serve via web server (nginx, Apache)
 - Configure reverse proxy if needed
 - Set up HTTPS for secure access
@@ -391,11 +419,13 @@ open http://localhost:8080/overview.html
 ### Grafana Dashboards
 
 **Access Grafana:**
+
 - URL: `http://localhost:3000` (or configured port)
 - Default credentials: `admin` / `admin`
 - Change password on first login
 
 **Import Dashboards:**
+
 1. Login to Grafana
 2. Go to Dashboards → Import
 3. Upload JSON files from `dashboards/grafana/`
@@ -411,6 +441,7 @@ open http://localhost:8080/overview.html
 **Problem:** Dashboard can't load data files.
 
 **Solutions:**
+
 1. Check data files exist: `ls -la dashboards/html/*.json`
 2. Update dashboards: `./bin/dashboard/updateDashboard.sh html`
 3. Check file permissions
@@ -421,6 +452,7 @@ open http://localhost:8080/overview.html
 **Problem:** Grafana dashboards show "No data".
 
 **Solutions:**
+
 1. Verify PostgreSQL data source is configured
 2. Check database connection: `psql -d osm_notes_monitoring -c "SELECT COUNT(*) FROM metrics;"`
 3. Verify metrics exist: `SELECT * FROM metrics LIMIT 10;`
@@ -432,6 +464,7 @@ open http://localhost:8080/overview.html
 **Problem:** `updateDashboard.sh` fails or shows errors.
 
 **Solutions:**
+
 1. Check database connection
 2. Verify `generateMetrics.sh` works: `./bin/dashboard/generateMetrics.sh ingestion json`
 3. Check log files: `tail -f logs/update_dashboard.log`
@@ -443,6 +476,7 @@ open http://localhost:8080/overview.html
 **Problem:** Dashboard shows stale data.
 
 **Solutions:**
+
 1. Force update: `./bin/dashboard/updateDashboard.sh --force all`
 2. Check monitoring scripts are running
 3. Verify metrics are being collected: `SELECT MAX(timestamp) FROM metrics;`
@@ -453,28 +487,33 @@ open http://localhost:8080/overview.html
 ## Best Practices
 
 ### 1. Regular Updates
+
 - Set up automated updates via cron or systemd
 - Update interval: 5 minutes for HTML, 30 seconds for Grafana
 - Monitor update script logs
 
 ### 2. Data Retention
+
 - Keep HTML dashboard data files for quick access
 - Archive old dashboard exports regularly
 - Clean up old metrics data per retention policy
 
 ### 3. Dashboard Maintenance
+
 - Review dashboard performance regularly
 - Optimize slow queries
 - Update dashboards as metrics evolve
 - Version control dashboard JSON files
 
 ### 4. Access Control
+
 - Restrict Grafana access appropriately
 - Use HTTPS for production dashboards
 - Implement authentication for HTML dashboards if exposed
 - Monitor dashboard access logs
 
 ### 5. Backup
+
 - Export dashboards regularly
 - Backup dashboard data files
 - Version control dashboard definitions
@@ -523,17 +562,20 @@ open dashboards/html/health_check.html
 ## Reference
 
 ### Related Documentation
+
 - [Grafana Architecture](./GRAFANA_ARCHITECTURE.md) - Dual Grafana deployment
 - [Grafana Setup Guide](./GRAFANA_SETUP_GUIDE.md) - Grafana installation and configuration
 - [Dashboard Customization Guide](./DASHBOARD_CUSTOMIZATION_GUIDE.md) - Customizing dashboards
 
 ### Scripts
+
 - `bin/dashboard/generateMetrics.sh` - Generate metrics data
 - `bin/dashboard/updateDashboard.sh` - Update dashboard data
 - `bin/dashboard/exportDashboard.sh` - Export dashboards
 - `bin/dashboard/importDashboard.sh` - Import dashboards
 
 ### Data Files
+
 - `dashboards/html/` - HTML dashboard files and data
 - `dashboards/grafana/` - Grafana dashboard JSON definitions
 
@@ -541,4 +583,6 @@ open dashboards/html/health_check.html
 
 ## Summary
 
-OSM Notes Monitoring dashboards provide comprehensive visibility into the health and performance of all components. Use HTML dashboards for quick checks and Grafana dashboards for detailed analysis. Keep dashboards updated automatically and maintain backups for disaster recovery.
+OSM Notes Monitoring dashboards provide comprehensive visibility into the health and performance of
+all components. Use HTML dashboards for quick checks and Grafana dashboards for detailed analysis.
+Keep dashboards updated automatically and maintain backups for disaster recovery.

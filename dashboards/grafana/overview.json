@@ -13,7 +13,7 @@
       "id": 1,
       "title": "Component Health Status",
       "type": "table",
-      "gridPos": {"h": 10, "w": 8, "x": 0, "y": 0},
+      "gridPos": { "h": 10, "w": 8, "x": 0, "y": 0 },
       "pluginVersion": "10.0.0",
       "targets": [
         {
@@ -43,7 +43,7 @@
         "defaults": {},
         "overrides": [
           {
-            "matcher": {"id": "byName", "options": "status"},
+            "matcher": { "id": "byName", "options": "status" },
             "properties": [
               {
                 "id": "custom.cellOptions",
@@ -57,10 +57,10 @@
                   {
                     "type": "value",
                     "options": {
-                      "healthy": {"text": "Healthy", "color": "green"},
-                      "degraded": {"text": "Degraded", "color": "yellow"},
-                      "down": {"text": "Down", "color": "red"},
-                      "unknown": {"text": "Unknown", "color": "gray"}
+                      "healthy": { "text": "Healthy", "color": "green" },
+                      "degraded": { "text": "Degraded", "color": "yellow" },
+                      "down": { "text": "Down", "color": "red" },
+                      "unknown": { "text": "Unknown", "color": "gray" }
                     }
                   }
                 ]
@@ -74,7 +74,7 @@
       "id": 2,
       "title": "Database Connection Time (Last 24h)",
       "type": "timeseries",
-      "gridPos": {"h": 10, "w": 10, "x": 8, "y": 0},
+      "gridPos": { "h": 10, "w": 10, "x": 8, "y": 0 },
       "targets": [
         {
           "datasource": {
@@ -96,18 +96,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "green"},
-              {"value": 100, "color": "yellow"},
-              {"value": 1000, "color": "red"}
+              { "value": null, "color": "green" },
+              { "value": 100, "color": "yellow" },
+              { "value": 1000, "color": "red" }
             ]
           }
         },
         "overrides": [
           {
-            "matcher": {"id": "byFrameRefID", "options": "A"},
+            "matcher": { "id": "byFrameRefID", "options": "A" },
             "properties": [
-              {"id": "displayName", "value": "Connection Time (ms)"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}
+              { "id": "displayName", "value": "Connection Time (ms)" },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }
             ]
           }
         ]
@@ -122,16 +122,13 @@
           "mode": "multi"
         }
       },
-      "yaxes": [
-        {"format": "ms", "label": "Time (ms)", "min": 0},
-        {"format": "short"}
-      ]
+      "yaxes": [{ "format": "ms", "label": "Time (ms)", "min": 0 }, { "format": "short" }]
     },
     {
       "id": 3,
       "title": "Active Alerts",
       "type": "table",
-      "gridPos": {"h": 10, "w": 18, "x": 0, "y": 10},
+      "gridPos": { "h": 10, "w": 18, "x": 0, "y": 10 },
       "targets": [
         {
           "datasource": {
@@ -159,7 +156,7 @@
         "defaults": {},
         "overrides": [
           {
-            "matcher": {"id": "byName", "options": "alert_level"},
+            "matcher": { "id": "byName", "options": "alert_level" },
             "properties": [
               {
                 "id": "custom.cellOptions",
@@ -173,9 +170,9 @@
                   {
                     "type": "value",
                     "options": {
-                      "critical": {"text": "Critical", "color": "red"},
-                      "warning": {"text": "Warning", "color": "yellow"},
-                      "info": {"text": "Info", "color": "blue"}
+                      "critical": { "text": "Critical", "color": "red" },
+                      "warning": { "text": "Warning", "color": "yellow" },
+                      "info": { "text": "Info", "color": "blue" }
                     }
                   }
                 ]

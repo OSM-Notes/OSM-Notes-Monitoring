@@ -73,17 +73,20 @@ grep CRON /var/log/syslog | tail -20
 **Solutions**:
 
 1. **Cron Service Down**:
+
    ```bash
    sudo systemctl start cron
    sudo systemctl enable cron
    ```
 
 2. **Script Permissions**:
+
    ```bash
    chmod +x bin/monitor/*.sh
    ```
 
 3. **Path Issues**:
+
    ```bash
    # Verify paths in cron jobs
    crontab -e
@@ -120,22 +123,25 @@ cat etc/properties.sh | grep DB
 **Solutions**:
 
 1. **PostgreSQL Not Running**:
+
    ```bash
    sudo systemctl start postgresql
    sudo systemctl enable postgresql
    ```
 
 2. **Wrong Credentials**:
+
    ```bash
    # Update etc/properties.sh
    nano etc/properties.sh
    ```
 
 3. **Database Doesn't Exist**:
+
    ```bash
    # Create database
    createdb notes_monitoring
-   
+
    # Initialize schema
    psql -d notes_monitoring -f sql/init.sql
    ```
@@ -167,6 +173,7 @@ bash -n config/*.conf
 **Solutions**:
 
 1. **Missing Configuration**:
+
    ```bash
    # Copy from examples
    cp etc/properties.sh.example etc/properties.sh
@@ -174,6 +181,7 @@ bash -n config/*.conf
    ```
 
 2. **Invalid Values**:
+
    ```bash
    # Review and fix configuration
    nano etc/properties.sh
@@ -212,6 +220,7 @@ psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
 **Solutions**:
 
 1. **Clean Old Metrics**:
+
    ```bash
    # Run cleanup
    psql -d notes_monitoring -c "SELECT cleanup_old_metrics();"
@@ -219,6 +228,7 @@ psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
    ```
 
 2. **Manual Cleanup**:
+
    ```bash
    # Delete old metrics (be careful!)
    psql -d notes_monitoring -c "DELETE FROM metrics WHERE timestamp < NOW() - INTERVAL '90 days';"
@@ -249,12 +259,14 @@ psql -d notes_monitoring -c "ANALYZE;"
 **Solutions**:
 
 1. **Add Indexes**:
+
    ```bash
    # Review sql/optimize_queries.sql
    psql -d notes_monitoring -f sql/optimize_queries.sql
    ```
 
 2. **Vacuum Database**:
+
    ```bash
    psql -d notes_monitoring -c "VACUUM ANALYZE;"
    ```
@@ -291,15 +303,17 @@ tail -50 /var/log/osm-notes-monitoring/ingestion.log
 **Solutions**:
 
 1. **Scripts Not Running**:
+
    ```bash
    # Check cron jobs
    crontab -l
-   
+
    # Run manually
    ./bin/monitor/monitorIngestion.sh
    ```
 
 2. **Database Write Issues**:
+
    ```bash
    # Test database write
    psql -d notes_monitoring -c "INSERT INTO metrics (component, name, value, unit) VALUES ('test', 'test', 1, 'count');"
@@ -328,12 +342,14 @@ psql -d notes_monitoring -c "SELECT * FROM metrics WHERE component = 'ingestion'
 **Solutions**:
 
 1. **Review Script Logic**:
+
    ```bash
    # Review monitoring script
    nano bin/monitor/monitorIngestion.sh
    ```
 
 2. **Check Source Data**:
+
    ```bash
    # Verify source data is correct
    # Check monitored database/API
@@ -372,6 +388,7 @@ echo "test" | mutt -s "test" admin@example.com
 **Solutions**:
 
 1. **Email Not Configured**:
+
    ```bash
    # Update config
    nano config/alerts.conf
@@ -380,6 +397,7 @@ echo "test" | mutt -s "test" admin@example.com
    ```
 
 2. **Mutt Not Installed**:
+
    ```bash
    sudo apt-get install mutt
    # Or configure sendmail/postfix
@@ -409,12 +427,14 @@ psql -d notes_monitoring -c "SELECT component, message, COUNT(*) FROM alerts WHE
 **Solutions**:
 
 1. **Temporarily Disable Alerts**:
+
    ```bash
    nano config/alerts.conf
    # Set: SEND_ALERT_EMAIL="false"
    ```
 
 2. **Adjust Thresholds**:
+
    ```bash
    # Review thresholds
    nano config/monitoring.conf
@@ -453,6 +473,7 @@ psql -d notes_monitoring -c "SELECT * FROM pg_stat_activity WHERE state = 'activ
 **Solutions**:
 
 1. **Optimize Database**:
+
    ```bash
    # Run optimizations
    psql -d notes_monitoring -f sql/optimize_queries.sql
@@ -460,6 +481,7 @@ psql -d notes_monitoring -c "SELECT * FROM pg_stat_activity WHERE state = 'activ
    ```
 
 2. **Reduce Monitoring Frequency**:
+
    ```bash
    # Update cron jobs
    crontab -e
@@ -493,12 +515,14 @@ psql -d notes_monitoring -c "SELECT COUNT(*) FROM pg_stat_activity;"
 **Solutions**:
 
 1. **Reduce Monitoring Frequency**:
+
    ```bash
    # Update cron intervals
    crontab -e
    ```
 
 2. **Optimize Scripts**:
+
    ```bash
    # Review script performance
    # Optimize database queries

@@ -13,18 +13,20 @@
       "id": 1,
       "title": "Countries Last Update Age (hours)",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_update_frequency_hours' AND metadata LIKE '%type=countries%' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_update_frequency_hours' AND metadata LIKE '%type=countries%' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "h",
@@ -32,9 +34,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 168, "color": "yellow"},
-              {"value": 336, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 168, "color": "yellow" },
+              { "value": 336, "color": "red" }
             ]
           }
         }
@@ -44,18 +46,20 @@
       "id": 2,
       "title": "Maritime Boundaries Last Update Age (hours)",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_update_frequency_hours' AND metadata LIKE '%type=maritime%' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_update_frequency_hours' AND metadata LIKE '%type=maritime%' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "h",
@@ -63,9 +67,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 168, "color": "yellow"},
-              {"value": 336, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 168, "color": "yellow" },
+              { "value": 336, "color": "red" }
             ]
           }
         }
@@ -75,18 +79,20 @@
       "id": 3,
       "title": "Notes Without Country",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_without_country_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_without_country_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -98,18 +104,20 @@
       "id": 4,
       "title": "Notes With Country",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_with_country_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_with_country_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -121,7 +129,7 @@
       "id": 5,
       "title": "Country Assignment Trend",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "targets": [
         {
           "datasource": {
@@ -157,7 +165,7 @@
       "id": 6,
       "title": "Boundary Update Frequency Trend",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "targets": [
         {
           "datasource": {
@@ -193,18 +201,20 @@
       "id": 7,
       "title": "Notes Out of Bounds",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_out_of_bounds_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_out_of_bounds_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -212,9 +222,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 1, "color": "yellow"},
-              {"value": 10, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 10, "color": "red" }
             ]
           }
         }
@@ -224,18 +234,20 @@
       "id": 8,
       "title": "Notes With Wrong Country",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_wrong_country_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_wrong_country_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -243,9 +255,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 1, "color": "yellow"},
-              {"value": 10, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 10, "color": "red" }
             ]
           }
         }
@@ -255,18 +267,20 @@
       "id": 9,
       "title": "Country Assignment Percentage",
       "type": "gauge",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT ROUND((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_with_country_count' ORDER BY timestamp DESC LIMIT 1) * 100.0 / NULLIF((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_without_country_count' ORDER BY timestamp DESC LIMIT 1) + (SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_with_country_count' ORDER BY timestamp DESC LIMIT 1), 0), 2) as value",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_with_country_count' ORDER BY timestamp DESC LIMIT 1) * 100.0 / NULLIF((SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_without_country_count' ORDER BY timestamp DESC LIMIT 1) + (SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'boundary_notes_with_country_count' ORDER BY timestamp DESC LIMIT 1), 0), 2) as value",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -275,14 +289,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "red"},
-              {"value": 90, "color": "yellow"},
-              {"value": 100, "color": "green"}
+              { "value": 0, "color": "red" },
+              { "value": 90, "color": "yellow" },
+              { "value": 100, "color": "green" }
             ]
           }
         }
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": { "from": "now-24h", "to": "now" }
 }

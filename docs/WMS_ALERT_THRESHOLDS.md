@@ -7,17 +7,20 @@
 
 ## Overview
 
-This document defines all alert thresholds for the OSM-Notes-WMS component. These thresholds are used to determine when alerts should be triggered based on metric values.
+This document defines all alert thresholds for the OSM-Notes-WMS component. These thresholds are
+used to determine when alerts should be triggered based on metric values.
 
 ## Configuration
 
-All thresholds are configurable via `config/monitoring.conf`. Default values are defined in `config/monitoring.conf.example`.
+All thresholds are configurable via `config/monitoring.conf`. Default values are defined in
+`config/monitoring.conf.example`.
 
 ## Alert Thresholds by Category
 
 ### 1. Service Availability Thresholds
 
 #### `WMS_CHECK_TIMEOUT`
+
 - **Default:** `30`
 - **Unit:** Seconds
 - **Metric:** `service_response_time_ms`
@@ -28,13 +31,14 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### Service Unavailable
+
 - **Default:** `0` (service not responding)
 - **Unit:** Binary (0 = unavailable, 1 = available)
 - **Metric:** `service_availability`
 - **Alert Condition:** `service_availability = 0`
 - **Description:** Service is not responding to HTTP requests
 - **Severity:** CRITICAL
-- **Action:** 
+- **Action:**
   - Check if WMS service is running
   - Check network connectivity
   - Check server resources (CPU, memory, disk)
@@ -44,6 +48,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 2. Health Check Thresholds
 
 #### Health Check Failed
+
 - **Default:** `0` (health check failed)
 - **Unit:** Binary (0 = unhealthy, 1 = healthy)
 - **Metric:** `health_status`
@@ -58,6 +63,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** Automatic (based on health endpoint response)
 
 #### `WMS_HEALTH_CHECK_URL`
+
 - **Default:** `http://localhost:8080/health`
 - **Unit:** URL string
 - **Metric:** N/A (configuration)
@@ -70,6 +76,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 3. Response Time Thresholds
 
 #### `WMS_RESPONSE_TIME_THRESHOLD`
+
 - **Default:** `2000`
 - **Unit:** Milliseconds
 - **Metric:** `response_time_ms`
@@ -84,6 +91,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `WMS_TILE_GENERATION_THRESHOLD`
+
 - **Default:** `5000`
 - **Unit:** Milliseconds
 - **Metric:** `tile_generation_time_ms`
@@ -100,6 +108,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 4. Error Rate Thresholds
 
 #### `WMS_ERROR_RATE_THRESHOLD`
+
 - **Default:** `5`
 - **Unit:** Percent
 - **Metric:** `error_rate_percent`
@@ -116,11 +125,14 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 5. Cache Performance Thresholds
 
 #### `WMS_CACHE_HIT_RATE_THRESHOLD`
+
 - **Default:** `80`
 - **Unit:** Percent
 - **Metric:** `cache_hit_rate_percent`
 - **Alert Condition:** `cache_hit_rate_percent < threshold AND total_requests > 0`
-- **Description:** Minimum acceptable cache hit rate percentage. **Note:** Alerts are only generated when there is actual cache activity (hits + misses > 0). No alert is generated when there's no activity, as this is normal during periods of low or no traffic.
+- **Description:** Minimum acceptable cache hit rate percentage. **Note:** Alerts are only generated
+  when there is actual cache activity (hits + misses > 0). No alert is generated when there's no
+  activity, as this is normal during periods of low or no traffic.
 - **Severity:** WARNING
 - **Action:**
   - Check cache configuration
@@ -147,6 +159,7 @@ WMS_LOG_DIR="/var/log/wms"
 ## Alert Severity Levels
 
 ### CRITICAL
+
 - **Response Time:** Immediate (within 15 minutes)
 - **Impact:** Service is non-functional
 - **Examples:**
@@ -155,6 +168,7 @@ WMS_LOG_DIR="/var/log/wms"
   - Service not responding
 
 ### WARNING
+
 - **Response Time:** Within 1 hour
 - **Impact:** Performance degradation or potential issues
 - **Examples:**
@@ -166,17 +180,20 @@ WMS_LOG_DIR="/var/log/wms"
 ## Threshold Tuning Guidelines
 
 ### 1. Baseline Establishment
+
 - Monitor metrics for 1-2 weeks to establish baseline
 - Document normal operating ranges
 - Identify peak usage patterns
 
 ### 2. Threshold Adjustment
+
 - Start with default thresholds
 - Adjust based on observed patterns
 - Consider business requirements
 - Document threshold changes and reasons
 
 ### 3. Regular Review
+
 - Review thresholds quarterly
 - Adjust based on system changes
 - Consider seasonal patterns
@@ -185,16 +202,19 @@ WMS_LOG_DIR="/var/log/wms"
 ## Threshold Recommendations by Environment
 
 ### Development/Testing
+
 - **Response Time:** 5000ms (more lenient)
 - **Error Rate:** 10% (more lenient)
 - **Cache Hit Rate:** 70% (more lenient)
 
 ### Staging
+
 - **Response Time:** 3000ms
 - **Error Rate:** 7%
 - **Cache Hit Rate:** 75%
 
 ### Production
+
 - **Response Time:** 2000ms (default)
 - **Error Rate:** 5% (default)
 - **Cache Hit Rate:** 80% (default)
@@ -203,11 +223,11 @@ WMS_LOG_DIR="/var/log/wms"
 
 - **[WMS_METRICS.md](./WMS_METRICS.md)**: Complete metric definitions
 - **[WMS_MONITORING_GUIDE.md](./WMS_MONITORING_GUIDE.md)**: Monitoring setup guide
-- **[ETL_MONITORING_RUNBOOK.md](./ETL_MONITORING_RUNBOOK.md)**: Alert response procedures (reference)
+- **[ETL_MONITORING_RUNBOOK.md](./ETL_MONITORING_RUNBOOK.md)**: Alert response procedures
+  (reference)
 - **[CONFIGURATION_REFERENCE.md](./CONFIGURATION_REFERENCE.md)**: Configuration options
 
 ---
 
 **Last Updated**: 2025-12-27  
 **Version**: 1.0.0
-

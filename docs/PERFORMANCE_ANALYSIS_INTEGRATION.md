@@ -7,7 +7,9 @@
 
 ## Overview
 
-The `analyzeDatabasePerformance.sh` script is very resource-intensive and should run **monthly** from the ingestion project's cron, not from the monitoring repository. This guide explains how to set up the integration to store performance metrics in the monitoring database for trend tracking.
+The `analyzeDatabasePerformance.sh` script is very resource-intensive and should run **monthly**
+from the ingestion project's cron, not from the monitoring repository. This guide explains how to
+set up the integration to store performance metrics in the monitoring database for trend tracking.
 
 ## Why Store Metrics in Database?
 
@@ -86,7 +88,8 @@ You have two options:
 
 #### Option A: Integrate with Existing Cron Entry (Recommended)
 
-If you already have a cron entry that runs `analyzeDatabasePerformance.sh`, integrate the metrics storage by adding `&&`:
+If you already have a cron entry that runs `analyzeDatabasePerformance.sh`, integrate the metrics
+storage by adding `&&`:
 
 ```bash
 # Edit crontab
@@ -100,7 +103,8 @@ crontab -e
         >> /path/to/logs/performance_analysis_cron.log 2>&1
 ```
 
-**Note:** The `&&` ensures that the metrics storage script only runs if `analyzeDatabasePerformance.sh` completes successfully.
+**Note:** The `&&` ensures that the metrics storage script only runs if
+`analyzeDatabasePerformance.sh` completes successfully.
 
 #### Option B: Standalone Cron Entry
 
@@ -130,11 +134,11 @@ Test the script manually before adding to cron:
 
 # Check metrics were stored
 psql -d osm_notes_monitoring -c "
-SELECT metric_name, metric_value, timestamp 
-FROM metrics 
-WHERE component = 'ingestion' 
+SELECT metric_name, metric_value, timestamp
+FROM metrics
+WHERE component = 'ingestion'
   AND metric_name LIKE 'performance_check%'
-ORDER BY timestamp DESC 
+ORDER BY timestamp DESC
 LIMIT 10;
 "
 ```
@@ -144,11 +148,13 @@ LIMIT 10;
 ### Basic Usage
 
 **Option 1: Execute script and store metrics**
+
 ```bash
 run_and_store_performance_analysis.sh --ingestion-repo /path/to/OSM-Notes-Ingestion
 ```
 
 **Option 2: Parse existing output file (for cron integration)**
+
 ```bash
 run_and_store_performance_analysis.sh --input-file /path/to/db_performance_monthly_20260101.log
 ```
@@ -156,6 +162,7 @@ run_and_store_performance_analysis.sh --input-file /path/to/db_performance_month
 ### Full Options
 
 **Execute script:**
+
 ```bash
 run_and_store_performance_analysis.sh \
     --ingestion-repo /path/to/OSM-Notes-Ingestion \
@@ -166,6 +173,7 @@ run_and_store_performance_analysis.sh \
 ```
 
 **Parse existing file:**
+
 ```bash
 run_and_store_performance_analysis.sh \
     --input-file /path/to/db_performance_monthly_20260101.log \
@@ -175,7 +183,8 @@ run_and_store_performance_analysis.sh \
 
 ### Options
 
-- `--ingestion-repo PATH`: Path to OSM-Notes-Ingestion repository (required if `--input-file` not used)
+- `--ingestion-repo PATH`: Path to OSM-Notes-Ingestion repository (required if `--input-file` not
+  used)
 - `--input-file FILE`: Parse existing output file instead of running script (for cron integration)
 - `--monitoring-db DBNAME`: Monitoring database name (default: from `etc/properties.sh`)
 - `--ingestion-db DBNAME`: Ingestion database name (default: `notes`)
@@ -202,6 +211,7 @@ The script stores the following metrics in the monitoring database:
 - `performance_check_table_checks`: Number of table-related checks
 
 All metrics include metadata:
+
 - `component=ingestion`
 - `check=analyzeDatabasePerformance`
 - `source=monthly_cron`
@@ -211,7 +221,7 @@ All metrics include metadata:
 ### Latest Performance Check Status
 
 ```sql
-SELECT 
+SELECT
     metric_name,
     metric_value,
     timestamp
@@ -226,7 +236,7 @@ LIMIT 10;
 ### Performance Trend Over Time
 
 ```sql
-SELECT 
+SELECT
     DATE_TRUNC('month', timestamp) AS month,
     AVG(CASE WHEN metric_name = 'performance_check_passes' THEN metric_value END) AS avg_passes,
     AVG(CASE WHEN metric_name = 'performance_check_failures' THEN metric_value END) AS avg_failures,
@@ -234,7 +244,7 @@ SELECT
     AVG(CASE WHEN metric_name = 'performance_check_duration' THEN metric_value END) AS avg_duration_seconds
 FROM metrics
 WHERE component = 'ingestion'
-  AND metric_name IN ('performance_check_passes', 'performance_check_failures', 
+  AND metric_name IN ('performance_check_passes', 'performance_check_failures',
                       'performance_check_warnings', 'performance_check_duration')
   AND metadata->>'source' = 'monthly_cron'
 GROUP BY DATE_TRUNC('month', timestamp)
@@ -246,7 +256,7 @@ ORDER BY month DESC;
 ```sql
 -- Compare current month with previous month
 WITH monthly_stats AS (
-    SELECT 
+    SELECT
         DATE_TRUNC('month', timestamp) AS month,
         AVG(CASE WHEN metric_name = 'performance_check_failures' THEN metric_value END) AS failures,
         AVG(CASE WHEN metric_name = 'performance_check_warnings' THEN metric_value END) AS warnings
@@ -256,7 +266,7 @@ WITH monthly_stats AS (
       AND metadata->>'source' = 'monthly_cron'
     GROUP BY DATE_TRUNC('month', timestamp)
 )
-SELECT 
+SELECT
     current.month,
     current.failures AS current_failures,
     previous.failures AS previous_failures,
@@ -265,7 +275,7 @@ SELECT
     previous.warnings AS previous_warnings,
     current.warnings - previous.warnings AS warning_delta
 FROM monthly_stats current
-LEFT JOIN monthly_stats previous 
+LEFT JOIN monthly_stats previous
     ON previous.month = current.month - INTERVAL '1 month'
 ORDER BY current.month DESC
 LIMIT 12;
@@ -298,6 +308,7 @@ Create a Grafana dashboard to visualize performance trends:
 **Error:** `Cannot connect to monitoring database`
 
 **Solution:**
+
 1. Check database credentials in `etc/properties.sh`
 2. Verify database is accessible: `psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "SELECT 1;"`
 3. Check firewall rules if database is remote
@@ -308,8 +319,10 @@ Create a Grafana dashboard to visualize performance trends:
 **Error:** `analyzeDatabasePerformance.sh not found`
 
 **Solution:**
+
 1. Verify `--ingestion-repo` path is correct
-2. Check that the ingestion repository has the script: `ls -la ${INGESTION_REPO_PATH}/bin/monitor/analyzeDatabasePerformance.sh`
+2. Check that the ingestion repository has the script:
+   `ls -la ${INGESTION_REPO_PATH}/bin/monitor/analyzeDatabasePerformance.sh`
 3. Ensure script has execute permissions
 
 ### Metrics Not Stored
@@ -317,6 +330,7 @@ Create a Grafana dashboard to visualize performance trends:
 **Symptom:** Script runs successfully but no metrics appear in database
 
 **Solution:**
+
 1. Check script output for errors: `tail -f logs/performance_analysis.log`
 2. Verify database connection is working: Test `record_metric` function
 3. Check database permissions: User must have INSERT permission on `metrics` table
@@ -327,6 +341,7 @@ Create a Grafana dashboard to visualize performance trends:
 **Error:** `Script execution timed out`
 
 **Solution:**
+
 1. Increase timeout: Set `PERFORMANCE_ANALYSIS_TIMEOUT` environment variable (default: 3600 seconds)
 2. Check if database is under heavy load
 3. Consider running during off-peak hours
@@ -342,14 +357,17 @@ Create a Grafana dashboard to visualize performance trends:
 
 ## Related Documentation
 
-- [Existing_Monitoring_Components.md](./Existing_Monitoring_Components.md): Details about `analyzeDatabasePerformance.sh`
+- [Existing_Monitoring_Components.md](./Existing_Monitoring_Components.md): Details about
+  `analyzeDatabasePerformance.sh`
 - [INGESTION_METRICS.md](./INGESTION_METRICS.md): Complete list of ingestion metrics
-- [INGESTION_ALERT_THRESHOLDS.md](./INGESTION_ALERT_THRESHOLDS.md): Alert thresholds for performance metrics
+- [INGESTION_ALERT_THRESHOLDS.md](./INGESTION_ALERT_THRESHOLDS.md): Alert thresholds for performance
+  metrics
 - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md): Database schema for metrics table
 
 ## Support
 
 For issues or questions:
+
 1. Check script logs: `logs/performance_analysis.log`
 2. Review cron logs if running from cron
 3. Test script manually with `--verbose` flag

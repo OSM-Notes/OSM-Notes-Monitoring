@@ -277,4 +277,3 @@ Una vez creado el repositorio, puedes comenzar con:
 ---
 
 **¡Listo!** El repositorio está creado y listo para comenzar el desarrollo.
-

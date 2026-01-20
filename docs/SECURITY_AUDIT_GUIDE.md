@@ -6,7 +6,9 @@
 
 ## Overview
 
-This guide provides instructions for performing security audits of the OSM-Notes-Monitoring system. Regular security audits help identify vulnerabilities, ensure compliance with security best practices, and maintain a secure monitoring infrastructure.
+This guide provides instructions for performing security audits of the OSM-Notes-Monitoring system.
+Regular security audits help identify vulnerabilities, ensure compliance with security best
+practices, and maintain a secure monitoring infrastructure.
 
 ## Table of Contents
 
@@ -28,6 +30,7 @@ The security audit script performs automated checks for common security issues:
 ```
 
 The script checks for:
+
 - File permissions (world-writable files)
 - SQL injection vulnerabilities
 - Command injection vulnerabilities
@@ -42,6 +45,7 @@ The script checks for:
 ### Output
 
 The script generates a report in `reports/security_audit_YYYYMMDD_HHMMSS.txt` with:
+
 - Passed checks (✓)
 - Warnings (⚠)
 - Critical/High issues (✗)
@@ -56,6 +60,7 @@ The script generates a report in `reports/security_audit_YYYYMMDD_HHMMSS.txt` wi
 ### 1. Code Review Checklist
 
 **Input Validation:**
+
 - [ ] All user inputs are validated
 - [ ] IP addresses are validated before use
 - [ ] File paths are sanitized
@@ -63,18 +68,21 @@ The script generates a report in `reports/security_audit_YYYYMMDD_HHMMSS.txt` wi
 - [ ] Command arguments are properly escaped
 
 **Authentication & Authorization:**
+
 - [ ] Database credentials are not hardcoded
 - [ ] Configuration files with secrets are not committed
 - [ ] File permissions restrict access to sensitive files
 - [ ] No default passwords in production
 
 **Error Handling:**
+
 - [ ] Errors don't leak sensitive information
 - [ ] Error messages are logged appropriately
 - [ ] Failed operations are handled gracefully
 - [ ] Scripts use `set -euo pipefail`
 
 **Logging:**
+
 - [ ] Passwords are never logged
 - [ ] API keys are never logged
 - [ ] Sensitive data is redacted in logs
@@ -83,6 +91,7 @@ The script generates a report in `reports/security_audit_YYYYMMDD_HHMMSS.txt` wi
 ### 2. Configuration Review
 
 **Check Configuration Files:**
+
 ```bash
 # Review security configuration
 cat config/security.conf.example
@@ -92,6 +101,7 @@ grep -r "password\|secret\|key" bin/ config/ --exclude="*.example" | grep -v "ex
 ```
 
 **Verify File Permissions:**
+
 ```bash
 # Check for world-writable files
 find bin/ -type f -perm -002
@@ -103,12 +113,14 @@ ls -la bin/**/*.sh
 ### 3. Database Security Review
 
 **Check Database Access:**
+
 - [ ] Database user has minimal required permissions
 - [ ] Passwords are stored securely (not in scripts)
 - [ ] Connection strings don't expose credentials
 - [ ] Database backups are encrypted
 
 **Review SQL Queries:**
+
 - [ ] No direct string concatenation in SQL
 - [ ] Input is validated before SQL execution
 - [ ] Prepared statements are used where possible
@@ -155,17 +167,20 @@ ls -la bin/**/*.sh
 
 **Risk:** HIGH  
 **Prevention:**
+
 - Use parameterized queries
 - Validate all input
 - Escape special characters
 - Use database functions for type conversion
 
 **Example (Bad):**
+
 ```bash
 query="SELECT * FROM users WHERE id = ${user_id}"
 ```
 
 **Example (Good):**
+
 ```bash
 query="SELECT * FROM users WHERE id = '${user_id}'::integer"
 # Or better: use parameterized queries
@@ -175,17 +190,20 @@ query="SELECT * FROM users WHERE id = '${user_id}'::integer"
 
 **Risk:** HIGH  
 **Prevention:**
+
 - Never use `eval` with user input
 - Quote all variables
 - Use `basename` or `realpath` for file paths
 - Validate command arguments
 
 **Example (Bad):**
+
 ```bash
 result=$(psql -c "${user_query}")
 ```
 
 **Example (Good):**
+
 ```bash
 # Validate query type first
 if [[ "${query_type}" == "SELECT" ]]; then
@@ -197,17 +215,20 @@ fi
 
 **Risk:** MEDIUM  
 **Prevention:**
+
 - Validate file paths
 - Use `basename` or `realpath`
 - Restrict file operations to specific directories
 - Check for `..` in paths
 
 **Example (Bad):**
+
 ```bash
 cat "${user_provided_path}"
 ```
 
 **Example (Good):**
+
 ```bash
 safe_path=$(realpath "${user_provided_path}")
 if [[ "${safe_path}" == "${allowed_dir}"* ]]; then
@@ -219,17 +240,20 @@ fi
 
 **Risk:** CRITICAL  
 **Prevention:**
+
 - Use environment variables
 - Use configuration files (not in git)
 - Use `.pgpass` for PostgreSQL
 - Never commit secrets
 
 **Example (Bad):**
+
 ```bash
 DBPASSWORD="mysecretpassword"
 ```
 
 **Example (Good):**
+
 ```bash
 DBPASSWORD="${DBPASSWORD:-}"  # From environment or .pgpass
 ```
@@ -238,6 +262,7 @@ DBPASSWORD="${DBPASSWORD:-}"  # From environment or .pgpass
 
 **Risk:** MEDIUM  
 **Prevention:**
+
 - Don't log passwords or secrets
 - Sanitize error messages
 - Don't expose internal paths
@@ -248,6 +273,7 @@ DBPASSWORD="${DBPASSWORD:-}"  # From environment or .pgpass
 ### Critical Issues
 
 **Priority:** Fix immediately
+
 - Hardcoded credentials
 - SQL injection vulnerabilities
 - Command injection vulnerabilities
@@ -256,6 +282,7 @@ DBPASSWORD="${DBPASSWORD:-}"  # From environment or .pgpass
 ### High Priority Issues
 
 **Priority:** Fix within 1 week
+
 - Missing input validation
 - Path traversal vulnerabilities
 - Sensitive data in logs
@@ -264,6 +291,7 @@ DBPASSWORD="${DBPASSWORD:-}"  # From environment or .pgpass
 ### Medium Priority Issues
 
 **Priority:** Fix within 1 month
+
 - Missing error handling
 - Incomplete input validation
 - Configuration issues
@@ -272,6 +300,7 @@ DBPASSWORD="${DBPASSWORD:-}"  # From environment or .pgpass
 ### Low Priority Issues
 
 **Priority:** Fix in next release
+
 - Code quality improvements
 - Documentation updates
 - Best practice recommendations
@@ -343,6 +372,7 @@ If you discover a security vulnerability:
 ### Audit Report Format
 
 Security audit reports should include:
+
 - Date and time of audit
 - Scope of audit
 - Issues found (with severity)
@@ -359,6 +389,7 @@ Security audit reports should include:
 ## Support
 
 For security questions or concerns:
+
 1. Review this guide
 2. Check security best practices documentation
 3. Run automated security audit

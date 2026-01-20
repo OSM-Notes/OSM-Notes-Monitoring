@@ -19,7 +19,8 @@
 
 ## Overview
 
-Rate limiting protects the API from abuse by limiting the number of requests that can be made within a specific time window. The OSM-Notes-Monitoring rate limiting system supports:
+Rate limiting protects the API from abuse by limiting the number of requests that can be made within
+a specific time window. The OSM-Notes-Monitoring rate limiting system supports:
 
 - **Per-IP Rate Limiting**: Limit requests per IP address
 - **Per-API-Key Rate Limiting**: Limit requests per API key (for authenticated users)
@@ -43,7 +44,7 @@ Rate limiting protects the API from abuse by limiting the number of requests tha
 
 1. **Request Arrives**: API receives a request from an IP address
 2. **Check Rate Limit**: System checks if request should be allowed
-3. **Decision**: 
+3. **Decision**:
    - **Allowed**: Request proceeds, event recorded
    - **Denied**: Request rejected, violation recorded
 4. **Record Event**: All requests (allowed or denied) are recorded for tracking
@@ -55,6 +56,7 @@ Rate limiting protects the API from abuse by limiting the number of requests tha
 Limits requests based on the client's IP address. This is the most common form of rate limiting.
 
 **Example:**
+
 - Limit: 60 requests per minute per IP
 - IP `192.168.1.100` makes 70 requests in 1 minute
 - First 60 requests: **Allowed**
@@ -62,9 +64,11 @@ Limits requests based on the client's IP address. This is the most common form o
 
 #### Per-API-Key Rate Limiting
 
-Limits requests based on the API key used for authentication. Provides higher limits for authenticated users.
+Limits requests based on the API key used for authentication. Provides higher limits for
+authenticated users.
 
 **Example:**
+
 - Limit: 100 requests per minute per API key
 - API key `abc123` makes 120 requests in 1 minute
 - First 100 requests: **Allowed**
@@ -75,6 +79,7 @@ Limits requests based on the API key used for authentication. Provides higher li
 Limits requests to specific API endpoints. Useful for protecting expensive endpoints.
 
 **Example:**
+
 - Limit: 30 requests per minute for `/api/search`
 - IP `192.168.1.100` makes 40 requests to `/api/search` in 1 minute
 - First 30 requests: **Allowed**
@@ -147,26 +152,31 @@ RATE_LIMIT_PER_API_KEY_PER_DAY=100000
 ### Configuration Options
 
 #### `RATE_LIMIT_PER_IP_PER_MINUTE`
+
 - **Default:** `60`
 - **Description:** Maximum requests per IP per minute
 - **Recommendation:** Start with 60, adjust based on usage
 
 #### `RATE_LIMIT_PER_IP_PER_HOUR`
+
 - **Default:** `1000`
 - **Description:** Maximum requests per IP per hour
 - **Recommendation:** Set to ~16x per-minute limit
 
 #### `RATE_LIMIT_PER_IP_PER_DAY`
+
 - **Default:** `10000`
 - **Description:** Maximum requests per IP per day
 - **Recommendation:** Set to ~10x per-hour limit
 
 #### `RATE_LIMIT_BURST_SIZE`
+
 - **Default:** `10`
 - **Description:** Maximum burst requests allowed
 - **Recommendation:** Set to ~15-20% of per-minute limit
 
 #### `RATE_LIMIT_PER_API_KEY_PER_MINUTE`
+
 - **Default:** `100`
 - **Description:** Maximum requests per API key per minute
 - **Recommendation:** Set higher than per-IP limit (authenticated users)
@@ -236,10 +246,10 @@ API_KEY="abc123"
 if ./bin/security/rateLimiter.sh check "${IP_ADDRESS}" "${ENDPOINT}" "${API_KEY}"; then
     # Process request
     process_api_request "${ENDPOINT}"
-    
+
     # Record successful request
     ./bin/security/rateLimiter.sh record "${IP_ADDRESS}" "${ENDPOINT}" "${API_KEY}"
-    
+
     echo "Request processed successfully"
 else
     # Rate limit exceeded
@@ -264,7 +274,7 @@ The sliding window algorithm works by:
 **SQL Query Example:**
 
 ```sql
-SELECT COUNT(*) 
+SELECT COUNT(*)
 FROM security_events
 WHERE event_type = 'rate_limit'
   AND ip_address = '192.168.1.100'::inet
@@ -307,6 +317,7 @@ The system determines which identifier to use based on:
 3. **IP Address**: Use IP address as fallback
 
 **Priority:**
+
 1. API key (highest priority)
 2. Endpoint
 3. IP address (lowest priority)
@@ -352,6 +363,7 @@ The system determines which identifier to use based on:
 **Symptoms:** Legitimate users report being rate limited
 
 **Solutions:**
+
 1. Check if IP is whitelisted: `./bin/security/ipBlocking.sh status <IP>`
 2. Review rate limit thresholds
 3. Consider increasing limits for authenticated users
@@ -362,6 +374,7 @@ The system determines which identifier to use based on:
 **Symptoms:** Rate limits not being enforced
 
 **Solutions:**
+
 1. Verify configuration is loaded
 2. Check database connection
 3. Verify `record_request()` is being called
@@ -372,6 +385,7 @@ The system determines which identifier to use based on:
 **Symptoms:** Rate limiting causing high database load
 
 **Solutions:**
+
 1. Add indexes to `security_events` table
 2. Optimize queries (use EXPLAIN ANALYZE)
 3. Consider caching rate limit results
@@ -382,6 +396,7 @@ The system determines which identifier to use based on:
 **Symptoms:** Burst handling not working as expected
 
 **Solutions:**
+
 1. Review burst size configuration
 2. Check burst window implementation
 3. Verify burst logic in `check_rate_limit_sliding_window()`
@@ -396,4 +411,3 @@ The system determines which identifier to use based on:
 - **Alert Thresholds**: `docs/API_SECURITY_ALERT_THRESHOLDS.md` - Rate limit thresholds
 - **Script**: `bin/security/rateLimiter.sh` - Rate limiting implementation
 - **Security Functions**: `bin/lib/securityFunctions.sh` - Security utilities
-

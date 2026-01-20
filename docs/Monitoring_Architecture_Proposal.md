@@ -7,7 +7,8 @@
 
 ## Executive Summary
 
-This document proposes the creation of **OSM-Notes-Monitoring**, an 8th repository in the OSM Notes ecosystem to provide centralized monitoring, alerting, and security for all components:
+This document proposes the creation of **OSM-Notes-Monitoring**, an 8th repository in the OSM Notes
+ecosystem to provide centralized monitoring, alerting, and security for all components:
 
 - **OSM-Notes-Ingestion** (data ingestion)
 - **OSM-Notes-Analytics** (DWH/ETL)
@@ -82,6 +83,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 ### 1. Ingestion Monitoring (OSM-Notes-Ingestion)
 
 **What to Monitor:**
+
 - Script execution status (processAPINotes, processPlanetNotes)
 - Processing latency (time to process updates)
 - Data quality (integrity checks, validation results)
@@ -92,6 +94,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Planet file processing status
 
 **Metrics:**
+
 - Last successful execution timestamp
 - Processing duration
 - Records processed per cycle
@@ -100,6 +103,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Database connection health
 
 **Alerts:**
+
 - Script execution failures
 - High error rates
 - Data quality issues (>5% gaps)
@@ -110,6 +114,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 ### 2. Analytics/DWH Monitoring (OSM-Notes-Analytics)
 
 **What to Monitor:**
+
 - ETL job execution status
 - Data warehouse freshness
 - ETL processing duration
@@ -119,6 +124,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Data quality in DWH
 
 **Metrics:**
+
 - Last ETL execution timestamp
 - ETL processing duration
 - Records processed
@@ -127,6 +133,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Storage usage
 
 **Alerts:**
+
 - ETL job failures
 - Stale data in DWH
 - Performance degradation
@@ -135,6 +142,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 ### 3. Viewer/WMS Monitoring (OSM-Notes-WMS)
 
 **What to Monitor:**
+
 - WMS service availability
 - Request rates
 - Response times
@@ -144,6 +152,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Geographic coverage
 
 **Metrics:**
+
 - Service uptime
 - Requests per minute
 - Average response time
@@ -152,6 +161,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Active connections
 
 **Alerts:**
+
 - Service downtime
 - High error rates
 - Slow response times
@@ -161,6 +171,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 ### 4. API Monitoring & Security (OSM-Notes-API)
 
 **What to Monitor:**
+
 - API availability and uptime
 - Request rates (per endpoint, per IP)
 - Response times
@@ -171,6 +182,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Abuse patterns
 
 **Security Monitoring:**
+
 - Suspicious IP addresses
 - Unusual request patterns
 - Authentication failures
@@ -179,6 +191,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Bot detection
 
 **Metrics:**
+
 - API uptime percentage
 - Requests per second/minute
 - Average response time
@@ -188,6 +201,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Authentication success rate
 
 **Alerts:**
+
 - API downtime
 - DDoS attack detected
 - High error rates
@@ -196,6 +210,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Authentication failures spike
 
 **Protection Mechanisms:**
+
 - Rate limiting (per IP, per API key)
 - IP whitelist/blacklist
 - Request throttling
@@ -207,6 +222,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 ### 5. Data Freshness Monitoring (OSM-Notes-Data)
 
 **What to Monitor:**
+
 - Backup file freshness
 - Data update frequency
 - Repository sync status
@@ -214,6 +230,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Storage availability
 
 **Metrics:**
+
 - Last backup timestamp
 - Time since last update
 - File size changes
@@ -221,6 +238,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - Checksum validation
 
 **Alerts:**
+
 - Stale backup data
 - Missing backups
 - Repository sync failures
@@ -229,6 +247,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 ### 6. Infrastructure Monitoring
 
 **What to Monitor:**
+
 - Server resources (CPU, memory, disk)
 - Network connectivity
 - Database server health
@@ -236,6 +255,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - System logs
 
 **Metrics:**
+
 - CPU usage
 - Memory usage
 - Disk I/O
@@ -244,6 +264,7 @@ This document proposes the creation of **OSM-Notes-Monitoring**, an 8th reposito
 - System load
 
 **Alerts:**
+
 - High resource usage
 - Disk space warnings
 - Network connectivity issues
@@ -349,6 +370,7 @@ OSM-Notes-Monitoring/
 ### 1. Data Collection
 
 **Methods:**
+
 - **Script Execution Monitoring**: Check execution logs, lock files, status files
 - **Database Queries**: Query metrics from database tables
 - **HTTP Health Checks**: Check API/WMS endpoints
@@ -356,6 +378,7 @@ OSM-Notes-Monitoring/
 - **Log Analysis**: Parse logs for errors and patterns
 
 **Frequency:**
+
 - **Real-time**: API monitoring (every minute)
 - **Near real-time**: Ingestion monitoring (every 5 minutes)
 - **Periodic**: Analytics, WMS, Data freshness (every 15-60 minutes)
@@ -364,6 +387,7 @@ OSM-Notes-Monitoring/
 ### 2. Metrics Storage
 
 **Options:**
+
 - **PostgreSQL**: Store metrics in dedicated monitoring database
 - **Time-series DB**: Use InfluxDB or TimescaleDB for time-series data
 - **Files**: JSON/CSV files for simple metrics
@@ -374,6 +398,7 @@ OSM-Notes-Monitoring/
 ### 3. Dashboard
 
 **Options:**
+
 - **Grafana**: Professional dashboards with time-series visualization
 - **Custom Web Interface**: Simple HTML/JavaScript dashboard
 - **CLI Tools**: Command-line dashboards for quick checks
@@ -383,12 +408,14 @@ OSM-Notes-Monitoring/
 ### 4. Alerting
 
 **Channels:**
+
 - **Email**: Primary alert channel (using mutt, as in current system)
 - **Slack**: Team notifications
 - **PagerDuty**: Critical alerts escalation
 - **SMS**: Emergency alerts (optional)
 
 **Alert Levels:**
+
 - **Critical**: System down, data loss, security breach
 - **Warning**: Performance degradation, high error rates
 - **Info**: Status updates, scheduled maintenance
@@ -398,12 +425,14 @@ OSM-Notes-Monitoring/
 ### Rate Limiting
 
 **Implementation:**
+
 - Per-IP rate limiting
 - Per-API-key rate limiting
 - Per-endpoint rate limiting
 - Sliding window algorithm
 
 **Configuration:**
+
 ```bash
 # Rate limits
 MAX_REQUESTS_PER_MINUTE=60
@@ -415,6 +444,7 @@ BURST_SIZE=10
 ### DDoS Protection
 
 **Mechanisms:**
+
 - Connection rate limiting
 - IP reputation checking
 - Geographic filtering (optional)
@@ -424,6 +454,7 @@ BURST_SIZE=10
 ### Abuse Detection
 
 **Patterns to Detect:**
+
 - Unusual request volumes from single IP
 - Rapid sequential requests
 - Unusual geographic patterns
@@ -432,6 +463,7 @@ BURST_SIZE=10
 - Authentication brute force attempts
 
 **Response:**
+
 - Automatic temporary IP blocking (15 minutes)
 - Escalation to permanent block list
 - Alert to administrator
@@ -440,15 +472,18 @@ BURST_SIZE=10
 ### IP Management
 
 **Whitelist:**
+
 - Known good IPs (your servers, trusted services)
 - Bypass rate limiting for whitelisted IPs
 
 **Blacklist:**
+
 - Known bad IPs
 - Automatically blocked IPs
 - Manual blocks
 
 **Management:**
+
 - Scripts to add/remove IPs
 - Automatic expiration of temporary blocks
 - Review and approval process for permanent blocks
@@ -588,14 +623,15 @@ Creating **OSM-Notes-Monitoring** as a separate repository provides:
 - **Scalable architecture** for future growth
 - **Maintainable codebase** with clear separation of concerns
 
-This repository will become the **operational command center** for the entire OSM Notes ecosystem, ensuring reliability, security, and performance across all components.
+This repository will become the **operational command center** for the entire OSM Notes ecosystem,
+ensuring reliability, security, and performance across all components.
 
 ---
 
 **Next Steps:**
+
 1. Review and approve this architecture
 2. Create the repository
 3. Begin Phase 1 implementation
 4. Migrate existing monitoring components
 5. Expand to multi-repository monitoring
-

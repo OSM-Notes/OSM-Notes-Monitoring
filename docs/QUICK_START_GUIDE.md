@@ -7,7 +7,8 @@
 
 ## Overview
 
-This guide will help you get OSM Notes Monitoring running in 15 minutes. For detailed setup, see the [Setup Guide](./Monitoring_SETUP_Guide.md).
+This guide will help you get OSM Notes Monitoring running in 15 minutes. For detailed setup, see the
+[Setup Guide](./Monitoring_SETUP_Guide.md).
 
 ---
 
@@ -37,6 +38,7 @@ nano etc/properties.sh
 ```
 
 **Minimum Configuration:**
+
 ```bash
 # Monitoring Database (this project's own database)
 # Development: osm_notes_monitoring
@@ -96,6 +98,7 @@ nano config/alerts.conf
 ```
 
 **Minimum Configuration:**
+
 ```bash
 # Email (optional - can be configured later)
 export ADMIN_EMAIL="your-email@example.com"
@@ -286,6 +289,7 @@ chmod 755 logs
 ### "Command not found" Errors
 
 **Solution:** Ensure scripts are executable:
+
 ```bash
 chmod +x bin/**/*.sh
 ```
@@ -293,6 +297,7 @@ chmod +x bin/**/*.sh
 ### "Permission denied" for Log Directory
 
 **Solution:** Create log directory with proper permissions:
+
 ```bash
 mkdir -p "${LOG_DIR}"
 chmod 755 "${LOG_DIR}"
@@ -301,6 +306,7 @@ chmod 755 "${LOG_DIR}"
 ### PostgreSQL Authentication Errors
 
 **Solution:** Use peer authentication or configure `.pgpass`:
+
 ```bash
 # For peer authentication (default on many systems)
 export DBUSER="${USER}"

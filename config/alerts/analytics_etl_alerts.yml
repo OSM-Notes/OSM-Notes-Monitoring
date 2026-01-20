@@ -20,7 +20,9 @@ groups:
           alert_type: etl_status
         annotations:
           summary: "ETL process is not running"
-          description: "The ETL process has been stopped for more than 5 minutes. Component: {{ $labels.component }}"
+          description:
+            "The ETL process has been stopped for more than 5 minutes. Component: {{
+            $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Execution Failed
@@ -33,7 +35,9 @@ groups:
           alert_type: etl_execution
         annotations:
           summary: "ETL execution failed"
-          description: "ETL execution has failed. Failed executions: {{ $value }}. Component: {{ $labels.component }}"
+          description:
+            "ETL execution has failed. Failed executions: {{ $value }}. Component: {{
+            $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Success Rate Low
@@ -46,7 +50,9 @@ groups:
           alert_type: etl_performance
         annotations:
           summary: "ETL success rate is below threshold"
-          description: "ETL success rate is {{ $value }}%, which is below the 90% threshold. Component: {{ $labels.component }}"
+          description:
+            "ETL success rate is {{ $value }}%, which is below the 90% threshold. Component: {{
+            $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Execution Duration High
@@ -59,7 +65,9 @@ groups:
           alert_type: etl_performance
         annotations:
           summary: "ETL execution duration is high"
-          description: "ETL execution took {{ $value }} seconds, which exceeds the 1 hour threshold. Component: {{ $labels.component }}"
+          description:
+            "ETL execution took {{ $value }} seconds, which exceeds the 1 hour threshold. Component:
+            {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Execution Gap Detected
@@ -72,7 +80,9 @@ groups:
           alert_type: etl_schedule
         annotations:
           summary: "ETL execution gap detected"
-          description: "ETL has not executed successfully for {{ $value }} seconds ({{ $value | humanizeDuration }}). Component: {{ $labels.component }}"
+          description:
+            "ETL has not executed successfully for {{ $value }} seconds ({{ $value |
+            humanizeDuration }}). Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Validation Failed
@@ -85,7 +95,8 @@ groups:
           alert_type: data_quality
         annotations:
           summary: "ETL validation failed"
-          description: "ETL validation {{ $labels.validation }} has failed. Component: {{ $labels.component }}"
+          description:
+            "ETL validation {{ $labels.validation }} has failed. Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Validation Issues Detected
@@ -98,7 +109,9 @@ groups:
           alert_type: data_quality
         annotations:
           summary: "ETL validation issues detected"
-          description: "ETL validation {{ $labels.validation }} has {{ $value }} issues. Component: {{ $labels.component }}"
+          description:
+            "ETL validation {{ $labels.validation }} has {{ $value }} issues. Component: {{
+            $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Concurrent Executions Detected
@@ -111,7 +124,9 @@ groups:
           alert_type: etl_status
         annotations:
           summary: "ETL concurrent executions detected"
-          description: "Multiple ETL instances are running concurrently. Lock files count: {{ $value }}. Component: {{ $labels.component }}"
+          description:
+            "Multiple ETL instances are running concurrently. Lock files count: {{ $value }}.
+            Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Error Count High
@@ -124,7 +139,9 @@ groups:
           alert_type: etl_errors
         annotations:
           summary: "ETL error rate is high"
-          description: "ETL is generating errors at a rate of {{ $value }} errors/minute. Component: {{ $labels.component }}"
+          description:
+            "ETL is generating errors at a rate of {{ $value }} errors/minute. Component: {{
+            $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # Database Inaccessible
@@ -137,7 +154,8 @@ groups:
           alert_type: database
         annotations:
           summary: "Analytics database is inaccessible"
-          description: "Cannot connect to the analytics database. Component: {{ $labels.component }}"
+          description:
+            "Cannot connect to the analytics database. Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
 
       # Disk Usage High (Warning)
@@ -150,7 +168,9 @@ groups:
           alert_type: infrastructure
         annotations:
           summary: "Analytics disk usage is high (warning)"
-          description: "Disk usage is {{ $value }}%, which exceeds the 85% warning threshold. Component: {{ $labels.component }}"
+          description:
+            "Disk usage is {{ $value }}%, which exceeds the 85% warning threshold. Component: {{
+            $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/CAPACITY_PLANNING_GUIDE.md"
 
       # Disk Usage Critical
@@ -163,7 +183,9 @@ groups:
           alert_type: infrastructure
         annotations:
           summary: "Analytics disk usage is critical"
-          description: "Disk usage is {{ $value }}%, which exceeds the 90% critical threshold. Immediate action required. Component: {{ $labels.component }}"
+          description:
+            "Disk usage is {{ $value }}%, which exceeds the 90% critical threshold. Immediate action
+            required. Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/CAPACITY_PLANNING_GUIDE.md"
 
       # ETL Stage Duration High
@@ -176,7 +198,9 @@ groups:
           alert_type: etl_performance
         annotations:
           summary: "ETL stage duration is high"
-          description: "ETL stage '{{ $labels.stage }}' is taking {{ $value }} seconds on average, which exceeds the 30 minute threshold. Component: {{ $labels.component }}"
+          description:
+            "ETL stage '{{ $labels.stage }}' is taking {{ $value }} seconds on average, which
+            exceeds the 30 minute threshold. Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
 
       # ETL Facts Processing Rate Low
@@ -189,9 +213,10 @@ groups:
           alert_type: etl_performance
         annotations:
           summary: "ETL facts processing rate is low"
-          description: "ETL is processing facts at {{ $value }} facts/second, which is below the expected rate. Component: {{ $labels.component }}"
+          description:
+            "ETL is processing facts at {{ $value }} facts/second, which is below the expected rate.
+            Component: {{ $labels.component }}"
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ETL_MONITORING_RUNBOOK.md"
-
 # Note: These alert rules use Prometheus query syntax
 # For use with the monitoring system's alert functions, adapt the expressions
 # to match the metric names and formats used by record_metric() calls

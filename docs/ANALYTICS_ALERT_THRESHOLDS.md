@@ -7,17 +7,20 @@
 
 ## Overview
 
-This document defines all alert thresholds for the OSM-Notes-Analytics component. These thresholds are used to determine when alerts should be triggered based on metric values.
+This document defines all alert thresholds for the OSM-Notes-Analytics component. These thresholds
+are used to determine when alerts should be triggered based on metric values.
 
 ## Configuration
 
-All thresholds are configurable via `config/monitoring.conf`. Default values are defined in `config/monitoring.conf.example`.
+All thresholds are configurable via `config/monitoring.conf`. Default values are defined in
+`config/monitoring.conf.example`.
 
 ## Alert Thresholds by Category
 
 ### 1. ETL Job Execution Thresholds
 
 #### `ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD`
+
 - **Default:** `2`
 - **Unit:** Count
 - **Metric:** `etl_scripts_found`
@@ -28,6 +31,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_ETL_SCRIPTS_EXECUTABLE_THRESHOLD`
+
 - **Default:** Same as `ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD`
 - **Unit:** Count
 - **Metric:** `etl_scripts_executable`
@@ -38,6 +42,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** Derived from `ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD`
 
 #### `ANALYTICS_ETL_SCRIPTS_RUNNING_THRESHOLD`
+
 - **Default:** Same as `ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD`
 - **Unit:** Count
 - **Metric:** `etl_scripts_running`
@@ -48,6 +53,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** Derived from `ANALYTICS_ETL_SCRIPTS_FOUND_THRESHOLD`
 
 #### `ANALYTICS_ETL_LAST_EXECUTION_AGE_THRESHOLD`
+
 - **Default:** `3600` (1 hour)
 - **Unit:** Seconds
 - **Metric:** `last_etl_execution_age_seconds`
@@ -58,6 +64,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_ETL_ERROR_COUNT_THRESHOLD`
+
 - **Default:** `0` (any error triggers alert)
 - **Unit:** Count (24 hours)
 - **Metric:** `etl_error_count`
@@ -68,6 +75,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** Hardcoded (alert on any error)
 
 #### `ANALYTICS_ETL_FAILURE_COUNT_THRESHOLD`
+
 - **Default:** `0` (any failure triggers alert)
 - **Unit:** Count (24 hours)
 - **Metric:** `etl_failure_count`
@@ -80,6 +88,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 2. ETL Processing Duration Thresholds
 
 #### `ANALYTICS_ETL_DURATION_THRESHOLD`
+
 - **Default:** `3600` (1 hour)
 - **Unit:** Seconds
 - **Metric:** `etl_running_jobs_duration_seconds` (for running jobs)
@@ -90,6 +99,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_ETL_AVG_DURATION_THRESHOLD`
+
 - **Default:** `1800` (30 minutes)
 - **Unit:** Seconds
 - **Metric:** `etl_processing_duration_avg_seconds`
@@ -100,6 +110,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_ETL_MAX_DURATION_THRESHOLD`
+
 - **Default:** `7200` (2 hours)
 - **Unit:** Seconds
 - **Metric:** `etl_processing_duration_max_seconds`
@@ -110,6 +121,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_ETL_LONG_RUNNING_JOBS_THRESHOLD`
+
 - **Default:** Derived from `ANALYTICS_ETL_AVG_DURATION_THRESHOLD` (1.5x average)
 - **Unit:** Seconds
 - **Metric:** `etl_long_running_jobs_count`
@@ -122,6 +134,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 3. Data Warehouse Freshness Thresholds
 
 #### `ANALYTICS_DATA_FRESHNESS_THRESHOLD`
+
 - **Default:** `3600` (1 hour)
 - **Unit:** Seconds
 - **Metric:** `data_warehouse_freshness_seconds`
@@ -132,6 +145,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_DATA_WAREHOUSE_RECENT_UPDATES_THRESHOLD`
+
 - **Default:** `0` (any updates expected)
 - **Unit:** Count (1 hour)
 - **Metric:** `data_warehouse_recent_updates_count`
@@ -144,6 +158,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 4. Data Mart Thresholds
 
 #### `ANALYTICS_DATA_MART_UPDATE_AGE_THRESHOLD`
+
 - **Default:** `3600` (1 hour)
 - **Unit:** Seconds
 - **Metric:** `data_mart_update_age_seconds`
@@ -154,6 +169,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_DATA_MART_AVG_UPDATE_AGE_THRESHOLD`
+
 - **Default:** `1800` (30 minutes)
 - **Unit:** Seconds
 - **Metric:** `data_mart_avg_update_age_seconds`
@@ -164,6 +180,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_DATA_MART_RECENT_UPDATES_THRESHOLD`
+
 - **Default:** `0` (any updates expected for frequently updated marts)
 - **Unit:** Count (1 hour)
 - **Metric:** `data_mart_recent_updates_count`
@@ -174,6 +191,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** Hardcoded (alert if no updates for frequently updated marts)
 
 #### `ANALYTICS_DATA_MART_STALE_COUNT_THRESHOLD`
+
 - **Default:** `0` (no stale marts expected)
 - **Unit:** Count
 - **Metric:** `data_mart_stale_count`
@@ -184,6 +202,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** Hardcoded (alert if any stale marts)
 
 #### `ANALYTICS_DATA_MART_FAILED_COUNT_THRESHOLD`
+
 - **Default:** `0` (no failures expected)
 - **Unit:** Count
 - **Metric:** `data_mart_failed_count`
@@ -196,6 +215,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 5. Query Performance Thresholds
 
 #### `ANALYTICS_SLOW_QUERY_THRESHOLD`
+
 - **Default:** `1000` (1 second)
 - **Unit:** Milliseconds
 - **Metric:** `slow_query_count`, `query_time_ms`
@@ -206,6 +226,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_AVG_QUERY_TIME_THRESHOLD`
+
 - **Default:** `500` (0.5 seconds)
 - **Unit:** Milliseconds
 - **Metric:** `query_avg_time_ms`
@@ -216,6 +237,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_MAX_QUERY_TIME_THRESHOLD`
+
 - **Default:** `5000` (5 seconds)
 - **Unit:** Milliseconds
 - **Metric:** `query_max_time_ms`
@@ -226,6 +248,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_UNUSED_INDEX_COUNT_THRESHOLD`
+
 - **Default:** `0` (all indexes should be used)
 - **Unit:** Count
 - **Metric:** `unused_index_count`
@@ -238,6 +261,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 ### 6. Storage Thresholds
 
 #### `ANALYTICS_DB_SIZE_THRESHOLD`
+
 - **Default:** `107374182400` (100 GB)
 - **Unit:** Bytes
 - **Metric:** `database_size_bytes`
@@ -248,6 +272,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_LARGEST_TABLE_SIZE_THRESHOLD`
+
 - **Default:** `10737418240` (10 GB)
 - **Unit:** Bytes
 - **Metric:** `largest_table_size_bytes`
@@ -258,6 +283,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_DISK_USAGE_THRESHOLD`
+
 - **Default:** `85` (85%)
 - **Unit:** Percentage
 - **Metric:** `disk_usage_percent`
@@ -268,6 +294,7 @@ All thresholds are configurable via `config/monitoring.conf`. Default values are
 - **Configuration:** `config/monitoring.conf`
 
 #### `ANALYTICS_DISK_CRITICAL_THRESHOLD`
+
 - **Default:** `90` (90%)
 - **Unit:** Percentage
 - **Metric:** `disk_usage_percent`
@@ -310,6 +337,7 @@ ANALYTICS_DISK_USAGE_THRESHOLD=85
 ### Threshold Validation
 
 Thresholds are validated when the monitoring script starts:
+
 - Numeric values must be positive integers or floats
 - Units must match the metric type (seconds, milliseconds, bytes, percentage, count)
 - Thresholds are loaded from configuration or use defaults if not specified
@@ -317,16 +345,19 @@ Thresholds are validated when the monitoring script starts:
 ## Alert Severity Levels
 
 ### WARNING
+
 - Indicates a potential issue that should be investigated
 - System is still functional but may degrade
 - Examples: Slow queries, stale data, approaching capacity limits
 
 ### ERROR
+
 - Indicates a problem that needs immediate attention
 - System functionality may be impacted
 - Examples: Failed ETL jobs, data mart update failures
 
 ### CRITICAL
+
 - Indicates a critical issue requiring immediate action
 - System functionality is severely impacted
 - Examples: Disk usage > 90%, database connection failures
@@ -351,6 +382,7 @@ Thresholds are validated when the monitoring script starts:
 ### Capacity Planning
 
 Use storage and performance thresholds to plan for growth:
+
 - Monitor trends in database size and query performance
 - Set thresholds that provide advance warning before capacity limits
 - Review thresholds quarterly or when system load changes significantly
@@ -361,4 +393,3 @@ Use storage and performance thresholds to plan for growth:
 - [Analytics Monitoring Guide](ANALYTICS_MONITORING_GUIDE.md) - How to use analytics monitoring
 - [ETL Monitoring Runbook](ETL_MONITORING_RUNBOOK.md) - Troubleshooting ETL issues
 - [Performance Tuning Guide](PERFORMANCE_TUNING_GUIDE.md) - Optimizing analytics performance
-

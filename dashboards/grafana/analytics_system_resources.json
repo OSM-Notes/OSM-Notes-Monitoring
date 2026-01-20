@@ -13,18 +13,20 @@
       "id": 1,
       "title": "ETL CPU Usage (%)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'etl_cpu_usage_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'etl_cpu_usage_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -34,9 +36,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 70, "color": "yellow"},
-              {"value": 90, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 90, "color": "red" }
             ]
           }
         }
@@ -46,18 +48,20 @@
       "id": 2,
       "title": "PostgreSQL CPU Usage (%)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'postgresql_cpu_usage_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'postgresql_cpu_usage_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -67,9 +71,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 70, "color": "yellow"},
-              {"value": 90, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 90, "color": "red" }
             ]
           }
         }
@@ -79,18 +83,20 @@
       "id": 3,
       "title": "ETL Memory Usage",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'etl_memory_usage_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'etl_memory_usage_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -98,9 +104,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 1073741824, "color": "yellow"},
-              {"value": 2147483648, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 1073741824, "color": "yellow" },
+              { "value": 2147483648, "color": "red" }
             ]
           }
         }
@@ -110,18 +116,20 @@
       "id": 4,
       "title": "PostgreSQL Memory Usage",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'postgresql_memory_usage_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'postgresql_memory_usage_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -129,9 +137,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 2147483648, "color": "yellow"},
-              {"value": 4294967296, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 2147483648, "color": "yellow" },
+              { "value": 4294967296, "color": "red" }
             ]
           }
         }
@@ -141,7 +149,7 @@
       "id": 5,
       "title": "ETL Disk I/O",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "targets": [
         {
           "datasource": {
@@ -179,18 +187,20 @@
       "id": 6,
       "title": "System Disk Usage (%)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'system_disk_usage_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'system_disk_usage_percent' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -200,9 +210,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 85, "color": "yellow"},
-              {"value": 90, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 85, "color": "yellow" },
+              { "value": 90, "color": "red" }
             ]
           }
         }
@@ -212,7 +222,7 @@
       "id": 7,
       "title": "System Load Average",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "targets": [
         {
           "datasource": {
@@ -262,18 +272,20 @@
       "id": 8,
       "title": "ETL Log Disk Usage",
       "type": "stat",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'etl_log_disk_usage_bytes' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'etl_log_disk_usage_bytes' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -281,9 +293,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 1073741824, "color": "yellow"},
-              {"value": 5368709120, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 1073741824, "color": "yellow" },
+              { "value": 5368709120, "color": "red" }
             ]
           }
         }

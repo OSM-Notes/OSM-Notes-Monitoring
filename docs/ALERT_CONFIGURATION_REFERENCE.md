@@ -7,7 +7,8 @@
 
 ## Overview
 
-This document provides a comprehensive reference for all alert configuration options in the OSM-Notes-Monitoring system.
+This document provides a comprehensive reference for all alert configuration options in the
+OSM-Notes-Monitoring system.
 
 ## Configuration Files
 
@@ -21,12 +22,14 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Email Configuration
 
 #### `ADMIN_EMAIL`
+
 - **Type:** String
 - **Default:** `admin@example.com`
 - **Description:** Default administrator email address
 - **Example:** `ADMIN_EMAIL="admin@example.com"`
 
 #### `SEND_ALERT_EMAIL`
+
 - **Type:** Boolean
 - **Default:** `false`
 - **Description:** Enable/disable email alert delivery
@@ -36,6 +39,7 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Slack Configuration
 
 #### `SLACK_ENABLED`
+
 - **Type:** Boolean
 - **Default:** `false`
 - **Description:** Enable/disable Slack notifications
@@ -43,12 +47,14 @@ This document provides a comprehensive reference for all alert configuration opt
 - **Example:** `SLACK_ENABLED="true"`
 
 #### `SLACK_WEBHOOK_URL`
+
 - **Type:** String (URL)
 - **Default:** `""`
 - **Description:** Slack webhook URL for sending notifications
 - **Example:** `SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"`
 
 #### `SLACK_CHANNEL`
+
 - **Type:** String
 - **Default:** `#monitoring`
 - **Description:** Slack channel for alerts
@@ -57,18 +63,21 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Alert Recipients
 
 #### `CRITICAL_ALERT_RECIPIENTS`
+
 - **Type:** String (comma-separated emails)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Email recipients for critical alerts
 - **Example:** `CRITICAL_ALERT_RECIPIENTS="admin@example.com,oncall@example.com"`
 
 #### `WARNING_ALERT_RECIPIENTS`
+
 - **Type:** String (comma-separated emails)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Email recipients for warning alerts
 - **Example:** `WARNING_ALERT_RECIPIENTS="team@example.com"`
 
 #### `INFO_ALERT_RECIPIENTS`
+
 - **Type:** String (comma-separated emails)
 - **Default:** `""`
 - **Description:** Email recipients for info alerts (empty to disable)
@@ -77,6 +86,7 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Deduplication Configuration
 
 #### `ALERT_DEDUPLICATION_ENABLED`
+
 - **Type:** Boolean
 - **Default:** `true`
 - **Description:** Enable/disable alert deduplication
@@ -84,6 +94,7 @@ This document provides a comprehensive reference for all alert configuration opt
 - **Example:** `ALERT_DEDUPLICATION_ENABLED="true"`
 
 #### `ALERT_DEDUPLICATION_WINDOW_MINUTES`
+
 - **Type:** Integer
 - **Default:** `60`
 - **Description:** Time window (in minutes) for deduplication
@@ -92,6 +103,7 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Aggregation Configuration
 
 #### `ALERT_AGGREGATION_ENABLED`
+
 - **Type:** Boolean
 - **Default:** `true`
 - **Description:** Enable/disable alert aggregation
@@ -99,6 +111,7 @@ This document provides a comprehensive reference for all alert configuration opt
 - **Example:** `ALERT_AGGREGATION_ENABLED="true"`
 
 #### `ALERT_AGGREGATION_WINDOW_MINUTES`
+
 - **Type:** Integer
 - **Default:** `15`
 - **Description:** Time window (in minutes) for aggregation
@@ -107,6 +120,7 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Retention Configuration
 
 #### `ALERT_RETENTION_DAYS`
+
 - **Type:** Integer
 - **Default:** `180`
 - **Description:** Number of days to retain resolved alerts
@@ -115,6 +129,7 @@ This document provides a comprehensive reference for all alert configuration opt
 ### Escalation Configuration
 
 #### `ESCALATION_ENABLED`
+
 - **Type:** Boolean
 - **Default:** `true`
 - **Description:** Enable/disable alert escalation
@@ -122,36 +137,42 @@ This document provides a comprehensive reference for all alert configuration opt
 - **Example:** `ESCALATION_ENABLED="true"`
 
 #### `ESCALATION_LEVEL1_MINUTES`
+
 - **Type:** Integer
 - **Default:** `15`
 - **Description:** Minutes before level 1 escalation
 - **Example:** `ESCALATION_LEVEL1_MINUTES=15`
 
 #### `ESCALATION_LEVEL2_MINUTES`
+
 - **Type:** Integer
 - **Default:** `30`
 - **Description:** Minutes before level 2 escalation
 - **Example:** `ESCALATION_LEVEL2_MINUTES=30`
 
 #### `ESCALATION_LEVEL3_MINUTES`
+
 - **Type:** Integer
 - **Default:** `60`
 - **Description:** Minutes before level 3 escalation
 - **Example:** `ESCALATION_LEVEL3_MINUTES=60`
 
 #### `ESCALATION_LEVEL1_RECIPIENTS`
+
 - **Type:** String (comma-separated emails)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Recipients for level 1 escalation
 - **Example:** `ESCALATION_LEVEL1_RECIPIENTS="oncall@example.com"`
 
 #### `ESCALATION_LEVEL2_RECIPIENTS`
+
 - **Type:** String (comma-separated emails)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Recipients for level 2 escalation
 - **Example:** `ESCALATION_LEVEL2_RECIPIENTS="manager@example.com"`
 
 #### `ESCALATION_LEVEL3_RECIPIENTS`
+
 - **Type:** String (comma-separated emails)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Recipients for level 3 escalation
@@ -160,6 +181,7 @@ This document provides a comprehensive reference for all alert configuration opt
 ### On-Call Configuration
 
 #### `ONCALL_ROTATION_ENABLED`
+
 - **Type:** Boolean
 - **Default:** `false`
 - **Description:** Enable/disable on-call rotation
@@ -167,6 +189,7 @@ This document provides a comprehensive reference for all alert configuration opt
 - **Example:** `ONCALL_ROTATION_ENABLED="true"`
 
 #### `ONCALL_ROTATION_SCHEDULE`
+
 - **Type:** String
 - **Default:** `weekly`
 - **Description:** On-call rotation schedule
@@ -174,12 +197,14 @@ This document provides a comprehensive reference for all alert configuration opt
 - **Example:** `ONCALL_ROTATION_SCHEDULE="weekly"`
 
 #### `ONCALL_PRIMARY`
+
 - **Type:** String (email)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Primary on-call contact
 - **Example:** `ONCALL_PRIMARY="oncall-primary@example.com"`
 
 #### `ONCALL_SECONDARY`
+
 - **Type:** String (email)
 - **Default:** `${ADMIN_EMAIL}`
 - **Description:** Secondary on-call contact
@@ -284,5 +309,3 @@ Configuration is validated on script startup. Invalid values will log warnings a
 - **Alerting Guide**: `docs/ALERTING_GUIDE.md` - Comprehensive alerting guide
 - **On-Call Procedures**: `docs/ONCALL_PROCEDURES.md` - On-call procedures
 - **Configuration Example**: `config/alerts.conf.example` - Example configuration file
-
-

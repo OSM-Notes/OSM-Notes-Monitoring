@@ -2,8 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Complete Analytics Monitoring Implementation (7 Phases)
 
 ##### Phase 1: ETL Metrics Collection
+
 - **ETL metrics collection** (`bin/monitor/collect_etl_metrics.sh`)
   - ETL log parsing from `/tmp/ETL_*/ETL.log`
   - Execution time tracking
@@ -40,10 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SQL queries** (`sql/analytics/etl_execution_metrics.sql`)
 - **Grafana dashboard** (`dashboards/grafana/analytics_etl_overview.json`) - 8 panels
 - **Alert rules** (`config/alerts/analytics_etl_alerts.yml`) - 12 rules
-- **Unit tests** (`tests/unit/monitor/test_collect_etl_metrics.sh`, `tests/unit/lib/test_etlLogParser.sh`)
+- **Unit tests** (`tests/unit/monitor/test_collect_etl_metrics.sh`,
+  `tests/unit/lib/test_etlLogParser.sh`)
 - **Integration tests** (`tests/integration/test_etl_monitoring.sh`)
 
 ##### Phase 2: Database Performance Metrics
+
 - **Database metrics collection** (`bin/monitor/collect_database_metrics.sh`)
   - Cache hit ratio monitoring
   - Active connections tracking
@@ -59,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration tests** (`tests/integration/test_database_monitoring.sh`)
 
 ##### Phase 3: Datamart Metrics
+
 - **Datamart metrics collection** (`bin/monitor/collect_datamart_metrics.sh`)
   - Last successful execution tracking
   - Execution duration monitoring
@@ -74,10 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SQL queries** (`sql/analytics/datamart_metrics.sql`)
 - **Grafana dashboard** (`dashboards/grafana/analytics_datamarts_overview.json`) - 6 panels
 - **Alert rules** (`config/alerts/analytics_datamart_alerts.yml`) - 10 rules
-- **Unit tests** (`tests/unit/monitor/test_collect_datamart_metrics.sh`, `tests/unit/lib/test_datamartLogParser.sh`)
+- **Unit tests** (`tests/unit/monitor/test_collect_datamart_metrics.sh`,
+  `tests/unit/lib/test_datamartLogParser.sh`)
 - **Integration tests** (`tests/integration/test_datamart_monitoring.sh`)
 
 ##### Phase 4: Validation Metrics
+
 - **Validation metrics collection** (`bin/monitor/collect_validation_metrics.sh`)
   - MON-001 validation (validate_note_current_status)
   - MON-002 validation (validate_comment_counts)
@@ -91,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration tests** (`tests/integration/test_validation_monitoring.sh`)
 
 ##### Phase 5: System Resources
+
 - **System metrics collection** (`bin/monitor/collect_analytics_system_metrics.sh`)
   - ETL CPU usage monitoring
   - ETL memory usage tracking
@@ -106,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration tests** (`tests/integration/test_system_resources.sh`)
 
 ##### Phase 6: Export Metrics
+
 - **Export metrics collection** (`bin/monitor/collect_export_metrics.sh`)
   - JSON export file tracking
   - CSV export file tracking
@@ -121,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration tests** (`tests/integration/test_export_monitoring.sh`)
 
 ##### Phase 7: Cron Job Monitoring
+
 - **Cron metrics collection** (`bin/monitor/collect_cron_metrics.sh`)
   - ETL cron execution monitoring (every 15 minutes)
   - Datamart cron execution monitoring (daily)
@@ -162,7 +171,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 
 - All 7 phases of the Analytics monitoring implementation plan have been successfully completed
-- Complete monitoring coverage for ETL, database, datamarts, validations, system resources, exports, and cron jobs
+- Complete monitoring coverage for ETL, database, datamarts, validations, system resources, exports,
+  and cron jobs
 - See `docs/ANALYTICS_MONITORING_GUIDE.md` for complete operational guidance
 
 ## [1.1.0] - 2026-01-09
@@ -170,6 +180,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Phase 1: Daemon Process Monitoring (High Priority)
+
 - **Daemon metrics collection** (`bin/monitor/collectDaemonMetrics.sh`)
   - Systemd service status monitoring
   - Process information (PID, uptime, memory, CPU)
@@ -178,10 +189,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Processing metrics (notes processed, new vs updated, comments)
 - **SQL queries** (`sql/ingestion/daemon_metrics.sql`)
 - **Grafana dashboard** (`dashboards/grafana/daemon_overview.json`) - 9 panels
-- **Unit tests** (`tests/unit/monitor/test_collectDaemonMetrics.sh`, `test_monitorIngestion_daemon.sh`)
+- **Unit tests** (`tests/unit/monitor/test_collectDaemonMetrics.sh`,
+  `test_monitorIngestion_daemon.sh`)
 - **Documentation** (updated `docs/INGESTION_METRICS.md`)
 
 #### Phase 2: Advanced Database Performance Monitoring (High Priority)
+
 - **Database metrics collection** (`bin/monitor/collectDatabaseMetrics.sh`)
   - Table sizes and growth tracking
   - Index usage and bloat analysis
@@ -192,10 +205,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Lock statistics
 - **SQL queries** (`sql/ingestion/database_performance_advanced.sql`)
 - **Grafana dashboard** (`dashboards/grafana/database_performance.json`) - 11 panels
-- **Unit tests** (`tests/unit/monitor/test_collectDatabaseMetrics.sh`, `test_monitorIngestion_database.sh`)
+- **Unit tests** (`tests/unit/monitor/test_collectDatabaseMetrics.sh`,
+  `test_monitorIngestion_database.sh`)
 - **Documentation** (updated `docs/INGESTION_METRICS.md`)
 
 #### Phase 3: Complete System Resources Monitoring (Medium Priority)
+
 - **System metrics collection** (`bin/monitor/collectSystemMetrics.sh`)
   - Load average monitoring
   - CPU usage by process (daemon, PostgreSQL)
@@ -205,10 +220,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Network traffic monitoring
 - **Integration** (`bin/monitor/monitorInfrastructure.sh`)
 - **Grafana dashboard** (`dashboards/grafana/system_resources.json`) - 10 panels
-- **Unit tests** (`tests/unit/monitor/test_collectSystemMetrics.sh`, `test_monitorInfrastructure_system.sh`)
+- **Unit tests** (`tests/unit/monitor/test_collectSystemMetrics.sh`,
+  `test_monitorInfrastructure_system.sh`)
 - **Documentation** (updated `docs/INFRASTRUCTURE_MONITORING_GUIDE.md`)
 
 #### Phase 4: Enhanced API Integration Metrics (Medium Priority)
+
 - **API logs parser** (`bin/lib/parseApiLogs.sh`)
   - HTTP request parsing
   - Response time extraction
@@ -222,6 +239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation** (updated `docs/INGESTION_METRICS.md`)
 
 #### Phase 5: Boundary Processing Monitoring (Low Priority)
+
 - **Boundary metrics collection** (`bin/monitor/collectBoundaryMetrics.sh`)
   - Countries and maritime boundaries last update tracking
   - Update frequency calculation
@@ -230,17 +248,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Notes affected by boundary changes detection
 - **SQL queries** (`sql/ingestion/boundary_metrics.sql`)
 - **Grafana dashboard** (`dashboards/grafana/boundary_processing.json`) - 7 panels
-- **Unit tests** (`tests/unit/monitor/test_collectBoundaryMetrics.sh`, `test_monitorIngestion_boundary.sh`)
+- **Unit tests** (`tests/unit/monitor/test_collectBoundaryMetrics.sh`,
+  `test_monitorIngestion_boundary.sh`)
 - **Documentation** (updated `docs/INGESTION_METRICS.md`)
 
 #### Phase 6: Structured Log Analysis Metrics (Medium Priority)
+
 - **Structured logs parser** (`bin/lib/parseStructuredLogs.sh`)
   - Cycle metrics extraction (duration, frequency, success rate)
   - Processing metrics (notes, comments, rates)
   - Stage timing metrics from [TIMING] logs
   - Optimization metrics (ANALYZE cache effectiveness, integrity optimizations, sequence syncs)
 - **Grafana dashboard** (`dashboards/grafana/log_analysis.json`) - 14 panels
-- **Unit tests** (`tests/unit/lib/test_parseStructuredLogs.sh`, `test_monitorIngestion_log_analysis.sh`)
+- **Unit tests** (`tests/unit/lib/test_parseStructuredLogs.sh`,
+  `test_monitorIngestion_log_analysis.sh`)
 - **Documentation** (updated `docs/INGESTION_METRICS.md`)
 
 ### Changed
@@ -324,4 +345,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]: https://github.com/OSM-Notes/OSM-Notes-Monitoring/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/OSM-Notes/OSM-Notes-Monitoring/releases/tag/v1.0.0
 [0.1.0]: https://github.com/OSM-Notes/OSM-Notes-Monitoring/releases/tag/v0.1.0
-

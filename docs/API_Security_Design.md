@@ -7,7 +7,8 @@
 
 ## Overview
 
-This document details the security and protection mechanisms for the OSM-Notes-API service to prevent abuse, DDoS attacks, and ensure service availability.
+This document details the security and protection mechanisms for the OSM-Notes-API service to
+prevent abuse, DDoS attacks, and ensure service availability.
 
 ## Threat Model
 
@@ -44,6 +45,7 @@ This document details the security and protection mechanisms for the OSM-Notes-A
 #### Implementation Strategy
 
 **Per-IP Rate Limiting:**
+
 ```bash
 # Configuration
 RATE_LIMIT_PER_IP_PER_MINUTE=60
@@ -53,6 +55,7 @@ BURST_ALLOWANCE=10  # Allow short bursts
 ```
 
 **Per-API-Key Rate Limiting:**
+
 ```bash
 # For authenticated users
 RATE_LIMIT_PER_KEY_PER_MINUTE=300
@@ -61,6 +64,7 @@ RATE_LIMIT_PER_KEY_PER_DAY=100000
 ```
 
 **Per-Endpoint Rate Limiting:**
+
 ```bash
 # Different limits for different endpoints
 RATE_LIMIT_SEARCH_PER_MINUTE=30
@@ -71,12 +75,14 @@ RATE_LIMIT_EXPORT_PER_MINUTE=5
 #### Algorithm: Sliding Window
 
 **Implementation:**
+
 - Use Redis or PostgreSQL to track request counts
 - Maintain counters per IP/Key/Endpoint
 - Use sliding window (not fixed window) for fairness
 - Reset counters after time window expires
 
 **Example:**
+
 ```sql
 -- PostgreSQL table for rate limiting
 CREATE TABLE api_rate_limits (
@@ -88,13 +94,14 @@ CREATE TABLE api_rate_limits (
 );
 
 -- Index for fast lookups
-CREATE INDEX idx_rate_limits_lookup 
+CREATE INDEX idx_rate_limits_lookup
     ON api_rate_limits (identifier, endpoint, window_start);
 ```
 
 #### Rate Limit Headers
 
 **Response Headers:**
+
 ```
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
@@ -103,6 +110,7 @@ X-RateLimit-Window: 60
 ```
 
 **429 Too Many Requests Response:**
+
 ```json
 {
   "error": "rate_limit_exceeded",
@@ -120,11 +128,13 @@ X-RateLimit-Window: 60
 **Purpose:** Bypass rate limiting for trusted IPs
 
 **Use Cases:**
+
 - Your own servers
 - Trusted partners
 - Internal services
 
 **Implementation:**
+
 ```sql
 CREATE TABLE api_ip_whitelist (
     ip_address INET NOT NULL PRIMARY KEY,
@@ -135,6 +145,7 @@ CREATE TABLE api_ip_whitelist (
 ```
 
 **Management Script:**
+
 ```bash
 # bin/security/manageWhitelist.sh
 # Usage:
@@ -148,6 +159,7 @@ CREATE TABLE api_ip_whitelist (
 **Purpose:** Permanently block known bad actors
 
 **Implementation:**
+
 ```sql
 CREATE TABLE api_ip_blacklist (
     ip_address INET NOT NULL PRIMARY KEY,
@@ -160,11 +172,13 @@ CREATE TABLE api_ip_blacklist (
 ```
 
 **Automatic Blocking:**
+
 - Block IPs that exceed rate limits repeatedly
 - Block IPs with suspicious patterns
 - Block IPs from known attack sources
 
 **Manual Blocking:**
+
 ```bash
 # bin/security/manageBlacklist.sh
 # Usage:
@@ -178,6 +192,7 @@ CREATE TABLE api_ip_blacklist (
 **Purpose:** Short-term blocks for suspicious activity
 
 **Implementation:**
+
 ```sql
 CREATE TABLE api_ip_temp_blocks (
     ip_address INET NOT NULL PRIMARY KEY,
@@ -189,6 +204,7 @@ CREATE TABLE api_ip_temp_blocks (
 ```
 
 **Block Duration:**
+
 - First violation: 15 minutes
 - Second violation: 1 hour
 - Third violation: 24 hours
@@ -199,6 +215,7 @@ CREATE TABLE api_ip_temp_blocks (
 #### Detection Mechanisms
 
 **Volume-Based Detection:**
+
 ```bash
 # Thresholds
 DDOS_THRESHOLD_REQUESTS_PER_SECOND=100
@@ -207,12 +224,14 @@ DDOS_THRESHOLD_BANDWIDTH_MBPS=100
 ```
 
 **Pattern Detection:**
+
 - Rapid sequential requests from same IP
 - Requests to non-existent endpoints
 - Missing or invalid headers
 - Unusual request sizes
 
 **Implementation:**
+
 ```sql
 -- Track request patterns
 CREATE TABLE api_request_patterns (
@@ -236,7 +255,7 @@ CREATE OR REPLACE FUNCTION detect_ddos_pattern(
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         arp.ip_address,
         COUNT(*) as request_count,
         AVG(arp.response_time_ms) as avg_response_time_ms,
@@ -253,17 +272,20 @@ $$ LANGUAGE plpgsql;
 #### Mitigation Strategies
 
 **Automatic Responses:**
+
 1. **Immediate**: Block IP temporarily (15 minutes)
 2. **Escalation**: Extend block duration if pattern continues
 3. **Alert**: Notify administrator immediately
 4. **Logging**: Log all suspicious activity
 
 **Rate Limiting Escalation:**
+
 - Reduce rate limits for suspicious IPs
 - Implement stricter limits during attacks
 - Prioritize legitimate traffic
 
 **Connection Limits:**
+
 ```bash
 # Maximum concurrent connections per IP
 MAX_CONCURRENT_CONNECTIONS_PER_IP=10
@@ -275,6 +297,7 @@ MAX_TOTAL_CONNECTIONS=1000
 #### Pattern Analysis
 
 **Suspicious Patterns:**
+
 1. **Rapid Sequential Requests**
    - Multiple requests in < 1 second
    - Pattern: Request → Response → Immediate Request
@@ -318,7 +341,7 @@ DECLARE
     error_rate NUMERIC;
 BEGIN
     -- Get request statistics
-    SELECT 
+    SELECT
         COUNT(*),
         AVG(EXTRACT(EPOCH FROM (timestamp - LAG(timestamp) OVER (ORDER BY timestamp)))),
         COUNT(DISTINCT endpoint),
@@ -327,39 +350,39 @@ BEGIN
     FROM api_request_patterns
     WHERE api_request_patterns.ip_address = detect_abuse_patterns.ip_address
       AND timestamp > NOW() - check_window;
-    
+
     -- Pattern 1: Rapid sequential requests
     IF avg_time_between_requests < 0.1 THEN
-        RETURN QUERY SELECT 
+        RETURN QUERY SELECT
             'rapid_sequential_requests'::VARCHAR(255),
             'high'::VARCHAR(50),
             format('Average time between requests: %s seconds', avg_time_between_requests)::TEXT;
     END IF;
-    
+
     -- Pattern 2: High error rate
     IF error_rate > 50 THEN
-        RETURN QUERY SELECT 
+        RETURN QUERY SELECT
             'high_error_rate'::VARCHAR(255),
             'medium'::VARCHAR(50),
             format('Error rate: %s%%', error_rate)::TEXT;
     END IF;
-    
+
     -- Pattern 3: Too many requests
     IF request_count > 1000 THEN
-        RETURN QUERY SELECT 
+        RETURN QUERY SELECT
             'excessive_requests'::VARCHAR(255),
             'high'::VARCHAR(50),
             format('Request count: %s', request_count)::TEXT;
     END IF;
-    
+
     -- Pattern 4: Single endpoint abuse
     IF unique_endpoints = 1 AND request_count > 500 THEN
-        RETURN QUERY SELECT 
+        RETURN QUERY SELECT
             'single_endpoint_abuse'::VARCHAR(255),
             'medium'::VARCHAR(50),
             format('Repeated requests to single endpoint: %s requests', request_count)::TEXT;
     END IF;
-    
+
     RETURN;
 END;
 $$ LANGUAGE plpgsql;
@@ -368,12 +391,14 @@ $$ LANGUAGE plpgsql;
 #### Response Actions
 
 **Automatic Actions:**
+
 1. **Log**: Record all abuse patterns
 2. **Alert**: Notify administrator
 3. **Block**: Temporarily block IP
 4. **Throttle**: Reduce rate limits for IP
 
 **Manual Review:**
+
 - Review flagged IPs daily
 - Investigate patterns
 - Decide on permanent blocks
@@ -384,18 +409,21 @@ $$ LANGUAGE plpgsql;
 #### Connection Limits
 
 **Per-IP Limits:**
+
 ```bash
 MAX_CONCURRENT_CONNECTIONS_PER_IP=10
 MAX_CONCURRENT_CONNECTIONS_PER_KEY=20
 ```
 
 **Global Limits:**
+
 ```bash
 MAX_TOTAL_CONNECTIONS=1000
 MAX_CONNECTIONS_PER_ENDPOINT=100
 ```
 
 **Implementation:**
+
 ```sql
 -- Track active connections
 CREATE TABLE api_active_connections (
@@ -416,7 +444,7 @@ DECLARE
 BEGIN
     DELETE FROM api_active_connections
     WHERE last_activity < NOW() - (timeout_seconds || ' seconds')::INTERVAL;
-    
+
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
     RETURN deleted_count;
 END;
@@ -428,6 +456,7 @@ $$ LANGUAGE plpgsql;
 #### Input Validation
 
 **Validate:**
+
 - Request size limits
 - Parameter types and ranges
 - Required headers
@@ -435,6 +464,7 @@ $$ LANGUAGE plpgsql;
 - Geographic bounds (if applicable)
 
 **Example:**
+
 ```bash
 # Request size limits
 MAX_REQUEST_SIZE_KB=100
@@ -445,11 +475,13 @@ MAX_POST_BODY_SIZE_KB=1000
 #### Header Validation
 
 **Required Headers:**
+
 - User-Agent (required, validated)
 - Accept (optional, but validated if present)
 - Content-Type (for POST requests)
 
 **Validation:**
+
 ```bash
 # Validate User-Agent
 if [[ -z "${USER_AGENT}" ]] || [[ "${USER_AGENT}" == *"bot"* ]] && [[ "${USER_AGENT}" != *"OSM-Notes"* ]]; then
@@ -462,6 +494,7 @@ fi
 #### Security Metrics
 
 **Track:**
+
 - Blocked IPs count
 - Rate limit violations
 - DDoS attack attempts
@@ -470,6 +503,7 @@ fi
 - Suspicious activity
 
 **Metrics Storage:**
+
 ```sql
 CREATE TABLE api_security_metrics (
     metric_date DATE NOT NULL,
@@ -487,6 +521,7 @@ CREATE TABLE api_security_metrics (
 #### Alerting
 
 **Alert Triggers:**
+
 - DDoS attack detected
 - High rate of blocked IPs
 - Multiple abuse patterns detected
@@ -494,6 +529,7 @@ CREATE TABLE api_security_metrics (
 - Unusual traffic patterns
 
 **Alert Channels:**
+
 - Email (immediate)
 - Slack (team notification)
 - PagerDuty (critical escalation)
@@ -515,20 +551,20 @@ RATE_LIMIT_WINDOW_SECONDS=60
 function check_rate_limit {
     local IP_ADDRESS=$1
     local ENDPOINT=$2
-    
+
     # Query database for request count in window
     local REQUEST_COUNT=$(psql -d "${MONITORING_DB}" -Atq -c "
-        SELECT COUNT(*) 
-        FROM api_rate_limits 
-        WHERE identifier = '${IP_ADDRESS}' 
+        SELECT COUNT(*)
+        FROM api_rate_limits
+        WHERE identifier = '${IP_ADDRESS}'
           AND endpoint = '${ENDPOINT}'
           AND window_start > NOW() - INTERVAL '${RATE_LIMIT_WINDOW_SECONDS} seconds';
     ")
-    
+
     if [[ "${REQUEST_COUNT}" -ge "${RATE_LIMIT_PER_MINUTE}" ]]; then
         return 1  # Rate limit exceeded
     fi
-    
+
     return 0  # Within limits
 }
 ```
@@ -542,32 +578,32 @@ function check_rate_limit {
 
 function check_ip_blocked {
     local IP_ADDRESS=$1
-    
+
     # Check blacklist
     local IS_BLACKLISTED=$(psql -d "${MONITORING_DB}" -Atq -c "
-        SELECT COUNT(*) 
-        FROM api_ip_blacklist 
-        WHERE ip_address = '${IP_ADDRESS}'::INET 
+        SELECT COUNT(*)
+        FROM api_ip_blacklist
+        WHERE ip_address = '${IP_ADDRESS}'::INET
           AND is_active = TRUE
           AND (expires_at IS NULL OR expires_at > NOW());
     ")
-    
+
     if [[ "${IS_BLACKLISTED}" -gt 0 ]]; then
         return 1  # Blocked
     fi
-    
+
     # Check temporary blocks
     local IS_TEMP_BLOCKED=$(psql -d "${MONITORING_DB}" -Atq -c "
-        SELECT COUNT(*) 
-        FROM api_ip_temp_blocks 
-        WHERE ip_address = '${IP_ADDRESS}'::INET 
+        SELECT COUNT(*)
+        FROM api_ip_temp_blocks
+        WHERE ip_address = '${IP_ADDRESS}'::INET
           AND expires_at > NOW();
     ")
-    
+
     if [[ "${IS_TEMP_BLOCKED}" -gt 0 ]]; then
         return 1  # Temporarily blocked
     fi
-    
+
     return 0  # Not blocked
 }
 ```
@@ -581,26 +617,26 @@ function check_ip_blocked {
 
 function detect_and_respond_abuse {
     local IP_ADDRESS=$1
-    
+
     # Run abuse detection
     local ABUSE_PATTERNS=$(psql -d "${MONITORING_DB}" -Atq -c "
-        SELECT pattern_type, severity 
+        SELECT pattern_type, severity
         FROM detect_abuse_patterns('${IP_ADDRESS}'::INET);
     ")
-    
+
     if [[ -n "${ABUSE_PATTERNS}" ]]; then
         # Log abuse
         __log_abuse "${IP_ADDRESS}" "${ABUSE_PATTERNS}"
-        
+
         # Block IP temporarily
         block_ip_temporary "${IP_ADDRESS}" "Abuse detected: ${ABUSE_PATTERNS}"
-        
+
         # Send alert
         send_security_alert "Abuse detected from ${IP_ADDRESS}: ${ABUSE_PATTERNS}"
-        
+
         return 1  # Abuse detected
     fi
-    
+
     return 0  # No abuse
 }
 ```
@@ -702,8 +738,8 @@ This security design provides comprehensive protection for the OSM-Notes-API:
 - **Monitoring**: Tracks security metrics and alerts
 
 The system is designed to be:
+
 - **Automatic**: Responds to threats automatically
 - **Configurable**: Easy to adjust thresholds
 - **Maintainable**: Clear structure and documentation
 - **Scalable**: Handles growth in traffic and threats
-

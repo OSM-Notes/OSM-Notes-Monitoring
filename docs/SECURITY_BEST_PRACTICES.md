@@ -21,7 +21,8 @@
 
 ## Overview
 
-This document provides comprehensive best practices for implementing and maintaining API security monitoring and protection. Following these practices will help ensure:
+This document provides comprehensive best practices for implementing and maintaining API security
+monitoring and protection. Following these practices will help ensure:
 
 - Effective protection against abuse and attacks
 - Minimal false positives
@@ -534,11 +535,12 @@ This document provides comprehensive best practices for implementing and maintai
 
 ## Conclusion
 
-Following these best practices will help ensure effective API security monitoring and protection. Regular review and continuous improvement are essential for maintaining security effectiveness.
+Following these best practices will help ensure effective API security monitoring and protection.
+Regular review and continuous improvement are essential for maintaining security effectiveness.
 
 Remember:
+
 - Start conservative and adjust based on experience
 - Monitor regularly and respond promptly
 - Document everything and learn from incidents
 - Continuously improve security measures
-

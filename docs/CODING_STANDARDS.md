@@ -92,7 +92,7 @@ lct=$(date)
 check_service_health() {
     local service_url="${1:?Service URL required}"
     local timeout="${2:-10}"
-    
+
     if curl -f -s --max-time "${timeout}" "${service_url}" > /dev/null 2>&1; then
         return 0
     else
@@ -104,30 +104,31 @@ check_service_health() {
 ### Code Organization
 
 1. **Script structure:**
+
    ```bash
    #!/usr/bin/env bash
    # Header comments
-   
+
    set -euo pipefail
-   
+
    # Source configuration
    source "$(dirname "$0")/../etc/properties.sh"
    source "$(dirname "$0")/../bin/lib/monitoringFunctions.sh"
-   
+
    # Constants
    readonly SCRIPT_NAME="$(basename "$0")"
    readonly MAX_RETRIES=3
-   
+
    # Functions (in order of use)
    # - Helper functions first
    # - Main functions next
    # - Main execution last
-   
+
    # Main execution
    main() {
        # Script logic here
    }
-   
+
    # Run main if script is executed directly
    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
        main "$@"
@@ -162,6 +163,7 @@ shellcheck --severity=error --format=gcc script_name.sh
 ```
 
 Common issues to avoid:
+
 - Unquoted variables
 - Unused variables
 - Missing shebang
@@ -178,16 +180,16 @@ Common issues to avoid:
 -- Use UPPER_CASE for SQL keywords
 -- Use snake_case for identifiers
 
-SELECT 
+SELECT
     component,
     metric_name,
     AVG(metric_value) AS avg_value,
     COUNT(*) AS sample_count
 FROM metrics
-WHERE 
+WHERE
     timestamp > CURRENT_TIMESTAMP - INTERVAL '24 hours'
     AND component = 'ingestion'
-GROUP BY 
+GROUP BY
     component,
     metric_name
 ORDER BY avg_value DESC;
@@ -208,7 +210,7 @@ ORDER BY avg_value DESC;
 3. **Add indexes** for frequently queried columns
 4. **Document complex queries** with comments
 5. **Use EXPLAIN ANALYZE** to optimize queries
-6. **Avoid SELECT *** in production queries
+6. **Avoid SELECT \*** in production queries
 
 ### Example
 
@@ -216,7 +218,7 @@ ORDER BY avg_value DESC;
 -- Get recent metrics for a component
 -- This query retrieves the last 24 hours of metrics
 -- grouped by metric name with average values
-SELECT 
+SELECT
     component,
     metric_name,
     AVG(metric_value) AS avg_value,
@@ -225,13 +227,13 @@ SELECT
     COUNT(*) AS sample_count,
     MAX(timestamp) AS last_updated
 FROM metrics
-WHERE 
+WHERE
     component = $1  -- Parameterized
     AND timestamp > CURRENT_TIMESTAMP - INTERVAL '24 hours'
-GROUP BY 
+GROUP BY
     component,
     metric_name
-ORDER BY 
+ORDER BY
     metric_name;
 ```
 
@@ -263,22 +265,22 @@ Always validate configuration:
 ```bash
 validate_config() {
     local config_file="${1:?Config file required}"
-    
+
     # Check file exists
     if [[ ! -f "${config_file}" ]]; then
         log_error "Configuration file not found: ${config_file}"
         return 1
     fi
-    
+
     # Source and validate
     source "${config_file}"
-    
+
     # Validate required variables
     if [[ -z "${COMPONENT_ENABLED:-}" ]]; then
         log_error "COMPONENT_ENABLED not set in ${config_file}"
         return 1
     fi
-    
+
     return 0
 }
 ```
@@ -330,19 +332,24 @@ Each major directory should have a README.md:
 # Directory Name
 
 ## Purpose
+
 Brief description of what's in this directory.
 
 ## Structure
+
 - `file1.sh` - Description
 - `file2.sh` - Description
 
 ## Usage
+
 Examples of how to use files in this directory.
 
 ## Dependencies
+
 List of dependencies.
 
 ## Examples
+
 Code examples.
 ```
 
@@ -368,7 +375,7 @@ readonly EXIT_NETWORK_ERROR=6
 handle_error() {
     local exit_code="${1:-1}"
     local error_message="${2:-Unknown error}"
-    
+
     log_error "${error_message}"
     cleanup_on_error
     exit "${exit_code}"
@@ -409,7 +416,7 @@ log_message() {
     local message="$*"
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     echo "${timestamp} [${level}] ${SCRIPT_NAME}: ${message}" >> "${LOG_FILE}"
 }
 ```
@@ -429,7 +436,7 @@ log_structured() {
         --arg script "${SCRIPT_NAME}" \
         --arg message "$*" \
         '{timestamp: $timestamp, level: $level, script: $script, message: $message}')
-    
+
     echo "${json_data}" >> "${LOG_FILE}"
 }
 ```
@@ -450,10 +457,10 @@ load "$(dirname "$0")/../tests/test_helper.bash"
 @test "test description" {
     # Arrange
     local expected="value"
-    
+
     # Act
     local actual=$(function_to_test "input")
-    
+
     # Assert
     assert_equal "${expected}" "${actual}"
 }
@@ -477,4 +484,3 @@ load "$(dirname "$0")/../tests/test_helper.bash"
 
 **Last Updated:** 2025-12-24  
 **Maintainer:** Andres Gomez (AngocA)
-

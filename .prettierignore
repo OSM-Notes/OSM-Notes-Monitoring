@@ -1,0 +1,19 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore git directories
+.git/
+
+# Ignore build artifacts
+dist/
+build/
+
+# Ignore temporary files
+tmp/
+*.tmp
+
+# Ignore logs
+*.log
+
+# Ignore submodules
+lib/osm-common/

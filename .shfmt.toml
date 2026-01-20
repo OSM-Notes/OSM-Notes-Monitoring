@@ -1,0 +1,31 @@
+# shfmt configuration for OSM-Notes-profile
+# Author: Andres Gomez (AngocA)
+# Version: 2025-01-27
+# Based on OSM-Notes-Ingestion standard configuration
+
+# Use 1 space indentation (project standard)
+indent = 1
+
+# Use spaces instead of tabs
+use_tabs = false
+
+# Binary operators like | and |& should be followed by a newline
+binary_next_line = true
+
+# Switch case statements should be indented
+switch_case_indent = true
+
+# Redirect operators should be followed by a newline
+redirect_next_line = true
+
+# Keep blank lines
+keep_padding = true
+
+# Function opening braces should be on the same line
+func_call_chain = true
+
+# Use spaces around redirect operators (aligned with -sr flag and .editorconfig)
+space_redirects = true
+
+# Remove trailing spaces (aligned with trim_trailing_whitespace in .editorconfig)
+keep_trailing_space = false

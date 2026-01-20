@@ -21,16 +21,19 @@ sql/
 ### First Time Setup
 
 1. Create the database:
+
 ```bash
 createdb osm_notes_monitoring
 ```
 
 2. Run the initialization script:
+
 ```bash
 psql -d osm_notes_monitoring -f sql/init.sql
 ```
 
 3. Apply query performance optimizations (recommended):
+
 ```bash
 psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
@@ -38,11 +41,13 @@ psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ### Testing the Schema
 
 Test the schema initialization:
+
 ```bash
 ./sql/test_schema.sh
 ```
 
 This script will:
+
 - Create a test database
 - Initialize the schema
 - Run comprehensive tests (tables, indexes, functions, views, constraints)
@@ -51,6 +56,7 @@ This script will:
 ### Test Database Setup
 
 For manual testing, create a separate database:
+
 ```bash
 createdb osm_notes_monitoring_test
 psql -d osm_notes_monitoring_test -f sql/init.sql
@@ -89,6 +95,7 @@ psql -d osm_notes_monitoring -f sql/optimize_queries.sql
 ```
 
 This script:
+
 - Creates additional indexes for frequently executed queries
 - Updates table statistics for better query planning
 - Provides monitoring queries for performance analysis
@@ -102,13 +109,15 @@ Use the performance analysis script:
 ```
 
 This script:
+
 - Analyzes index usage and identifies unused indexes
 - Checks for table bloat
 - Identifies sequential scans
 - Tests query execution times
 - Generates optimization recommendations
 
-For detailed information, see [Query Performance Optimization Guide](../docs/QUERY_PERFORMANCE_OPTIMIZATION.md).
+For detailed information, see
+[Query Performance Optimization Guide](../docs/QUERY_PERFORMANCE_OPTIMIZATION.md).
 
 ## Maintenance
 
@@ -141,6 +150,7 @@ For high-volume deployments, consider:
 ## Query Organization
 
 Queries are organized by component:
+
 - Each component directory contains SQL files for specific monitoring queries
 - Use descriptive filenames: `component_check_name.sql`
 - Include comments explaining query purpose and usage
@@ -176,6 +186,7 @@ The project uses a migration system to track and apply database schema changes.
 ### Migration Structure
 
 Migrations are stored in `sql/migrations/` and follow the naming pattern:
+
 ```
 YYYYMMDD_HHMMSS_description.sql
 ```
@@ -206,15 +217,16 @@ YYYYMMDD_HHMMSS_description.sql
 
 ### Migration Tracking
 
-Applied migrations are tracked in the `schema_migrations` table, which is created automatically by `init.sql` or the first migration.
+Applied migrations are tracked in the `schema_migrations` table, which is created automatically by
+`init.sql` or the first migration.
 
 ## Schema Documentation
 
 For detailed schema documentation including ER diagrams, table descriptions, and relationships, see:
+
 - [Database Schema Documentation](../docs/DATABASE_SCHEMA.md)
 
 ## References
 
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [TimescaleDB Documentation](https://docs.timescale.com/) (optional)
-

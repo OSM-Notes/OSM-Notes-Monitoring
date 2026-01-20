@@ -422,6 +422,7 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 **Symptoms:** Alerts not appearing in database or email
 
 **Solutions:**
+
 1. Check database connection: `psql -d osm_notes_monitoring -c "SELECT COUNT(*) FROM alerts;"`
 2. Verify configuration: `cat config/alerts.conf`
 3. Check logs: `tail -f logs/send_alert.log`
@@ -433,6 +434,7 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 **Symptoms:** Same alert appearing multiple times
 
 **Solutions:**
+
 1. Verify deduplication is enabled: `ALERT_DEDUPLICATION_ENABLED="true"`
 2. Check deduplication window: `ALERT_DEDUPLICATION_WINDOW_MINUTES`
 3. Review alert messages (must be identical for deduplication)
@@ -442,6 +444,7 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 **Symptoms:** Alerts stored but emails not sent
 
 **Solutions:**
+
 1. Check `mutt` installation: `which mutt`
 2. Test email manually: `echo "test" | mutt -s "test" admin@example.com`
 3. Verify `SEND_ALERT_EMAIL="true"`
@@ -452,9 +455,11 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 **Symptoms:** Slack notifications not received
 
 **Solutions:**
+
 1. Verify `SLACK_ENABLED="true"`
 2. Check `SLACK_WEBHOOK_URL` is set correctly
-3. Test webhook: `curl -X POST -H 'Content-type: application/json' --data '{"text":"test"}' ${SLACK_WEBHOOK_URL}`
+3. Test webhook:
+   `curl -X POST -H 'Content-type: application/json' --data '{"text":"test"}' ${SLACK_WEBHOOK_URL}`
 4. Check Slack channel permissions
 
 ### Escalation Not Working
@@ -462,6 +467,7 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 **Symptoms:** Alerts not escalating automatically
 
 **Solutions:**
+
 1. Verify escalation is enabled: `ESCALATION_ENABLED="true"`
 2. Check escalation thresholds: `ESCALATION_LEVEL1_MINUTES`, etc.
 3. Run escalation check manually: `./bin/alerts/escalation.sh check`
@@ -503,7 +509,8 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 
 ## Reference Documentation
 
-- **Alert Configuration Reference**: `docs/ALERT_CONFIGURATION_REFERENCE.md` - Detailed configuration options
+- **Alert Configuration Reference**: `docs/ALERT_CONFIGURATION_REFERENCE.md` - Detailed
+  configuration options
 - **On-Call Procedures**: `docs/ONCALL_PROCEDURES.md` - On-call procedures and guidelines
 - **Alert Functions**: `bin/lib/alertFunctions.sh` - Alert function library
 - **Alert Manager**: `bin/alerts/alertManager.sh` - Alert management script
@@ -516,9 +523,8 @@ send_alert "INGESTION" "critical" "data_quality" "Data quality check failed"
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review logs: `logs/send_alert.log`, `logs/alert_manager.log`, `logs/escalation.log`
 3. Review alerts in database
 4. Consult reference documentation
-
-

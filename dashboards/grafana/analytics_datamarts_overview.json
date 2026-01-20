@@ -13,34 +13,36 @@
       "id": 1,
       "title": "Datamart Status",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT labels->>'datamart' AS datamart, CASE WHEN metric_value = 1 THEN 'Running' ELSE 'Not Running' END as status FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_process_running' ORDER BY timestamp DESC LIMIT 3",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT labels->>'datamart' AS datamart, CASE WHEN metric_value = 1 THEN 'Running' ELSE 'Not Running' END as status FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_process_running' ORDER BY timestamp DESC LIMIT 3",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "mappings": [
             {
               "type": "value",
               "options": {
-                "Running": {"text": "Running", "color": "green"},
-                "Not Running": {"text": "Not Running", "color": "red"}
+                "Running": { "text": "Running", "color": "green" },
+                "Not Running": { "text": "Not Running", "color": "red" }
               }
             }
           ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "red"},
-              {"value": 1, "color": "green"}
+              { "value": null, "color": "red" },
+              { "value": 1, "color": "green" }
             ]
           }
         }
@@ -50,18 +52,20 @@
       "id": 2,
       "title": "Datamart Freshness",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_freshness_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_freshness_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -69,9 +73,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "green"},
-              {"value": 86400, "color": "yellow"},
-              {"value": 172800, "color": "red"}
+              { "value": null, "color": "green" },
+              { "value": 86400, "color": "yellow" },
+              { "value": 172800, "color": "red" }
             ]
           }
         }
@@ -94,18 +98,20 @@
       "id": 3,
       "title": "Execution Duration by Datamart",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_execution_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'datamart' AS datamart, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_execution_duration_seconds' AND $__timeFilter(timestamp) ORDER BY timestamp, datamart",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -130,7 +136,7 @@
       "id": 4,
       "title": "Records by Datamart",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "targets": [
         {
           "datasource": {
@@ -180,18 +186,20 @@
       "id": 5,
       "title": "Parallel Processing (Countries)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_parallel_processing_count' AND labels->>'datamart' = 'countries' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'analytics' AND metric_name = 'datamart_parallel_processing_count' AND labels->>'datamart' = 'countries' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -203,7 +211,7 @@
       "id": 6,
       "title": "Users Progress",
       "type": "stat",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "targets": [
         {
           "datasource": {
@@ -250,5 +258,5 @@
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": { "from": "now-24h", "to": "now" }
 }

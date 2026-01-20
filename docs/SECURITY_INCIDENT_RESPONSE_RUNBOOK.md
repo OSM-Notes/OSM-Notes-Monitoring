@@ -7,7 +7,9 @@
 
 ## Overview
 
-This runbook provides detailed information about security incidents and how to respond to them, including:
+This runbook provides detailed information about security incidents and how to respond to them,
+including:
+
 - What each incident type means
 - What causes it
 - How to investigate
@@ -17,16 +19,19 @@ This runbook provides detailed information about security incidents and how to r
 ## Alert Severity Levels
 
 ### CRITICAL
+
 - **Response Time:** Immediate (within 5 minutes)
 - **Impact:** Active attack, service availability at risk
 - **Action:** Immediate response, block attacker, investigate source
 
 ### WARNING
+
 - **Response Time:** Within 15 minutes
 - **Impact:** Potential abuse or violation detected
 - **Action:** Investigate and respond, monitor closely
 
 ### INFO
+
 - **Response Time:** Within 1 hour
 - **Impact:** Informational, no immediate threat
 - **Action:** Review and document, may indicate trends
@@ -44,26 +49,29 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `rate_limit_violation`
 
 **What it means:**
+
 - An IP address has exceeded the configured rate limit
 - Rate limit is enforced to prevent abuse and resource exhaustion
 
 **Common Causes:**
+
 - Legitimate high-volume user
 - Automated scraping or abuse
 - API integration making too many requests
 - Burst traffic from legitimate source
 
 **Investigation Steps:**
+
 1. Check rate limit statistics:
    ```bash
    ./bin/security/rateLimiter.sh stats <IP>
    ```
 2. Review request patterns:
    ```sql
-   SELECT * FROM security_events 
-   WHERE ip_address = '<IP>'::inet 
+   SELECT * FROM security_events
+   WHERE ip_address = '<IP>'::inet
      AND event_type = 'rate_limit'
-   ORDER BY timestamp DESC 
+   ORDER BY timestamp DESC
    LIMIT 50;
    ```
 3. Check if IP is whitelisted:
@@ -80,13 +88,15 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **If Legitimate User:**
    - Add IP to whitelist: `./bin/security/ipBlocking.sh add <IP> whitelist "Legitimate user"`
    - Consider providing API key for higher limits
    - Contact user to optimize request patterns
 
 2. **If Abuse:**
-   - Block IP temporarily: `./bin/security/ipBlocking.sh add <IP> temp_block "Rate limit violation" 15`
+   - Block IP temporarily:
+     `./bin/security/ipBlocking.sh add <IP> temp_block "Rate limit violation" 15`
    - Review abuse patterns
    - Consider permanent blacklist for repeat offenders
 
@@ -96,6 +106,7 @@ This runbook provides detailed information about security incidents and how to r
    - Optimize integration to reduce request frequency
 
 **Prevention:**
+
 - Monitor rate limit violations regularly
 - Adjust thresholds based on usage patterns
 - Provide API keys for authenticated users
@@ -112,16 +123,19 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `rate_limit_repeated_violations`
 
 **What it means:**
+
 - Same IP has violated rate limits multiple times
 - Indicates persistent abuse or misconfiguration
 
 **Common Causes:**
+
 - Persistent attacker
 - Misconfigured API integration
 - Bot or automated scraper
 - Legitimate user unaware of limits
 
 **Investigation Steps:**
+
 1. Count violations:
    ```sql
    SELECT COUNT(*) as violation_count
@@ -144,12 +158,14 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **First Violation:** Log and monitor
 2. **Second Violation:** Block for 1 hour
 3. **Third Violation:** Block for 24 hours
 4. **Persistent:** Add to permanent blacklist
 
 **Prevention:**
+
 - Progressive blocking (15 min → 1 hour → 24 hours)
 - Monitor violation patterns
 - Automate blocking for repeat offenders
@@ -167,17 +183,20 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `ddos_attack`
 
 **What it means:**
+
 - An IP address is making requests at a rate that exceeds DDoS threshold
 - Indicates potential distributed denial-of-service attack
 - Service availability may be at risk
 
 **Common Causes:**
+
 - Coordinated attack from single IP
 - Botnet attack
 - Misconfigured client making excessive requests
 - Legitimate traffic spike (false positive)
 
 **Investigation Steps:**
+
 1. Check attack statistics:
    ```bash
    ./bin/security/ddosProtection.sh stats
@@ -209,6 +228,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **Automatic Response (if enabled):**
    - IP is automatically blocked for `DDOS_AUTO_BLOCK_DURATION_MINUTES`
    - Monitor blocked IPs: `./bin/security/ipBlocking.sh list temp_block`
@@ -229,6 +249,7 @@ This runbook provides detailed information about security incidents and how to r
    - Consider scaling infrastructure
 
 **Prevention:**
+
 - Monitor baseline traffic patterns
 - Set thresholds 2-3x above normal peak traffic
 - Enable automatic IP blocking
@@ -246,17 +267,20 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `ddos_concurrent_connections`
 
 **What it means:**
+
 - Number of concurrent connections exceeds threshold
 - May indicate DDoS attack or resource exhaustion
 - Service availability may be at risk
 
 **Common Causes:**
+
 - DDoS attack (connection exhaustion)
 - Legitimate traffic spike
 - Misconfigured clients
 - Resource exhaustion
 
 **Investigation Steps:**
+
 1. Check connection statistics:
    ```bash
    ./bin/security/ddosProtection.sh stats
@@ -278,6 +302,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **If Attack:**
    - Enable connection rate limiting
    - Block high-volume IPs
@@ -289,6 +314,7 @@ This runbook provides detailed information about security incidents and how to r
    - Optimize connection handling
 
 **Prevention:**
+
 - Monitor connection patterns
 - Set appropriate connection limits
 - Enable connection rate limiting
@@ -307,17 +333,20 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `abuse_pattern`
 
 **What it means:**
+
 - Known abuse pattern detected (SQL injection, XSS, etc.)
 - Indicates potential attack attempt
 - May indicate automated abuse
 
 **Common Causes:**
+
 - SQL injection attempt
 - XSS attack attempt
 - Path traversal attempt
 - Automated vulnerability scanning
 
 **Investigation Steps:**
+
 1. Review abuse patterns:
    ```bash
    ./bin/security/abuseDetection.sh patterns
@@ -344,6 +373,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **If Attack Attempt:**
    - Block IP: `./bin/security/ipBlocking.sh add <IP> temp_block "Abuse pattern detected" 60`
    - Review attack patterns
@@ -355,6 +385,7 @@ This runbook provides detailed information about security incidents and how to r
    - Whitelist IP if legitimate user
 
 **Prevention:**
+
 - Regular review of abuse patterns
 - Update pattern matching rules
 - Monitor false positive rate
@@ -371,24 +402,27 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `abuse_anomaly`
 
 **What it means:**
+
 - Unusual activity pattern detected from an IP
 - Activity significantly differs from baseline
 - May indicate abuse or compromised account
 
 **Common Causes:**
+
 - Sudden spike in request volume
 - Unusual endpoint access patterns
 - Unusual time-of-day activity
 - Compromised account or API key
 
 **Investigation Steps:**
+
 1. Review anomaly score:
    ```bash
    ./bin/security/abuseDetection.sh check <IP>
    ```
 2. Compare to baseline:
    ```sql
-   SELECT 
+   SELECT
      AVG(CASE WHEN timestamp < CURRENT_TIMESTAMP - INTERVAL '7 days' THEN 1 ELSE 0 END) as baseline,
      COUNT(*) FILTER (WHERE timestamp > CURRENT_TIMESTAMP - INTERVAL '1 hour') as current
    FROM security_events
@@ -396,7 +430,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 3. Review activity patterns:
    ```sql
-   SELECT 
+   SELECT
      DATE_TRUNC('hour', timestamp) as hour,
      COUNT(*) as request_count
    FROM security_events
@@ -407,6 +441,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **If Abuse:**
    - Block IP temporarily
    - Review activity patterns
@@ -418,6 +453,7 @@ This runbook provides detailed information about security incidents and how to r
    - Whitelist IP if trusted user
 
 **Prevention:**
+
 - Regular baseline updates
 - Monitor anomaly detection accuracy
 - Adjust thresholds based on false positive rate
@@ -434,17 +470,20 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `abuse_behavioral`
 
 **What it means:**
+
 - Suspicious behavioral patterns detected
 - May indicate automated abuse or scraping
 - May indicate compromised account
 
 **Common Causes:**
+
 - Automated scraping
 - Bot activity
 - Unusual endpoint diversity
 - Unusual user agent patterns
 
 **Investigation Steps:**
+
 1. Review behavioral score:
    ```bash
    ./bin/security/abuseDetection.sh check <IP>
@@ -466,6 +505,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **If Abuse:**
    - Block IP
    - Review scraping patterns
@@ -477,6 +517,7 @@ This runbook provides detailed information about security incidents and how to r
    - Whitelist IP if trusted user
 
 **Prevention:**
+
 - Monitor behavioral patterns
 - Adjust behavioral analysis thresholds
 - Regular review of false positives
@@ -495,17 +536,20 @@ This runbook provides detailed information about security incidents and how to r
 **Alert Type:** `ip_auto_block`
 
 **What it means:**
+
 - An IP was automatically blocked due to security violation
 - Block duration depends on violation count
 - IP will be unblocked automatically after duration expires
 
 **Common Causes:**
+
 - Rate limit violation
 - DDoS attack detection
 - Abuse pattern detection
 - Anomaly detection
 
 **Investigation Steps:**
+
 1. Check block status:
    ```bash
    ./bin/security/ipBlocking.sh status <IP>
@@ -528,6 +572,7 @@ This runbook provides detailed information about security incidents and how to r
    ```
 
 **Resolution:**
+
 1. **If Legitimate User:**
    - Unblock IP: `./bin/security/ipBlocking.sh remove <IP> temp_block`
    - Add to whitelist to prevent future blocks
@@ -539,6 +584,7 @@ This runbook provides detailed information about security incidents and how to r
    - Monitor after unblock
 
 **Prevention:**
+
 - Regular review of blocked IPs
 - Whitelist trusted IPs
 - Provide API keys for authenticated users
@@ -617,4 +663,3 @@ This runbook provides detailed information about security incidents and how to r
 - **Alert Thresholds**: `docs/API_SECURITY_ALERT_THRESHOLDS.md` - Alert threshold definitions
 - **Rate Limiting Guide**: `docs/RATE_LIMITING_GUIDE.md` - Rate limiting guide
 - **Security Best Practices**: `docs/SECURITY_BEST_PRACTICES.md` - Security best practices
-

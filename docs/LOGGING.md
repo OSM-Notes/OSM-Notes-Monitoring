@@ -20,6 +20,7 @@ Complete guide to logging in OSM-Notes-Monitoring.
 ## Logging Overview
 
 OSM-Notes-Monitoring uses a centralized logging system with:
+
 - **Structured logging** with consistent format
 - **Multiple log levels** (DEBUG, INFO, WARNING, ERROR)
 - **Automatic log rotation** to manage disk space
@@ -44,56 +45,68 @@ OSM-Notes-Monitoring uses a centralized logging system with:
 ## Log Levels
 
 ### DEBUG
+
 Detailed debugging information. Only enabled when `LOG_LEVEL=DEBUG`.
 
 **When to use:**
+
 - Function entry/exit
 - Variable values
 - Detailed execution flow
 
 **Example:**
+
 ```bash
 log_debug "Processing note ${note_id}"
 log_debug "Database query: ${query}"
 ```
 
 ### INFO
+
 General informational messages about normal operation.
 
 **When to use:**
+
 - Component startup/shutdown
 - Successful operations
 - Status updates
 
 **Example:**
+
 ```bash
 log_info "Monitoring started for component: ${component}"
 log_info "Health check passed: ${component}"
 ```
 
 ### WARNING
+
 Warning messages for potentially problematic situations.
 
 **When to use:**
+
 - Recoverable errors
 - Degraded performance
 - Configuration issues
 
 **Example:**
+
 ```bash
 log_warning "High error rate detected: ${error_rate}%"
 log_warning "Response time above threshold: ${response_time}ms"
 ```
 
 ### ERROR
+
 Error messages for failures that need attention.
 
 **When to use:**
+
 - Component failures
 - Database connection errors
 - Critical system errors
 
 **Example:**
+
 ```bash
 log_error "Failed to connect to database: ${error}"
 log_error "Component ${component} is down"
@@ -128,6 +141,7 @@ All log entries follow this format:
 ```
 
 **Example:**
+
 ```
 [2025-12-24 10:30:45] [INFO] [MONITORING] Health check started
 [2025-12-24 10:30:46] [WARNING] [INGESTION] High error rate: 6%
@@ -149,21 +163,25 @@ Logs are automatically rotated daily using `logrotate`:
 ### Setup Log Rotation
 
 1. **Install logrotate configuration:**
+
 ```bash
 sudo ./scripts/setup_logrotate.sh
 ```
 
 2. **Test configuration:**
+
 ```bash
 sudo ./scripts/setup_logrotate.sh --test
 ```
 
 3. **Manual rotation (dry-run):**
+
 ```bash
 logrotate -d /etc/logrotate.d/osm-notes-monitoring
 ```
 
 4. **Force rotation:**
+
 ```bash
 logrotate -f /etc/logrotate.d/osm-notes-monitoring
 ```
@@ -171,10 +189,12 @@ logrotate -f /etc/logrotate.d/osm-notes-monitoring
 ### Log Rotation Configuration
 
 The configuration file is located at:
+
 - **Source**: `config/logrotate.conf`
 - **Installed**: `/etc/logrotate.d/osm-notes-monitoring`
 
 **Features:**
+
 - Daily rotation
 - Compression of old logs
 - Date-based naming (`*.log-YYYYMMDD.gz`)
@@ -235,7 +255,8 @@ log_error_with_trace "Function failed" "${BASH_SOURCE[0]}" "${LINENO}"
 
 ## Best Practices
 
-> **Note:** For comprehensive logging best practices, see **[Logging Best Practices](./LOGGING_BEST_PRACTICES.md)**
+> **Note:** For comprehensive logging best practices, see
+> **[Logging Best Practices](./LOGGING_BEST_PRACTICES.md)**
 
 ### 1. Use Appropriate Log Levels
 
@@ -299,18 +320,22 @@ log_info "Health check: component=${component} status=${status} response_time=${
 **Problem**: Log files are not being created.
 
 **Solutions:**
+
 1. Check log directory permissions:
+
 ```bash
 ls -ld /var/log/osm-notes-monitoring
 ```
 
 2. Ensure directory exists:
+
 ```bash
 mkdir -p /var/log/osm-notes-monitoring
 chmod 755 /var/log/osm-notes-monitoring
 ```
 
 3. Check `LOG_DIR` configuration:
+
 ```bash
 grep LOG_DIR etc/properties.sh
 ```
@@ -320,17 +345,21 @@ grep LOG_DIR etc/properties.sh
 **Problem**: Logs are not rotating.
 
 **Solutions:**
+
 1. Check logrotate configuration:
+
 ```bash
 logrotate -d /etc/logrotate.d/osm-notes-monitoring
 ```
 
 2. Verify logrotate is running:
+
 ```bash
 systemctl status logrotate
 ```
 
 3. Check cron for logrotate:
+
 ```bash
 grep logrotate /etc/cron.daily/logrotate
 ```
@@ -340,17 +369,21 @@ grep logrotate /etc/cron.daily/logrotate
 **Problem**: Disk space filling up with logs.
 
 **Solutions:**
+
 1. Reduce retention period in `config/logrotate.conf`:
+
 ```bash
 rotate 7  # Keep only 7 days instead of 30
 ```
 
 2. Force immediate rotation:
+
 ```bash
 logrotate -f /etc/logrotate.d/osm-notes-monitoring
 ```
 
 3. Clean up old logs manually:
+
 ```bash
 find /var/log/osm-notes-monitoring -name "*.log-*.gz" -mtime +30 -delete
 ```
@@ -360,12 +393,15 @@ find /var/log/osm-notes-monitoring -name "*.log-*.gz" -mtime +30 -delete
 **Problem**: Debug logs are too verbose in production.
 
 **Solutions:**
+
 1. Change log level in `etc/properties.sh`:
+
 ```bash
 LOG_LEVEL="INFO"  # Instead of DEBUG
 ```
 
 2. Disable debug logging:
+
 ```bash
 export LOG_LEVEL="INFO"
 ```
@@ -375,12 +411,15 @@ export LOG_LEVEL="INFO"
 **Problem**: Log entries don't show component name.
 
 **Solutions:**
+
 1. Initialize logging with component name:
+
 ```bash
 init_logging "COMPONENT_NAME"
 ```
 
 2. Set component explicitly:
+
 ```bash
 set_log_component "COMPONENT_NAME"
 ```
@@ -396,6 +435,7 @@ OSM-Notes-Monitoring includes built-in log aggregation and analysis utilities:
 Aggregates logs from multiple components with filtering options.
 
 **Usage:**
+
 ```bash
 # Show last 100 lines from all logs
 ./scripts/log_aggregator.sh
@@ -420,6 +460,7 @@ Aggregates logs from multiple components with filtering options.
 ```
 
 **Options:**
+
 - `-d, --dir DIR`: Log directory
 - `-c, --component NAME`: Filter by component
 - `-l, --level LEVEL`: Filter by log level
@@ -434,6 +475,7 @@ Aggregates logs from multiple components with filtering options.
 Analyzes logs and generates statistics and reports.
 
 **Usage:**
+
 ```bash
 # Show statistics
 ./scripts/log_analyzer.sh stats
@@ -458,6 +500,7 @@ Analyzes logs and generates statistics and reports.
 ```
 
 **Commands:**
+
 - `stats`: Show log statistics
 - `errors`: Show error summary
 - `top-errors`: Show top error messages
@@ -465,6 +508,7 @@ Analyzes logs and generates statistics and reports.
 - `summary`: Show summary report
 
 **Options:**
+
 - `-d, --dir DIR`: Log directory
 - `-s, --since TIME`: Analyze logs since time
 - `-u, --until TIME`: Analyze logs until time
@@ -512,6 +556,7 @@ Test logging performance with the performance test suite:
 ```
 
 **Test Coverage:**
+
 - Single log write performance
 - Batch log write performance
 - Log level filtering performance
@@ -521,6 +566,7 @@ Test logging performance with the performance test suite:
 - Memory usage
 
 **Example Output:**
+
 ```
 === Testing Single Log Write Performance ===
   Total time: 26630ms
@@ -531,6 +577,7 @@ Test logging performance with the performance test suite:
 ```
 
 **Performance Guidelines:**
+
 - Single log writes: ~2-3ms per message
 - Log level filtering adds minimal overhead
 - Concurrent logging scales well
@@ -543,23 +590,22 @@ Test logging performance with the performance test suite:
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LOG_LEVEL` | `INFO` | Log level (DEBUG, INFO, WARNING, ERROR) |
-| `LOG_DIR` | `/var/log/osm-notes-monitoring` | Log directory |
-| `LOG_COMPONENT` | `MONITORING` | Default component name |
+| Variable        | Default                         | Description                             |
+| --------------- | ------------------------------- | --------------------------------------- |
+| `LOG_LEVEL`     | `INFO`                          | Log level (DEBUG, INFO, WARNING, ERROR) |
+| `LOG_DIR`       | `/var/log/osm-notes-monitoring` | Log directory                           |
+| `LOG_COMPONENT` | `MONITORING`                    | Default component name                  |
 
 ### Log Rotation Settings
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| Rotation frequency | Daily | Logs rotated once per day |
-| Regular retention | 30 days | Standard logs kept for 30 days |
-| Error retention | 90 days | Error logs kept for 90 days |
-| Debug retention | 7 days | Debug logs kept for 7 days |
-| Compression | Yes | Old logs are compressed |
+| Setting            | Value   | Description                    |
+| ------------------ | ------- | ------------------------------ |
+| Rotation frequency | Daily   | Logs rotated once per day      |
+| Regular retention  | 30 days | Standard logs kept for 30 days |
+| Error retention    | 90 days | Error logs kept for 90 days    |
+| Debug retention    | 7 days  | Debug logs kept for 7 days     |
+| Compression        | Yes     | Old logs are compressed        |
 
 ---
 
 **Last Updated:** 2025-12-24
-

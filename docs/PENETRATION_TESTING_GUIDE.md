@@ -6,7 +6,9 @@
 
 ## Overview
 
-This guide provides instructions for performing penetration testing on the OSM-Notes-Monitoring system. Penetration testing (pen testing) involves simulating real-world attacks to identify security vulnerabilities that automated scans might miss.
+This guide provides instructions for performing penetration testing on the OSM-Notes-Monitoring
+system. Penetration testing (pen testing) involves simulating real-world attacks to identify
+security vulnerabilities that automated scans might miss.
 
 ## Table of Contents
 
@@ -25,7 +27,9 @@ This guide provides instructions for performing penetration testing on the OSM-N
 
 ### What is Penetration Testing?
 
-Penetration testing is a security testing methodology where security professionals attempt to exploit vulnerabilities in a controlled environment. Unlike automated vulnerability scans, pen testing involves:
+Penetration testing is a security testing methodology where security professionals attempt to
+exploit vulnerabilities in a controlled environment. Unlike automated vulnerability scans, pen
+testing involves:
 
 - **Manual testing**: Human testers think creatively about attack vectors
 - **Exploitation attempts**: Actually trying to exploit vulnerabilities
@@ -75,6 +79,7 @@ Penetration testing is a security testing methodology where security professiona
 ### Environment Setup
 
 1. **Use Test Environment**: Never test in production
+
    ```bash
    # Use test database
    export TEST_DB_NAME="osm_notes_monitoring_test"
@@ -82,11 +87,13 @@ Penetration testing is a security testing methodology where security professiona
    ```
 
 2. **Backup Test Data**: Create backups before testing
+
    ```bash
    pg_dump -d osm_notes_monitoring_test > backup_before_pen_test.sql
    ```
 
 3. **Enable Logging**: Ensure all security events are logged
+
    ```bash
    export LOG_LEVEL="DEBUG"
    ```
@@ -117,6 +124,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt to bypass rate limiting mechanisms
 
 **Test Cases**:
+
 - Rapid request bursts
 - IP rotation attempts
 - Whitelist manipulation
@@ -129,6 +137,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt SQL injection attacks
 
 **Test Cases**:
+
 - Basic SQL injection: `' OR '1'='1`
 - Union-based injection: `' UNION SELECT * FROM users--`
 - Time-based blind injection: `'; WAITFOR DELAY '00:00:05'--`
@@ -141,6 +150,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt command injection attacks
 
 **Test Cases**:
+
 - Basic command injection: `; ls -la`
 - Pipe injection: `| cat /etc/passwd`
 - Backtick injection: `` `whoami` ``
@@ -153,6 +163,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt to access unauthorized files
 
 **Test Cases**:
+
 - Basic traversal: `../../../etc/passwd`
 - Encoded traversal: `..%2F..%2Fetc%2Fpasswd`
 - Double encoding: `..%252F..%252Fetc%252Fpasswd`
@@ -165,6 +176,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt to bypass IP blocking
 
 **Test Cases**:
+
 - IP spoofing attempts
 - Proxy/VPN usage
 - Header manipulation (X-Forwarded-For)
@@ -177,6 +189,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt to bypass authentication
 
 **Test Cases**:
+
 - Default credentials
 - Credential brute force
 - Session hijacking
@@ -189,6 +202,7 @@ Penetration testing is a security testing methodology where security professiona
 **Objective**: Attempt to extract sensitive information
 
 **Test Cases**:
+
 - Error message analysis
 - Log file access
 - Configuration file access
@@ -228,12 +242,14 @@ Penetration testing is a security testing methodology where security professiona
 ### 1. SQL Injection Testing
 
 **Step 1**: Identify input points
+
 ```bash
 # Find SQL query execution points
 grep -r "execute_sql_query\|psql.*-c" bin/
 ```
 
 **Step 2**: Test with malicious input
+
 ```bash
 # Test IP validation function
 ./bin/lib/securityFunctions.sh
@@ -241,6 +257,7 @@ is_valid_ip "'; DROP TABLE metrics; --"
 ```
 
 **Step 3**: Verify protection
+
 ```bash
 # Check if table still exists
 psql -d osm_notes_monitoring_test -c "SELECT COUNT(*) FROM metrics;"
@@ -249,6 +266,7 @@ psql -d osm_notes_monitoring_test -c "SELECT COUNT(*) FROM metrics;"
 ### 2. Rate Limiting Testing
 
 **Step 1**: Baseline test
+
 ```bash
 # Normal request rate
 for i in {1..10}; do
@@ -258,6 +276,7 @@ done
 ```
 
 **Step 2**: Burst test
+
 ```bash
 # Rapid burst of requests
 for i in {1..100}; do
@@ -267,6 +286,7 @@ wait
 ```
 
 **Step 3**: Verify blocking
+
 ```bash
 # Check if IP was blocked
 ./bin/security/ipBlocking.sh status 192.168.1.100
@@ -275,11 +295,13 @@ wait
 ### 3. IP Blocking Testing
 
 **Step 1**: Add test IP to blacklist
+
 ```bash
 ./bin/security/ipBlocking.sh add 192.168.1.200 blacklist "pen test"
 ```
 
 **Step 2**: Attempt to bypass
+
 ```bash
 # Try different IP formats
 ./bin/lib/securityFunctions.sh is_valid_ip "192.168.1.200"
@@ -287,6 +309,7 @@ wait
 ```
 
 **Step 3**: Verify blocking persists
+
 ```bash
 ./bin/security/ipBlocking.sh status 192.168.1.200
 ```
@@ -294,12 +317,14 @@ wait
 ### 4. Path Traversal Testing
 
 **Step 1**: Identify file operations
+
 ```bash
 # Find file read operations
 grep -r "cat\|read\|source" bin/ --include="*.sh"
 ```
 
 **Step 2**: Test with traversal payloads
+
 ```bash
 # Test configuration loading
 export CONFIG_PATH="../../../etc/passwd"
@@ -307,6 +332,7 @@ export CONFIG_PATH="../../../etc/passwd"
 ```
 
 **Step 3**: Verify protection
+
 ```bash
 # Verify file wasn't accessed
 ls -la /etc/passwd
@@ -402,7 +428,9 @@ ls -la /etc/passwd
 
 ## Summary
 
-Penetration testing is a critical component of maintaining a secure monitoring system. By simulating real-world attacks, we can identify and fix vulnerabilities before they can be exploited. Use this guide to:
+Penetration testing is a critical component of maintaining a secure monitoring system. By simulating
+real-world attacks, we can identify and fix vulnerabilities before they can be exploited. Use this
+guide to:
 
 1. Plan and execute penetration tests safely
 2. Identify security vulnerabilities

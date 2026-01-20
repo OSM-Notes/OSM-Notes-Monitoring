@@ -7,7 +7,8 @@
 
 ## Overview
 
-This document provides procedures and guidelines for on-call operations in the OSM-Notes-Monitoring system.
+This document provides procedures and guidelines for on-call operations in the OSM-Notes-Monitoring
+system.
 
 ## On-Call Responsibilities
 
@@ -64,6 +65,7 @@ ONCALL_SECONDARY="oncall-secondary@example.com"
 ```
 
 **When to Acknowledge:**
+
 - When you start investigating
 - When you take ownership
 - When you begin working on resolution
@@ -78,12 +80,14 @@ ONCALL_SECONDARY="oncall-secondary@example.com"
 ### 4. Resolve or Escalate
 
 **If Resolved:**
+
 ```bash
 # Resolve alert
 ./bin/alerts/alertManager.sh resolve <alert-id> <your-name>
 ```
 
 **If Escalation Needed:**
+
 - Alert will auto-escalate based on time thresholds
 - Or manually escalate: `./bin/alerts/escalation.sh escalate <alert-id> <level>`
 
@@ -213,5 +217,3 @@ psql -d osm_notes_monitoring -c "UPDATE alerts SET metadata = metadata || '{\"re
 - **Alert Configuration**: `docs/ALERT_CONFIGURATION_REFERENCE.md` - Configuration reference
 - **Alert Manager**: `bin/alerts/alertManager.sh` - Alert management script
 - **Escalation**: `bin/alerts/escalation.sh` - Escalation script
-
-

@@ -76,6 +76,7 @@ Set up the production environment:
 ```
 
 This script:
+
 - Validates the environment
 - Creates necessary directories
 - Sets up configuration files
@@ -121,9 +122,11 @@ psql -d notes_monitoring -c "GRANT USAGE ON SCHEMA public TO osm_notes_monitorin
 
 ```
 
-**Note:** Replace `osm_notes_monitoring_user` with your actual monitoring database user if different.
+**Note:** Replace `osm_notes_monitoring_user` with your actual monitoring database user if
+different.
 
 **Options:**
+
 - `--skip-checks`: Skip environment validation
 - `--skip-database`: Skip database setup
 - `--skip-config`: Skip configuration setup
@@ -141,6 +144,7 @@ Run database migrations:
 The `-b` flag creates a backup before migration.
 
 **Options:**
+
 - `-b, --backup`: Create backup before migration
 - `-r, --rollback FILE`: Rollback from backup file
 - `-l, --list`: List pending migrations
@@ -155,12 +159,14 @@ Apply security hardening:
 ```
 
 This script:
+
 - Sets secure file permissions
 - Checks for hardcoded credentials
 - Validates security configuration
 - Runs security audit
 
 **Options:**
+
 - `--check`: Run security checks only
 - `--apply`: Apply security hardening
 - `--report`: Generate security report
@@ -174,6 +180,7 @@ Set up automated monitoring:
 ```
 
 This installs cron jobs for:
+
 - Ingestion monitoring (every 5 minutes)
 - Analytics monitoring (every 15 minutes)
 - WMS monitoring (every 5 minutes)
@@ -185,6 +192,7 @@ This installs cron jobs for:
 - Database backup (daily at 3 AM)
 
 **Options:**
+
 - `--install`: Install cron jobs
 - `--remove`: Remove cron jobs
 - `--list`: List current cron jobs
@@ -199,12 +207,13 @@ Set up automated backups:
 ```
 
 **Options:**
+
 - `--install`: Install backup cron job
 - `--remove`: Remove backup cron job
 - `--test`: Test backup creation
 - `--list`: List backup configuration
 - `--retention DAYS`: Set retention period (default: 30)
-- `--schedule SCHEDULE`: Set cron schedule (default: "0 3 * * *")
+- `--schedule SCHEDULE`: Set cron schedule (default: "0 3 \* \* \*")
 
 ### Step 6: Set Up Log Rotation
 
@@ -217,6 +226,7 @@ sudo ./scripts/setup_logrotate.sh
 This installs logrotate configuration to `/etc/logrotate.d/osm-notes-monitoring`.
 
 **Options:**
+
 - `-t, --test`: Test configuration without installing
 - `-d, --dry-run`: Dry run test
 
@@ -229,6 +239,7 @@ Validate the deployment:
 ```
 
 This checks:
+
 - Database connection
 - Configuration files
 - Monitoring scripts
@@ -246,32 +257,40 @@ This checks:
 Review and update configuration files:
 
 1. **Main Configuration** (`etc/properties.sh`):
+
    ```bash
    nano etc/properties.sh
    ```
+
    - Update database connection details
    - Set admin email
    - Configure repository paths
 
 2. **Alert Configuration** (`config/alerts.conf`):
+
    ```bash
    nano config/alerts.conf
    ```
+
    - Configure email alerts
    - Set up Slack webhook (optional)
    - Configure alert routing
 
 3. **Monitoring Configuration** (`config/monitoring.conf`):
+
    ```bash
    nano config/monitoring.conf
    ```
+
    - Adjust alert thresholds
    - Configure monitoring intervals
 
 4. **Security Configuration** (`config/security.conf`):
+
    ```bash
    nano config/security.conf
    ```
+
    - Configure rate limiting
    - Set up DDoS protection
    - Configure IP blocking
@@ -330,26 +349,30 @@ Run the validation script:
 ### Manual Verification
 
 1. **Check Database**:
+
    ```bash
    psql -d notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
    psql -d notes_monitoring -c "SELECT * FROM component_health;"
    ```
 
 2. **Check Cron Jobs**:
+
    ```bash
    crontab -l | grep OSM-Notes-Monitoring
    ```
 
 3. **Check Logs**:
+
    ```bash
    ls -lh /var/log/osm-notes-monitoring/
    ```
 
 4. **Check Dashboards**:
+
    ```bash
    # HTML dashboards
    ls -lh dashboards/html/
-   
+
    # Open in browser
    open dashboards/html/overview.html
    ```
@@ -365,6 +388,7 @@ Run the validation script:
 **Error**: `Cannot connect to database`
 
 **Solution**:
+
 1. Check PostgreSQL is running: `systemctl status postgresql`
 2. Verify database exists: `psql -l | grep notes_monitoring`
 3. Check credentials in `etc/properties.sh`
@@ -375,6 +399,7 @@ Run the validation script:
 **Error**: `Configuration validation found issues`
 
 **Solution**:
+
 1. Run validation with verbose output: `./scripts/test_config_validation.sh`
 2. Check for default values: `grep -r "example.com\|changeme" etc/ config/`
 3. Review configuration files manually
@@ -384,6 +409,7 @@ Run the validation script:
 **Error**: Monitoring scripts not executing
 
 **Solution**:
+
 1. Check cron service: `systemctl status cron`
 2. Verify cron jobs: `crontab -l`
 3. Check cron logs: `grep CRON /var/log/syslog`
@@ -394,6 +420,7 @@ Run the validation script:
 **Error**: Logs not rotating
 
 **Solution**:
+
 1. Check logrotate config: `cat /etc/logrotate.d/osm-notes-monitoring`
 2. Test manually: `sudo logrotate -d /etc/logrotate.d/osm-notes-monitoring`
 3. Force rotation: `sudo logrotate -f /etc/logrotate.d/osm-notes-monitoring`
@@ -403,9 +430,11 @@ Run the validation script:
 **Error**: Alerts not being sent
 
 **Solution**:
+
 1. Check alert configuration: `cat config/alerts.conf`
 2. Test email: `echo "test" | mutt -s "test" admin@example.com`
-3. Check Slack webhook: `curl -X POST -H 'Content-type: application/json' --data '{"text":"test"}' SLACK_WEBHOOK_URL`
+3. Check Slack webhook:
+   `curl -X POST -H 'Content-type: application/json' --data '{"text":"test"}' SLACK_WEBHOOK_URL`
 4. Review alert logs: `tail -f /var/log/osm-notes-monitoring/*.log`
 
 ### Getting Help
@@ -424,6 +453,7 @@ If you encounter issues:
 After successful deployment:
 
 1. **Configure Grafana** (optional):
+
    ```bash
    ./scripts/setup_grafana_all.sh
    ```

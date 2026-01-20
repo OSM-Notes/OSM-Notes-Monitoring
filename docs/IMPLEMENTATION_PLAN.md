@@ -4,7 +4,8 @@
 > **Author:** Andres Gomez (AngocA)  
 > **Version:** 2025-12-31  
 > **Status:** Complete - All phases implemented  
-> **Note:** This is a reference document. All implementation phases have been completed. For ongoing maintenance tasks, see [Operations Runbook](./OPERATIONS_RUNBOOK.md#ongoing-maintenance-plan)
+> **Note:** This is a reference document. All implementation phases have been completed. For ongoing
+> maintenance tasks, see [Operations Runbook](./OPERATIONS_RUNBOOK.md#ongoing-maintenance-plan)
 
 ## Table of Contents
 
@@ -19,7 +20,8 @@
 
 ## Overview
 
-This document provides a comprehensive implementation plan for OSM-Notes-Monitoring, following industry best practices for monitoring systems, including:
+This document provides a comprehensive implementation plan for OSM-Notes-Monitoring, following
+industry best practices for monitoring systems, including:
 
 - **SRE Principles**: Reliability, observability, error budgets
 - **Testing Standards**: Unit, integration, and end-to-end tests
@@ -37,48 +39,56 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Development Environment Setup**
+
 - Set up development database (PostgreSQL)
 - Configure local testing environment
 - Set up Git hooks (pre-commit, pre-push)
 - Configure IDE/editor settings
 
 2. **Code Quality Tools**
+
 - Install and configure `shellcheck` for bash scripts
 - Set up `shfmt` for code formatting
 - Configure `grep`/`ripgrep` for code analysis
 - Set up SQL linting tools (`sqlfluff` or similar)
 
 3. **Testing Framework**
+
 - Set up `bats` (Bash Automated Testing System)
 - Create test directory structure
 - Set up mock command framework
 - Create test utilities and helpers
 
 4. **CI/CD Pipeline**
+
 - Set up GitHub Actions (or similar)
 - Configure automated testing
 - Set up code quality checks
 - Configure automated documentation generation
 
 5. **Documentation Framework**
+
 - Set up documentation structure
 - Create documentation templates
 - Set up diagram generation (if needed)
 - Configure documentation linting
 
 6. **Standards Documentation**
+
 - Create coding standards document
 - Document testing standards
 - Create code review checklist
 - Document commit message conventions
 
 **Deliverables:**
+
 - Development environment ready
 - CI/CD pipeline functional
 - Testing framework operational
 - Standards documentation complete
 
 **Acceptance Criteria:**
+
 - All scripts pass `shellcheck` validation
 - Test framework can run sample tests
 - CI pipeline runs successfully
@@ -93,6 +103,7 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Database Schema Implementation**
+
 - Review and finalize `sql/init.sql`
 - Create migration scripts
 - Add database indexes optimization
@@ -100,6 +111,7 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Document database schema
 
 2. **Shared Libraries (`bin/lib/`)**
+
 - `monitoringFunctions.sh`: Core monitoring utilities
 - Database connection functions
 - Metrics collection functions
@@ -118,30 +130,35 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Metrics cleanup
 
 3. **Configuration Management**
+
 - Implement configuration loading (`etc/properties.sh`)
 - Configuration validation
 - Environment-specific configs (dev/staging/prod)
 - Configuration documentation
 
 4. **Logging Infrastructure**
+
 - Centralized logging functions
 - Log rotation configuration
 - Log level management
 - Structured logging format
 
 **Testing Requirements:**
+
 - Unit tests for all library functions
 - Integration tests for database operations
 - Configuration validation tests
 - Logging functionality tests
 
 **Documentation:**
+
 - API documentation for all library functions
 - Configuration guide
 - Database schema documentation
 - Logging guide
 
 **Code Quality:**
+
 - 100% shellcheck compliance
 - Code coverage > 80% for libraries
 - All functions documented
@@ -155,12 +172,14 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Script Migration**
+
 - Migrate `monitorIngestion.sh` from OSM-Notes-Ingestion
 - Adapt to use shared libraries
 - Update configuration references
 - Refactor for maintainability
 
 2. **Monitoring Checks**
+
 - Script execution status monitoring
 - Processing latency checks
 - Data quality validation
@@ -170,6 +189,7 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - API download status
 
 3. **SQL Queries (`sql/ingestion/`)**
+
 - Data freshness queries
 - Processing status queries
 - Performance analysis queries
@@ -177,29 +197,34 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Error analysis queries
 
 4. **Metrics Collection**
+
 - Store metrics in database
 - Calculate derived metrics
 - Set up metric retention
 
 5. **Alerting**
+
 - Define alert thresholds
 - Implement alert conditions
 - Test alert delivery
 - Document alert meanings
 
 **Testing Requirements:**
+
 - Unit tests for monitoring checks
 - Integration tests with test database
 - End-to-end tests with mock ingestion system
 - Alert delivery tests
 
 **Documentation:**
+
 - Monitoring guide for ingestion
 - Alert runbook
 - Troubleshooting guide
 - Metrics documentation
 
 **Standards:**
+
 - Follow SRE error budget principles
 - Implement alert fatigue prevention
 - Document all alert thresholds
@@ -213,6 +238,7 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Create `monitorAnalytics.sh`**
+
 - ETL job execution monitoring
 - Data warehouse freshness checks
 - ETL processing duration tracking
@@ -221,22 +247,26 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Storage growth tracking
 
 2. **SQL Queries (`sql/analytics/`)**
+
 - ETL status queries
 - Data freshness queries
 - Performance queries
 - Storage queries
 
 3. **Metrics & Alerts**
+
 - Define analytics-specific metrics
 - Set alert thresholds
 - Implement alerting logic
 
 **Testing Requirements:**
+
 - Unit tests for analytics checks
 - Integration tests with test DWH
 - Performance tests for queries
 
 **Documentation:**
+
 - Analytics monitoring guide
 - ETL monitoring runbook
 - Performance tuning guide
@@ -250,6 +280,7 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Create `monitorWMS.sh`**
+
 - WMS service availability checks
 - HTTP health checks
 - Response time monitoring
@@ -258,21 +289,25 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Cache hit rate monitoring
 
 2. **SQL Queries (`sql/wms/`)**
+
 - Service status queries
 - Performance queries
 - Error analysis queries
 
 3. **Metrics & Alerts**
+
 - WMS-specific metrics
 - Alert thresholds
 - Alerting implementation
 
 **Testing Requirements:**
+
 - Unit tests for WMS checks
 - Integration tests with mock WMS service
 - Load testing for monitoring overhead
 
 **Documentation:**
+
 - WMS monitoring guide
 - Service availability runbook
 
@@ -285,26 +320,31 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Data Freshness Monitoring (`monitorData.sh`)**
+
 - Backup file freshness checks
 - Repository sync status
 - File integrity validation
 - Storage availability
 
 2. **Infrastructure Monitoring (`monitorInfrastructure.sh`)**
+
 - Server resource monitoring (CPU, memory, disk)
 - Network connectivity checks
 - Database server health
 - Service dependency checks
 
 3. **SQL Queries**
+
 - Data freshness queries (`sql/data/`)
 - Infrastructure queries (`sql/infrastructure/`)
 
 **Testing Requirements:**
+
 - Unit tests for infrastructure checks
 - Integration tests with test infrastructure
 
 **Documentation:**
+
 - Infrastructure monitoring guide
 - Capacity planning guide
 
@@ -317,6 +357,7 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Rate Limiting (`bin/security/rateLimiter.sh`)**
+
 - Per-IP rate limiting
 - Per-API-key rate limiting
 - Per-endpoint rate limiting
@@ -324,41 +365,48 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Burst handling
 
 2. **DDoS Protection (`bin/security/ddosProtection.sh`)**
+
 - Attack detection
 - Automatic IP blocking
 - Connection rate limiting
 - Geographic filtering (optional)
 
 3. **Abuse Detection (`bin/security/abuseDetection.sh`)**
+
 - Pattern analysis
 - Anomaly detection
 - Behavioral analysis
 - Automatic response
 
 4. **IP Management (`bin/security/ipBlocking.sh`)**
+
 - Whitelist management
 - Blacklist management
 - Temporary block management
 - Block expiration handling
 
 5. **Security Monitoring (`monitorAPI.sh`)**
+
 - Security event tracking
 - Attack pattern analysis
 - Security metrics
 
 **Testing Requirements:**
+
 - Unit tests for all security functions
 - Integration tests for rate limiting
 - Load tests for DDoS protection
 - Penetration testing (optional)
 
 **Documentation:**
+
 - API security guide
 - Rate limiting documentation
 - Incident response runbook
 - Security best practices
 
 **Security Standards:**
+
 - Follow OWASP guidelines
 - Implement defense in depth
 - Regular security audits
@@ -373,39 +421,46 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Alert Manager (`bin/alerts/alertManager.sh`)**
+
 - Alert deduplication
 - Alert aggregation
 - Alert history
 - Alert acknowledgment
 
 2. **Alert Sender (`bin/alerts/sendAlert.sh`)**
+
 - Email alerts (mutt integration)
 - Slack integration
 - Alert formatting
 - Multi-channel support
 
 3. **Escalation (`bin/alerts/escalation.sh`)**
+
 - Escalation rules
 - Escalation timing
 - On-call rotation (if applicable)
 
 4. **Alert Configuration**
+
 - Alert rule definitions
 - Alert routing
 - Alert templates
 
 **Testing Requirements:**
+
 - Unit tests for alert functions
 - Integration tests for alert delivery
 - Alert deduplication tests
 - Escalation tests
 
 **Documentation:**
+
 - Alerting guide
 - Alert configuration reference
 - On-call procedures
 
 **Standards:**
+
 - Follow alerting best practices (PagerDuty, etc.)
 - Prevent alert fatigue
 - Clear alert messages
@@ -420,12 +475,14 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Grafana Setup**
+
 - Install and configure Grafana
 - Set up PostgreSQL data source
 - Configure authentication
 - Set up dashboard provisioning
 
 2. **Grafana Dashboards (`dashboards/grafana/`)**
+
 - Overview dashboard
 - Ingestion dashboard
 - Analytics dashboard
@@ -434,21 +491,25 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 - Infrastructure dashboard
 
 3. **HTML Dashboards (`dashboards/html/`)**
+
 - Simple overview dashboard
 - Component status pages
 - Quick health check page
 
 4. **Dashboard Scripts (`bin/dashboard/`)**
+
 - Metrics generation script
 - Dashboard update script
 - Export/import utilities
 
 **Testing Requirements:**
+
 - Dashboard functionality tests
 - Data accuracy validation
 - Performance tests for dashboards
 
 **Documentation:**
+
 - Dashboard guide
 - Dashboard customization guide
 - Grafana setup guide
@@ -462,36 +523,42 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Test Coverage**
+
 - Achieve >80% code coverage
 - Test all critical paths
 - Test error handling
 - Test edge cases
 
 2. **Integration Testing**
+
 - End-to-end monitoring tests
 - Cross-component tests
 - Database integration tests
 - Alert delivery tests
 
 3. **Performance Testing**
+
 - Load testing
 - Stress testing
 - Resource usage analysis
 - Query performance optimization
 
 4. **Security Testing**
+
 - Security audit
 - Vulnerability scanning
 - Penetration testing (if applicable)
 - Access control testing
 
 5. **Documentation Review**
+
 - Complete all documentation
 - Review for accuracy
 - Update based on implementation
 - Create user guides
 
 **Deliverables:**
+
 - Comprehensive test suite
 - Test coverage report
 - Performance benchmarks
@@ -507,36 +574,42 @@ This document provides a comprehensive implementation plan for OSM-Notes-Monitor
 #### Tasks
 
 1. **Production Preparation**
+
 - Production environment setup
 - Database migration
 - Configuration for production
 - Security hardening
 
 2. **Migration from OSM-Notes-Ingestion**
+
 - Migrate monitoring scripts
 - Update references
 - Test migration
 - Document migration process
 
 3. **Deployment**
+
 - Deploy monitoring system
 - Configure cron jobs
 - Set up log rotation
 - Configure backups
 
 4. **Validation**
+
 - Verify all monitoring works
 - Validate alert delivery
 - Check dashboard functionality
 - Monitor system health
 
 5. **Documentation**
+
 - Deployment guide
 - Migration guide
 - Operations runbook
 - Troubleshooting guide
 
 **Deliverables:**
+
 - Production deployment
 - Migration complete
 - Operations documentation
@@ -856,19 +929,19 @@ The project is successful when:
 
 ## Timeline Summary
 
-| Phase | Duration | Focus |
-|-------|----------|-------|
-| Phase 0 | Week 1 | Foundation & Standards |
-| Phase 1 | Week 2 | Core Infrastructure |
-| Phase 2 | Week 3 | Ingestion Monitoring |
-| Phase 3 | Week 4 | Analytics Monitoring |
-| Phase 4 | Week 5 | WMS Monitoring |
-| Phase 5 | Week 6 | Data & Infrastructure |
-| Phase 6 | Week 7-8 | API Security |
-| Phase 7 | Week 9 | Alerting System |
-| Phase 8 | Week 10 | Dashboards |
-| Phase 9 | Week 11 | Testing & QA |
-| Phase 10 | Week 12 | Deployment & Migration |
+| Phase    | Duration | Focus                  |
+| -------- | -------- | ---------------------- |
+| Phase 0  | Week 1   | Foundation & Standards |
+| Phase 1  | Week 2   | Core Infrastructure    |
+| Phase 2  | Week 3   | Ingestion Monitoring   |
+| Phase 3  | Week 4   | Analytics Monitoring   |
+| Phase 4  | Week 5   | WMS Monitoring         |
+| Phase 5  | Week 6   | Data & Infrastructure  |
+| Phase 6  | Week 7-8 | API Security           |
+| Phase 7  | Week 9   | Alerting System        |
+| Phase 8  | Week 10  | Dashboards             |
+| Phase 9  | Week 11  | Testing & QA           |
+| Phase 10 | Week 12  | Deployment & Migration |
 
 **Total Duration:** 12 weeks (3 months)
 
@@ -916,4 +989,3 @@ The project is successful when:
 **Last Updated:** 2025-12-24  
 **Status:** Active  
 **Owner:** Andres Gomez (AngocA)
-

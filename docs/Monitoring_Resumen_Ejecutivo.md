@@ -18,24 +18,28 @@
 ## Qué se Monitoreará
 
 ### 1. Ingestion (OSM-Notes-Ingestion)
+
 - ✅ Estado de ejecución de scripts
 - ✅ Calidad de datos
 - ✅ Rendimiento de base de datos
 - ✅ Errores y alertas
 
 ### 2. Analytics/DWH (OSM-Notes-Analytics)
+
 - ✅ Estado de trabajos ETL
 - ✅ Frescura de datos en el DWH
 - ✅ Rendimiento de consultas
 - ✅ Crecimiento de almacenamiento
 
 ### 3. Viewer/WMS (OSM-Notes-WMS)
+
 - ✅ Disponibilidad del servicio
 - ✅ Tiempos de respuesta
 - ✅ Tasas de error
 - ✅ Rendimiento de generación de tiles
 
 ### 4. API (OSM-Notes-API) - **CRÍTICO**
+
 - ✅ Disponibilidad y uptime
 - ✅ Tasas de solicitudes
 - ✅ **Protección contra DDoS**
@@ -45,11 +49,13 @@
 - ✅ Patrones sospechosos
 
 ### 5. Data (OSM-Notes-Data)
+
 - ✅ Frescura de backups
 - ✅ Estado de sincronización
 - ✅ Integridad de archivos
 
 ### 6. Infraestructura
+
 - ✅ Recursos del servidor (CPU, memoria, disco)
 - ✅ Conectividad de red
 - ✅ Salud de la base de datos
@@ -104,34 +110,40 @@ OSM-Notes-Monitoring/
 ## Plan de Migración (9 Semanas)
 
 ### Semana 1: Setup del Repositorio
+
 - Crear repositorio
 - Estructura básica
 - Configuración inicial
 
 ### Semana 2: Migración de Ingestion
+
 - Mover scripts de monitoreo actuales
 - Adaptar a nueva ubicación
 - Actualizar referencias
 
 ### Semana 3-4: Monitoreo Multi-Repositorio
+
 - Scripts para Analytics
 - Scripts para WMS
 - Monitoreo de frescura de datos
 - Monitoreo de infraestructura
 
 ### Semana 5-6: Seguridad del API
+
 - Rate limiting
 - Protección DDoS
 - Detección de abusos
 - Gestión de IPs
 
 ### Semana 7-8: Dashboard y Alertas
+
 - Configurar Grafana
 - Crear dashboards
 - Sistema de alertas unificado
 - Configurar canales (email, Slack)
 
 ### Semana 9: Documentación y Testing
+
 - Completar documentación
 - Escribir tests
 - Guía de migración
@@ -139,6 +151,7 @@ OSM-Notes-Monitoring/
 ## Beneficios
 
 ### Para Ti (Gestión)
+
 - ✅ **Un solo lugar** para ver todo el sistema
 - ✅ **Alertas unificadas** - no perderte nada importante
 - ✅ **Protección automática** del API contra ataques
@@ -146,12 +159,14 @@ OSM-Notes-Monitoring/
 - ✅ **Detección temprana** de problemas
 
 ### Para el Sistema
+
 - ✅ **Confiabilidad**: Detección temprana de fallos
 - ✅ **Seguridad**: Protección contra abusos y ataques
 - ✅ **Performance**: Monitoreo de rendimiento
 - ✅ **Escalabilidad**: Diseñado para crecer
 
 ### Para los Usuarios
+
 - ✅ **API disponible**: Protección contra DDoS
 - ✅ **Datos frescos**: Monitoreo de frescura
 - ✅ **Servicio confiable**: Detección y resolución rápida de problemas
@@ -168,28 +183,33 @@ OSM-Notes-Monitoring/
 ## Preguntas Frecuentes
 
 ### ¿Por qué no mantener el monitoreo en Ingestion?
+
 - Necesitas monitorear 7 repositorios, no solo Ingestion
 - El monitoreo crecerá independientemente
 - La protección del API requiere infraestructura dedicada
 
 ### ¿Cuánto tiempo tomará?
+
 - **9 semanas** para implementación completa
 - Puedes empezar a usar partes desde la Semana 2
 
 ### ¿Qué recursos necesito?
+
 - PostgreSQL (para métricas)
 - Grafana (opcional, para dashboards)
 - Servidor para ejecutar scripts de monitoreo
 - Acceso a bases de datos de otros repositorios
 
 ### ¿Afectará el rendimiento?
+
 - No, el monitoreo es ligero
 - Se ejecuta en horarios programados
 - No interfiere con sistemas de producción
 
 ## Conclusión
 
-**OSM-Notes-Monitoring** será el **centro de comando operacional** de todo el ecosistema OSM Notes, proporcionando:
+**OSM-Notes-Monitoring** será el **centro de comando operacional** de todo el ecosistema OSM Notes,
+proporcionando:
 
 - 👁️ **Visibilidad** completa del sistema
 - 🛡️ **Protección** del API contra ataques
@@ -202,6 +222,7 @@ OSM-Notes-Monitoring/
 ---
 
 **Documentos Relacionados:**
-- [Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md) - Arquitectura completa
-- [API_Security_Design.md](./API_Security_Design.md) - Diseño de seguridad del API
 
+- [Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md) - Arquitectura
+  completa
+- [API_Security_Design.md](./API_Security_Design.md) - Diseño de seguridad del API

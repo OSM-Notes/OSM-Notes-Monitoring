@@ -22,7 +22,8 @@
 
 ## Overview
 
-The Ingestion Monitoring system provides comprehensive monitoring for the OSM-Notes-Ingestion component, tracking:
+The Ingestion Monitoring system provides comprehensive monitoring for the OSM-Notes-Ingestion
+component, tracking:
 
 - **Script Execution Status**: Verifies that ingestion scripts are present, executable, and running
 - **Error Rates**: Monitors error and warning rates from log files
@@ -120,9 +121,9 @@ Or run specific checks:
 Query the database to verify metrics:
 
 ```sql
-SELECT * FROM metrics 
-WHERE component = 'ingestion' 
-ORDER BY timestamp DESC 
+SELECT * FROM metrics
+WHERE component = 'ingestion'
+ORDER BY timestamp DESC
 LIMIT 10;
 ```
 
@@ -181,7 +182,8 @@ INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false
 INFRASTRUCTURE_DISK_THRESHOLD=90
 ```
 
-For complete threshold documentation, see [INGESTION_ALERT_THRESHOLDS.md](./INGESTION_ALERT_THRESHOLDS.md).
+For complete threshold documentation, see
+[INGESTION_ALERT_THRESHOLDS.md](./INGESTION_ALERT_THRESHOLDS.md).
 
 ### Alert Configuration (`config/alerts.conf`)
 
@@ -265,7 +267,8 @@ Set up cron job to run monitoring checks periodically:
 0 2 * * * /path/to/OSM-Notes-Monitoring/bin/monitor/monitorIngestion.sh
 ```
 
-**Recommended Frequency**: Run every 15-30 minutes for active monitoring, or hourly for less critical systems.
+**Recommended Frequency**: Run every 15-30 minutes for active monitoring, or hourly for less
+critical systems.
 
 ---
 
@@ -276,6 +279,7 @@ Set up cron job to run monitoring checks periodically:
 #### 1. Script Execution Metrics
 
 **`scripts_found`**
+
 - **Description**: Number of ingestion scripts found in repository
 - **Expected Range**: 7 scripts
 - **Expected Scripts**:
@@ -290,24 +294,28 @@ Set up cron job to run monitoring checks periodically:
      - This script is very resource-intensive and should run monthly from ingestion project's cron
      - Set `INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=true` to enable (NOT RECOMMENDED)
 - **Alert**: Triggered if ≠ 7 scripts found (must be exactly 7)
-- **Interpretation**: 
+- **Interpretation**:
   - Normal: 7 scripts found
   - Warning: < 7 scripts (scripts may be missing or repository path incorrect)
 
 **`scripts_executable`**
+
 - **Description**: Number of scripts with execute permissions
 - **Expected Range**: Must equal 7 (all scripts must be executable)
 - **Alert**: Triggered if ≠ 7 scripts executable (must be exactly 7)
-- **Interpretation**: All 7 scripts must be executable. If less than 7, some scripts are missing execute permissions.
+- **Interpretation**: All 7 scripts must be executable. If less than 7, some scripts are missing
+  execute permissions.
 
 **`scripts_running`**
+
 - **Description**: Number of scripts currently running
 - **Expected Range**: 0-7 (depends on scheduled execution)
-- **Interpretation**: 
+- **Interpretation**:
   - 0: No scripts running (normal if not scheduled)
   - 1-7: Scripts actively processing (normal during execution)
 
 **`last_log_age_hours`**
+
 - **Description**: Age of most recent log file
 - **Expected Range**: < 24 hours
 - **Alert**: Triggered if > 24 hours
@@ -316,24 +324,28 @@ Set up cron job to run monitoring checks periodically:
 #### 2. Error and Warning Metrics
 
 **`error_count`**
+
 - **Description**: Total number of errors in last 24 hours
 - **Expected Range**: < 1000 errors
 - **Alert**: Triggered if > 1000 errors
 - **Interpretation**: High error count indicates systemic issues
 
 **`error_rate_percent`**
+
 - **Description**: Percentage of log entries that are errors
 - **Expected Range**: < 5%
 - **Alert**: Triggered if > 5%
 - **Interpretation**: High error rate indicates processing problems
 
 **`warning_count`**
+
 - **Description**: Total number of warnings in last 24 hours
 - **Expected Range**: < 2000 warnings
 - **Alert**: Triggered if > 2000 warnings
 - **Interpretation**: High warning count may indicate issues
 
 **`warning_rate_percent`**
+
 - **Description**: Percentage of log entries that are warnings
 - **Expected Range**: < 15%
 - **Alert**: Triggered if > 15%
@@ -342,12 +354,14 @@ Set up cron job to run monitoring checks periodically:
 #### 3. Data Quality Metrics
 
 **`data_freshness_seconds`**
+
 - **Description**: Time since last data update
 - **Expected Range**: < 3600 seconds (1 hour)
 - **Alert**: Triggered if > 3600 seconds
 - **Interpretation**: Indicates data staleness
 
 **`data_quality_score`**
+
 - **Description**: Data quality score (0-100)
 - **Expected Range**: > 95%
 - **Alert**: Triggered if < 95%
@@ -356,12 +370,14 @@ Set up cron job to run monitoring checks periodically:
 #### 4. Performance Metrics
 
 **`processing_latency_seconds`**
+
 - **Description**: Time to process updates
 - **Expected Range**: < 300 seconds (5 minutes)
 - **Alert**: Triggered if > 300 seconds
 - **Interpretation**: High latency indicates performance issues
 
 **`api_download_success_rate_percent`**
+
 - **Description**: Success rate of API downloads
 - **Expected Range**: > 95%
 - **Alert**: Triggered if < 95%
@@ -370,6 +386,7 @@ Set up cron job to run monitoring checks periodically:
 #### 5. Infrastructure Metrics
 
 **`disk_usage_percent`**
+
 - **Description**: Disk space usage percentage
 - **Expected Range**: < 90%
 - **Alert**: Triggered if >= 90%
@@ -432,6 +449,7 @@ For complete metric definitions, see [INGESTION_METRICS.md](./INGESTION_METRICS.
 **Severity**: WARNING
 
 **What to do**:
+
 1. Check `INGESTION_REPO_PATH` configuration
 2. Verify repository exists: `ls -la ${INGESTION_REPO_PATH}/bin`
 3. Check if scripts are in expected location
@@ -444,6 +462,7 @@ For complete metric definitions, see [INGESTION_METRICS.md](./INGESTION_METRICS.
 **Severity**: WARNING
 
 **What to do**:
+
 1. Review error logs: `tail -f ${INGESTION_LOG_DIR}/ingestion.log`
 2. Check for common error patterns
 3. Verify system resources (disk space, memory)
@@ -456,6 +475,7 @@ For complete metric definitions, see [INGESTION_METRICS.md](./INGESTION_METRICS.
 **Severity**: WARNING
 
 **What to do**:
+
 1. Check if ingestion scripts are running
 2. Verify cron jobs are scheduled correctly
 3. Check for script execution failures
@@ -468,6 +488,7 @@ For complete metric definitions, see [INGESTION_METRICS.md](./INGESTION_METRICS.
 **Severity**: WARNING
 
 **What to do**:
+
 1. Identify large files: `du -sh ${INGESTION_REPO_PATH}/*`
 2. Clean up old log files
 3. Archive old data files
@@ -508,6 +529,7 @@ ORDER BY count DESC;
 **Symptoms**: No metrics being collected, no logs generated
 
 **Solutions**:
+
 1. Check script permissions: `chmod +x bin/monitor/monitorIngestion.sh`
 2. Verify database connection: `psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "SELECT 1;"`
 3. Check configuration files exist and are readable
@@ -518,6 +540,7 @@ ORDER BY count DESC;
 **Symptoms**: Errors like "could not connect to database" or "authentication failed"
 
 **Solutions**:
+
 1. Verify database is running: `pg_isready -h ${DBHOST} -p ${DBPORT}`
 2. Check credentials in `etc/properties.sh`
 3. Verify `PGPASSWORD` environment variable is set
@@ -529,6 +552,7 @@ ORDER BY count DESC;
 **Symptoms**: Script runs successfully but no metrics in database
 
 **Solutions**:
+
 1. Verify database connection works: Run `check_database_connection`
 2. Check database schema: `\d metrics` in psql
 3. Verify user has INSERT permissions on `metrics` table
@@ -540,6 +564,7 @@ ORDER BY count DESC;
 **Symptoms**: Monitoring checks take too long or consume too many resources
 
 **Solutions**:
+
 1. Reduce monitoring frequency (run less often)
 2. Disable non-critical checks
 3. Optimize database queries (add indexes)
@@ -550,6 +575,7 @@ ORDER BY count DESC;
 **Symptoms**: Alerts triggered but system is actually healthy
 
 **Solutions**:
+
 1. Review alert thresholds in `config/monitoring.conf`
 2. Adjust thresholds based on your system's normal behavior
 3. Check if metrics are being collected correctly
@@ -560,6 +586,7 @@ ORDER BY count DESC;
 **Symptoms**: Scripts exist but are not detected
 
 **Solutions**:
+
 1. Verify `INGESTION_REPO_PATH` is correct
 2. Check script locations match expected paths
 3. Verify scripts have execute permissions: `chmod +x bin/*.sh`
@@ -625,7 +652,8 @@ ORDER BY count DESC;
 
 - **[Monitoring_SETUP_Guide.md](./Monitoring_SETUP_Guide.md)**: Initial setup guide
 - **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)**: Database schema documentation
-- **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System architecture overview
+- **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System
+  architecture overview
 
 ### Scripts
 
@@ -657,4 +685,3 @@ If you encounter issues or have questions:
 
 **Last Updated**: 2025-12-26  
 **Version**: 1.0.0
-

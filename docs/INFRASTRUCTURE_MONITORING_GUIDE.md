@@ -6,7 +6,9 @@
 
 ## Overview
 
-The Infrastructure Monitoring system provides comprehensive monitoring of server resources, network connectivity, database health, and service dependencies. This guide covers setup, configuration, usage, and troubleshooting for infrastructure monitoring.
+The Infrastructure Monitoring system provides comprehensive monitoring of server resources, network
+connectivity, database health, and service dependencies. This guide covers setup, configuration,
+usage, and troubleshooting for infrastructure monitoring.
 
 ## Table of Contents
 
@@ -43,6 +45,7 @@ psql -U postgres -d osm_notes_monitoring -f sql/schema.sql
 ### Permissions
 
 The monitoring script requires:
+
 - Read access to system files (`/proc`, `/sys`)
 - Execute permissions for system commands
 - Database connection permissions
@@ -96,30 +99,30 @@ psql -U postgres -d osm_notes_monitoring -c "SELECT * FROM alerts WHERE componen
 
 ### Configuration Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `INFRASTRUCTURE_ENABLED` | `true` | Enable/disable infrastructure monitoring |
-| `INFRASTRUCTURE_CPU_THRESHOLD` | `80` | CPU usage warning threshold (%) |
-| `INFRASTRUCTURE_MEMORY_THRESHOLD` | `85` | Memory usage warning threshold (%) |
-| `INFRASTRUCTURE_DISK_THRESHOLD` | `90` | Disk usage warning threshold (%) |
-| `INFRASTRUCTURE_SWAP_THRESHOLD` | `50` | Swap usage warning threshold (%) |
-| `INFRASTRUCTURE_LOAD_THRESHOLD_MULTIPLIER` | `2` | Load average threshold multiplier (alert if load > multiplier x CPU count) |
-| `INFRASTRUCTURE_CHECK_TIMEOUT` | `30` | Timeout for network checks (seconds) |
-| `INFRASTRUCTURE_NETWORK_HOSTS` | `localhost` | Comma-separated list of hosts to check |
-| `INFRASTRUCTURE_SERVICE_DEPENDENCIES` | `postgresql` | Comma-separated list of services to check |
+| Variable                                   | Default      | Description                                                                |
+| ------------------------------------------ | ------------ | -------------------------------------------------------------------------- |
+| `INFRASTRUCTURE_ENABLED`                   | `true`       | Enable/disable infrastructure monitoring                                   |
+| `INFRASTRUCTURE_CPU_THRESHOLD`             | `80`         | CPU usage warning threshold (%)                                            |
+| `INFRASTRUCTURE_MEMORY_THRESHOLD`          | `85`         | Memory usage warning threshold (%)                                         |
+| `INFRASTRUCTURE_DISK_THRESHOLD`            | `90`         | Disk usage warning threshold (%)                                           |
+| `INFRASTRUCTURE_SWAP_THRESHOLD`            | `50`         | Swap usage warning threshold (%)                                           |
+| `INFRASTRUCTURE_LOAD_THRESHOLD_MULTIPLIER` | `2`          | Load average threshold multiplier (alert if load > multiplier x CPU count) |
+| `INFRASTRUCTURE_CHECK_TIMEOUT`             | `30`         | Timeout for network checks (seconds)                                       |
+| `INFRASTRUCTURE_NETWORK_HOSTS`             | `localhost`  | Comma-separated list of hosts to check                                     |
+| `INFRASTRUCTURE_SERVICE_DEPENDENCIES`      | `postgresql` | Comma-separated list of services to check                                  |
 
 ### Alert Thresholds
 
-| Metric | Warning | Critical | Description |
-|--------|---------|----------|-------------|
-| CPU Usage | 80% | 95% | CPU utilization percentage |
-| Memory Usage | 85% | 95% | Memory utilization percentage |
-| Disk Usage | 90% | 95% | Disk space usage percentage |
-| Swap Usage | 50% | N/A | Swap space usage percentage |
-| Load Average | 2x CPU count | N/A | System load average (1 minute) |
-| Network Connectivity | Any failure | N/A | Host reachability |
-| Database Connections | 80% of max | N/A | Active connection usage |
-| Service Dependencies | Any down | N/A | Service availability |
+| Metric               | Warning      | Critical | Description                    |
+| -------------------- | ------------ | -------- | ------------------------------ |
+| CPU Usage            | 80%          | 95%      | CPU utilization percentage     |
+| Memory Usage         | 85%          | 95%      | Memory utilization percentage  |
+| Disk Usage           | 90%          | 95%      | Disk space usage percentage    |
+| Swap Usage           | 50%          | N/A      | Swap space usage percentage    |
+| Load Average         | 2x CPU count | N/A      | System load average (1 minute) |
+| Network Connectivity | Any failure  | N/A      | Host reachability              |
+| Database Connections | 80% of max   | N/A      | Active connection usage        |
+| Service Dependencies | Any down     | N/A      | Service availability           |
 
 ---
 
@@ -205,6 +208,7 @@ sudo systemctl start infrastructure-monitoring.timer
 ### Server Resources Metrics
 
 #### CPU Usage (`cpu_usage_percent`)
+
 - **Type:** Gauge
 - **Unit:** Percentage
 - **Range:** 0-100
@@ -212,6 +216,7 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Collection:** `top` or `vmstat` command
 
 #### Memory Usage (`memory_usage_percent`)
+
 - **Type:** Gauge
 - **Unit:** Percentage
 - **Range:** 0-100
@@ -219,18 +224,21 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Collection:** `free` command
 
 #### Memory Total (`memory_total_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Total system memory
 - **Collection:** `free` command
 
 #### Memory Available (`memory_available_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Available system memory
 - **Collection:** `free` command
 
 #### Disk Usage (`disk_usage_percent`)
+
 - **Type:** Gauge
 - **Unit:** Percentage
 - **Range:** 0-100
@@ -238,12 +246,14 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Collection:** `df` command
 
 #### Disk Available (`disk_available_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Available disk space
 - **Collection:** `df` command
 
 #### Disk Total (`disk_total_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Total disk space
@@ -252,6 +262,7 @@ sudo systemctl start infrastructure-monitoring.timer
 ### Advanced System Metrics
 
 #### Load Average - 1 minute (`system_load_average_1min`)
+
 - **Type:** Gauge
 - **Unit:** Load average
 - **Description:** System load average for the last 1 minute
@@ -259,18 +270,21 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Alert Threshold:** > 2x CPU count (configurable via `INFRASTRUCTURE_LOAD_THRESHOLD_MULTIPLIER`)
 
 #### Load Average - 5 minutes (`system_load_average_5min`)
+
 - **Type:** Gauge
 - **Unit:** Load average
 - **Description:** System load average for the last 5 minutes
 - **Collection:** `/proc/loadavg`
 
 #### Load Average - 15 minutes (`system_load_average_15min`)
+
 - **Type:** Gauge
 - **Unit:** Load average
 - **Description:** System load average for the last 15 minutes
 - **Collection:** `/proc/loadavg`
 
 #### PostgreSQL CPU Usage (`system_cpu_postgres_percent`)
+
 - **Type:** Gauge
 - **Unit:** Percentage
 - **Description:** CPU usage by PostgreSQL processes (sum of all postgres processes)
@@ -278,30 +292,35 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Range:** 0-100
 
 #### PostgreSQL Memory Usage (`system_memory_postgres_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Memory usage by PostgreSQL processes (RSS, sum of all postgres processes)
 - **Collection:** `ps` command
 
 #### PostgreSQL Shared Memory (`system_memory_postgres_shared_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Shared memory used by PostgreSQL processes
 - **Collection:** `/proc/[pid]/statm`
 
 #### Swap Total (`system_swap_total_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Total swap space available
 - **Collection:** `free` command
 
 #### Swap Used (`system_swap_used_bytes`)
+
 - **Type:** Gauge
 - **Unit:** Bytes
 - **Description:** Swap space currently in use
 - **Collection:** `free` command
 
 #### Swap Usage (`system_swap_usage_percent`)
+
 - **Type:** Gauge
 - **Unit:** Percentage
 - **Description:** Swap usage percentage
@@ -309,36 +328,42 @@ sudo systemctl start infrastructure-monitoring.timer
 - **Alert Threshold:** > 50% (configurable via `INFRASTRUCTURE_SWAP_THRESHOLD`)
 
 #### Disk Reads (`system_disk_reads_bytes`)
+
 - **Type:** Counter
 - **Unit:** Bytes
 - **Description:** Total bytes read from disk (cumulative)
 - **Collection:** `/proc/diskstats`
 
 #### Disk Writes (`system_disk_writes_bytes`)
+
 - **Type:** Counter
 - **Unit:** Bytes
 - **Description:** Total bytes written to disk (cumulative)
 - **Collection:** `/proc/diskstats`
 
 #### Network RX (`system_network_rx_bytes`)
+
 - **Type:** Counter
 - **Unit:** Bytes
 - **Description:** Total bytes received over network (cumulative, all interfaces except loopback)
 - **Collection:** `/proc/net/dev`
 
 #### Network TX (`system_network_tx_bytes`)
+
 - **Type:** Counter
 - **Unit:** Bytes
 - **Description:** Total bytes transmitted over network (cumulative, all interfaces except loopback)
 - **Collection:** `/proc/net/dev`
 
 #### Network Traffic (`system_network_traffic_bytes`)
+
 - **Type:** Counter
 - **Unit:** Bytes
 - **Description:** Total network traffic (RX + TX)
 - **Collection:** Calculated from `/proc/net/dev`
 
 #### CPU Count (`system_cpu_count`)
+
 - **Type:** Gauge
 - **Unit:** Count
 - **Description:** Number of CPU cores available
@@ -347,18 +372,21 @@ sudo systemctl start infrastructure-monitoring.timer
 ### Network Connectivity Metrics
 
 #### Network Connectivity (`network_connectivity`)
+
 - **Type:** Gauge
 - **Unit:** Boolean (0/1)
 - **Description:** Overall network connectivity status (1 = all hosts reachable, 0 = failures)
 - **Collection:** `ping` or `nc` command
 
 #### Connectivity Failures (`network_connectivity_failures`)
+
 - **Type:** Counter
 - **Unit:** Count
 - **Description:** Number of unreachable hosts
 - **Collection:** `ping` or `nc` command
 
 #### Connectivity Checks (`network_connectivity_checks`)
+
 - **Type:** Counter
 - **Unit:** Count
 - **Description:** Total number of hosts checked
@@ -367,18 +395,21 @@ sudo systemctl start infrastructure-monitoring.timer
 ### Database Health Metrics
 
 #### Database Uptime (`database_uptime_seconds`)
+
 - **Type:** Gauge
 - **Unit:** Seconds
 - **Description:** Database server uptime
 - **Collection:** PostgreSQL `pg_postmaster_start_time()`
 
 #### Active Connections (`database_active_connections`)
+
 - **Type:** Gauge
 - **Unit:** Count
 - **Description:** Current active database connections
 - **Collection:** PostgreSQL `pg_stat_activity`
 
 #### Max Connections (`database_max_connections`)
+
 - **Type:** Gauge
 - **Unit:** Count
 - **Description:** Maximum allowed database connections
@@ -387,18 +418,21 @@ sudo systemctl start infrastructure-monitoring.timer
 ### Service Dependencies Metrics
 
 #### Service Availability (`service_dependencies_available`)
+
 - **Type:** Gauge
 - **Unit:** Boolean (0/1)
 - **Description:** Overall service availability (1 = all services running, 0 = failures)
 - **Collection:** `systemctl`, `service`, or `pgrep`
 
 #### Service Failures (`service_dependencies_failures`)
+
 - **Type:** Counter
 - **Unit:** Count
 - **Description:** Number of services not running
 - **Collection:** `systemctl`, `service`, or `pgrep`
 
 #### Service Total (`service_dependencies_total`)
+
 - **Type:** Gauge
 - **Unit:** Count
 - **Description:** Total number of services checked
@@ -413,16 +447,19 @@ sudo systemctl start infrastructure-monitoring.timer
 #### Server Resource Alerts
 
 **Alert Type:** `cpu_usage_high`
+
 - **Severity:** WARNING (80-95%), CRITICAL (>95%)
 - **Condition:** CPU usage exceeds threshold
 - **Message:** "CPU usage (X%) exceeds threshold (Y%)"
 
 **Alert Type:** `memory_usage_high`
+
 - **Severity:** WARNING (85-95%), CRITICAL (>95%)
 - **Condition:** Memory usage exceeds threshold
 - **Message:** "Memory usage (X%) exceeds threshold (Y%)"
 
 **Alert Type:** `disk_usage_high`
+
 - **Severity:** WARNING (90-95%), CRITICAL (>95%)
 - **Condition:** Disk usage exceeds threshold
 - **Message:** "Disk usage (X%) exceeds threshold (Y%)"
@@ -430,6 +467,7 @@ sudo systemctl start infrastructure-monitoring.timer
 #### Network Connectivity Alerts
 
 **Alert Type:** `network_connectivity_failure`
+
 - **Severity:** WARNING
 - **Condition:** One or more hosts are unreachable
 - **Message:** "Network connectivity check found X failure(s) out of Y hosts checked"
@@ -437,11 +475,13 @@ sudo systemctl start infrastructure-monitoring.timer
 #### Database Health Alerts
 
 **Alert Type:** `database_connection_failed`
+
 - **Severity:** CRITICAL
 - **Condition:** Database connection fails
 - **Message:** "Database server connection failed"
 
 **Alert Type:** `database_connections_high`
+
 - **Severity:** WARNING
 - **Condition:** Connection usage exceeds 80% of max
 - **Message:** "Database connection usage (X%, Y/Z) is high"
@@ -449,6 +489,7 @@ sudo systemctl start infrastructure-monitoring.timer
 #### Service Dependency Alerts
 
 **Alert Type:** `service_dependency_failure`
+
 - **Severity:** WARNING
 - **Condition:** One or more services are not running
 - **Message:** "Service dependencies check found X failure(s) out of Y services checked"
@@ -457,20 +498,20 @@ sudo systemctl start infrastructure-monitoring.timer
 
 ```sql
 -- Recent infrastructure alerts
-SELECT * FROM alerts 
-WHERE component = 'INFRASTRUCTURE' 
-ORDER BY created_at DESC 
+SELECT * FROM alerts
+WHERE component = 'INFRASTRUCTURE'
+ORDER BY created_at DESC
 LIMIT 20;
 
 -- Critical alerts
-SELECT * FROM alerts 
-WHERE component = 'INFRASTRUCTURE' 
+SELECT * FROM alerts
+WHERE component = 'INFRASTRUCTURE'
 AND alert_level = 'CRITICAL'
 ORDER BY created_at DESC;
 
 -- Alerts by type
 SELECT alert_type, COUNT(*) as count, MAX(created_at) as latest
-FROM alerts 
+FROM alerts
 WHERE component = 'INFRASTRUCTURE'
 GROUP BY alert_type
 ORDER BY count DESC;
@@ -485,10 +526,12 @@ ORDER BY count DESC;
 #### Issue: CPU/Memory metrics not recorded
 
 **Symptoms:**
+
 - Metrics table shows no CPU or memory data
 - Script runs but no metrics appear
 
 **Solutions:**
+
 1. Check if `top` or `free` commands are available:
    ```bash
    which top free
@@ -505,10 +548,12 @@ ORDER BY count DESC;
 #### Issue: Network connectivity checks fail
 
 **Symptoms:**
+
 - All hosts show as unreachable
 - Network alerts triggered incorrectly
 
 **Solutions:**
+
 1. Verify `ping` or `nc` is available:
    ```bash
    which ping nc
@@ -529,10 +574,12 @@ ORDER BY count DESC;
 #### Issue: Database health check fails
 
 **Symptoms:**
+
 - Database connection errors
 - Database metrics not recorded
 
 **Solutions:**
+
 1. Verify database connection:
    ```bash
    psql -U postgres -d osm_notes_monitoring -c "SELECT 1;"
@@ -549,10 +596,12 @@ ORDER BY count DESC;
 #### Issue: Service dependency checks fail
 
 **Symptoms:**
+
 - Services show as down when they're running
 - Incorrect service status
 
 **Solutions:**
+
 1. Verify service management tool:
    ```bash
    which systemctl service pgrep
@@ -688,8 +737,8 @@ tail -f logs/infrastructure.log
 ## Support
 
 For issues or questions:
+
 1. Check logs: `logs/infrastructure.log`
 2. Review this guide
 3. Check [Troubleshooting](#troubleshooting) section
 4. Consult project documentation
-

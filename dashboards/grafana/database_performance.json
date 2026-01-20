@@ -13,18 +13,20 @@
       "id": 1,
       "title": "Cache Hit Ratio (%)",
       "type": "gauge",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_cache_hit_ratio' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_cache_hit_ratio' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -33,9 +35,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "red"},
-              {"value": 95, "color": "yellow"},
-              {"value": 100, "color": "green"}
+              { "value": 0, "color": "red" },
+              { "value": 95, "color": "yellow" },
+              { "value": 100, "color": "green" }
             ]
           }
         }
@@ -45,18 +47,20 @@
       "id": 2,
       "title": "Table Sizes (bytes)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'table' AS table_name FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_table_size_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'table' AS table_name FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_table_size_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -68,18 +72,20 @@
       "id": 3,
       "title": "Connection Usage (%)",
       "type": "gauge",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 4},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connection_usage_percent' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connection_usage_percent' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -88,9 +94,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 80, "color": "yellow"},
-              {"value": 100, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 80, "color": "yellow" },
+              { "value": 100, "color": "red" }
             ]
           }
         }
@@ -100,18 +106,20 @@
       "id": 4,
       "title": "Active Connections by Application",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 4},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'application' AS application FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connections_active_by_app' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 4 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'application' AS application FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_connections_active_by_app' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -123,18 +131,20 @@
       "id": 5,
       "title": "Index Scan Ratio (%)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'table' AS table_name FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_index_scan_ratio' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'table' AS table_name FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_index_scan_ratio' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -146,18 +156,20 @@
       "id": 6,
       "title": "Table Bloat Ratio (%)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'table' AS table_name FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_table_bloat_ratio' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value, metadata->>'table' AS table_name FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_table_bloat_ratio' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -169,18 +181,20 @@
       "id": 7,
       "title": "Slow Queries Count",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_slow_queries_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_slow_queries_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -188,9 +202,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 1, "color": "yellow"},
-              {"value": 5, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 5, "color": "red" }
             ]
           }
         }
@@ -200,18 +214,20 @@
       "id": 8,
       "title": "Unused Indexes Count",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_unused_indexes_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_unused_indexes_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -223,7 +239,7 @@
       "id": 9,
       "title": "Active Locks",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "targets": [
         {
           "datasource": {
@@ -259,18 +275,20 @@
       "id": 10,
       "title": "Deadlocks Count",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 20},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_deadlocks_count' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value as value FROM metrics WHERE component = 'ingestion' AND metric_name = 'db_deadlocks_count' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -278,8 +296,8 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"},
-              {"value": 1, "color": "red"}
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "red" }
             ]
           }
         }
@@ -289,7 +307,7 @@
       "id": 11,
       "title": "Connection Statistics",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
       "targets": [
         {
           "datasource": {
@@ -333,5 +351,5 @@
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": { "from": "now-24h", "to": "now" }
 }

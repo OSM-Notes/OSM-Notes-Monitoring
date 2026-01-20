@@ -13,17 +13,23 @@ CREATE INDEX IF NOT EXISTS idx_notes_note_id ON notes(note_id);
 CREATE INDEX IF NOT EXISTS idx_notes_coordinates ON notes(latitude, longitude);
 
 -- Partial index for recent updates (optimizes freshness queries)
-CREATE INDEX IF NOT EXISTS idx_notes_recent_updates 
-ON notes(updated_at DESC) 
+CREATE INDEX IF NOT EXISTS idx_notes_recent_updates
+ON notes(updated_at DESC)
 WHERE updated_at > NOW() - INTERVAL '30 days';
 
 -- Note comments table indexes
 CREATE INDEX IF NOT EXISTS idx_note_comments_note_id ON note_comments(note_id);
-CREATE INDEX IF NOT EXISTS idx_note_comments_created_at ON note_comments(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_note_comments_note_id_created_at ON note_comments(note_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_note_comments_created_at ON note_comments(
+    created_at DESC
+);
+CREATE INDEX IF NOT EXISTS idx_note_comments_note_id_created_at ON note_comments(
+    note_id, created_at DESC
+);
 
 -- Note comment texts table indexes
-CREATE INDEX IF NOT EXISTS idx_note_comment_texts_comment_id ON note_comment_texts(comment_id);
+CREATE INDEX IF NOT EXISTS idx_note_comment_texts_comment_id ON note_comment_texts(
+    comment_id
+);
 
 -- Processing log table indexes (if table exists)
 -- Note: These will fail silently if table doesn't exist
@@ -41,11 +47,11 @@ BEGIN
 END $$;
 
 -- Hash index for duplicate detection (if needed)
-CREATE INDEX IF NOT EXISTS idx_notes_note_id_hash ON notes USING hash(note_id);
+CREATE INDEX IF NOT EXISTS idx_notes_note_id_hash ON notes USING HASH(note_id);
 
 -- Partial index for quality checks
-CREATE INDEX IF NOT EXISTS idx_notes_quality_check 
-ON notes(id) 
+CREATE INDEX IF NOT EXISTS idx_notes_quality_check
+ON notes(id)
 WHERE latitude IS NULL OR longitude IS NULL OR updated_at < created_at;
 
 -- Analyze tables after creating indexes
@@ -60,4 +66,3 @@ BEGIN
         ANALYZE processing_log;
     END IF;
 END $$;
-

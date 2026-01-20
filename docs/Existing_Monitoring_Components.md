@@ -1,14 +1,18 @@
 # Existing Monitoring Components in OSM-Notes-Ingestion
 
-> **Purpose:** Document existing monitoring components in OSM-Notes-Ingestion that OSM-Notes-Monitoring should integrate with or reference  
+> **Purpose:** Document existing monitoring components in OSM-Notes-Ingestion that
+> OSM-Notes-Monitoring should integrate with or reference  
 > **Author:** Andres Gomez (AngocA)  
 > **Version:** 2025-12-24
 
 ## Overview
 
-OSM-Notes-Ingestion already contains several monitoring components that are specific to data ingestion verification. OSM-Notes-Monitoring should be aware of these components and integrate with them where appropriate.
+OSM-Notes-Ingestion already contains several monitoring components that are specific to data
+ingestion verification. OSM-Notes-Monitoring should be aware of these components and integrate with
+them where appropriate.
 
-> **Note:** For recommended changes to improve integration, see **[Integration Changes](./INTEGRATION_CHANGES.md)**.
+> **Note:** For recommended changes to improve integration, see
+> **[Integration Changes](./INTEGRATION_CHANGES.md)**.
 
 ## Monitoring Scripts in OSM-Notes-Ingestion
 
@@ -19,6 +23,7 @@ OSM-Notes-Ingestion already contains several monitoring components that are spec
 **Purpose:** Validates note data integrity by comparing Planet file data with API calls.
 
 **What it does:**
+
 - Downloads the latest Planet notes file
 - Creates check tables (`notes_check`, `note_comments_check`, `note_comment_texts_check`)
 - Compares Planet data with API-processed data
@@ -27,37 +32,44 @@ OSM-Notes-Ingestion already contains several monitoring components that are spec
 - Can insert missing data from check tables into main tables
 
 **Key Features:**
+
 - Data integrity verification
 - Discrepancy detection
 - Email alerting (uses `mutt`)
 - Automatic data correction (optional)
 
 **Usage:**
+
 ```bash
 cd /path/to/OSM-Notes-Ingestion
 ./bin/monitor/notesCheckVerifier.sh
 ```
 
 **Configuration:**
+
 - `EMAILS`: Comma-separated list of email recipients
 - `LOG_LEVEL`: Log level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
 - `CLEAN`: Whether to clean temporary files (default: true)
 
 **When to run:**
+
 - Daily automated check (recommended: 4 AM UTC)
 - After Planet processing
 - When data quality issues are suspected
 
 **Integration with OSM-Notes-Monitoring:**
+
 - OSM-Notes-Monitoring should call this script as part of ingestion monitoring
 - OSM-Notes-Monitoring should parse its output and logs
 - OSM-Notes-Monitoring should track its execution status
 
 #### 2. `processCheckPlanetNotes.sh`
 
-**Purpose:** Verifies Planet notes processing by comparing loaded notes with a fresh Planet download.
+**Purpose:** Verifies Planet notes processing by comparing loaded notes with a fresh Planet
+download.
 
 **What it does:**
+
 - Downloads the latest Planet notes file
 - Creates check tables
 - Converts notes to CSV using AWK scripts
@@ -65,22 +77,26 @@ cd /path/to/OSM-Notes-Ingestion
 - Allows comparison between main tables and check tables
 
 **Key Features:**
+
 - Planet data verification
 - Table comparison
 - Data validation
 
 **Usage:**
+
 ```bash
 cd /path/to/OSM-Notes-Ingestion
 ./bin/monitor/processCheckPlanetNotes.sh
 ```
 
 **When to run:**
+
 - Around 6h UTC (when OSM Planet file is published)
 - After Planet processing to verify correctness
 - When investigating data discrepancies
 
 **Integration with OSM-Notes-Monitoring:**
+
 - OSM-Notes-Monitoring should schedule this script
 - OSM-Notes-Monitoring should monitor its execution
 - OSM-Notes-Monitoring should track Planet file freshness
@@ -90,44 +106,53 @@ cd /path/to/OSM-Notes-Ingestion
 **Purpose:** Analyzes database performance by running SQL analysis scripts.
 
 **What it does:**
+
 - Executes all SQL analysis scripts from `sql/analysis/`
 - Generates performance reports
 - Checks if performance thresholds are met
 - Provides colored output (PASS/FAIL/WARNING)
 
 **Key Features:**
+
 - Performance analysis
 - Query optimization validation
 - Index usage analysis
 - Scalability checks
 
 **Usage:**
+
 ```bash
 cd /path/to/OSM-Notes-Ingestion
 ./bin/monitor/analyzeDatabasePerformance.sh [--db DATABASE] [--output DIR] [--verbose]
 ```
 
 **Configuration:**
+
 - `DBNAME`: Database name (from `etc/properties.sh`)
 - `LOG_LEVEL`: Log level
 
 **When to run:**
+
 - **Monthly** (recommended: first day of month at 4 AM) - This script is very resource-intensive
 - After database schema changes
 - When performance issues are suspected
 - Before scaling operations
 
 **IMPORTANT - Execution Location:**
+
 - **This script MUST be scheduled from the ingestion project's cron, NOT from OSM-Notes-Monitoring**
 - The script is too resource-intensive to run frequently from monitoring
-- OSM-Notes-Monitoring has execution disabled by default (`INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false`)
+- OSM-Notes-Monitoring has execution disabled by default
+  (`INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=false`)
 - Set up a monthly cron job in the ingestion project to run this script
 
 **Integration with OSM-Notes-Monitoring:**
+
 - OSM-Notes-Monitoring does NOT execute this script by default (disabled to avoid resource overload)
 - OSM-Notes-Monitoring can track performance trends from ingestion project's execution
 - OSM-Notes-Monitoring should alert on performance degradation
-- To enable execution from monitoring (NOT RECOMMENDED), set `INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=true` in `config/monitoring.conf`
+- To enable execution from monitoring (NOT RECOMMENDED), set
+  `INGESTION_ANALYZE_DB_PERFORMANCE_ENABLED=true` in `config/monitoring.conf`
 
 ## SQL Monitoring Queries
 
@@ -178,6 +203,7 @@ See `docs/Alerting_System.md` in OSM-Notes-Ingestion for details.
 ### Phase 1: Awareness
 
 OSM-Notes-Monitoring should:
+
 1. Document these existing components
 2. Reference them in monitoring documentation
 3. Understand their purpose and usage
@@ -185,6 +211,7 @@ OSM-Notes-Monitoring should:
 ### Phase 2: Integration
 
 OSM-Notes-Monitoring should:
+
 1. Call these scripts as part of ingestion monitoring
 2. Parse their output and logs
 3. Track their execution status
@@ -193,6 +220,7 @@ OSM-Notes-Monitoring should:
 ### Phase 3: Enhancement
 
 OSM-Notes-Monitoring could:
+
 1. Provide unified dashboards showing results from these scripts
 2. Add additional monitoring layers on top
 3. Correlate results with other repository monitoring
@@ -200,10 +228,10 @@ OSM-Notes-Monitoring could:
 
 ## Monitoring Scripts Mapping
 
-| OSM-Notes-Ingestion Script | OSM-Notes-Monitoring Integration |
-|---------------------------|----------------------------------|
-| `notesCheckVerifier.sh` | Ingestion data quality monitoring |
-| `processCheckPlanetNotes.sh` | Ingestion Planet verification |
+| OSM-Notes-Ingestion Script      | OSM-Notes-Monitoring Integration      |
+| ------------------------------- | ------------------------------------- |
+| `notesCheckVerifier.sh`         | Ingestion data quality monitoring     |
+| `processCheckPlanetNotes.sh`    | Ingestion Planet verification         |
 | `analyzeDatabasePerformance.sh` | Infrastructure performance monitoring |
 
 ## Configuration Dependencies
@@ -258,5 +286,6 @@ fi
 
 ---
 
-**Note:** These components remain in OSM-Notes-Ingestion as they are specific to ingestion data quality verification. OSM-Notes-Monitoring provides centralized monitoring that integrates with and enhances these local monitoring capabilities.
-
+**Note:** These components remain in OSM-Notes-Ingestion as they are specific to ingestion data
+quality verification. OSM-Notes-Monitoring provides centralized monitoring that integrates with and
+enhances these local monitoring capabilities.

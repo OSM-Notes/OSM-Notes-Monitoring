@@ -1,18 +1,21 @@
 # Grafana Architecture - Dual Deployment
 
-> **Purpose:** Document the dual Grafana deployment architecture across OSM-Notes-API and OSM-Notes-Monitoring  
+> **Purpose:** Document the dual Grafana deployment architecture across OSM-Notes-API and
+> OSM-Notes-Monitoring  
 > **Version:** 1.0.0  
 > **Date:** 2025-12-27  
 > **Status:** Active
 
 ## Overview
 
-The OSM Notes ecosystem uses **two complementary Grafana deployments** to provide comprehensive monitoring coverage:
+The OSM Notes ecosystem uses **two complementary Grafana deployments** to provide comprehensive
+monitoring coverage:
 
 1. **OSM-Notes-API Grafana**: Operational monitoring for the API service
 2. **OSM-Notes-Monitoring Grafana**: Strategic monitoring for the entire ecosystem
 
-This dual approach provides both **real-time operational insights** and **strategic ecosystem-wide visibility**.
+This dual approach provides both **real-time operational insights** and **strategic ecosystem-wide
+visibility**.
 
 ---
 
@@ -73,25 +76,27 @@ This dual approach provides both **real-time operational insights** and **strate
 
 ### Different Purposes
 
-| Aspect | OSM-Notes-API Grafana | OSM-Notes-Monitoring Grafana |
-|--------|----------------------|----------------------------|
-| **Purpose** | Operational monitoring | Strategic monitoring |
-| **Time Horizon** | Real-time (seconds/minutes) | Historical (hours/days/weeks) |
-| **Data Source** | Prometheus (time-series) | PostgreSQL (relational + time-series) |
-| **Update Frequency** | Continuous (scraping) | Periodic (monitoring cycles) |
-| **Scope** | API service only | Entire ecosystem |
-| **Use Cases** | Debugging, performance tuning | Capacity planning, trend analysis |
-| **Users** | API developers, DevOps | System administrators, managers |
+| Aspect               | OSM-Notes-API Grafana         | OSM-Notes-Monitoring Grafana          |
+| -------------------- | ----------------------------- | ------------------------------------- |
+| **Purpose**          | Operational monitoring        | Strategic monitoring                  |
+| **Time Horizon**     | Real-time (seconds/minutes)   | Historical (hours/days/weeks)         |
+| **Data Source**      | Prometheus (time-series)      | PostgreSQL (relational + time-series) |
+| **Update Frequency** | Continuous (scraping)         | Periodic (monitoring cycles)          |
+| **Scope**            | API service only              | Entire ecosystem                      |
+| **Use Cases**        | Debugging, performance tuning | Capacity planning, trend analysis     |
+| **Users**            | API developers, DevOps        | System administrators, managers       |
 
 ### Different Data Models
 
 **OSM-Notes-API (Prometheus)**:
+
 - High-frequency metrics (every few seconds)
 - Time-series data optimized for real-time queries
 - Ephemeral data (short retention)
 - Focus on current performance
 
 **OSM-Notes-Monitoring (PostgreSQL)**:
+
 - Lower-frequency metrics (every monitoring cycle)
 - Relational data with metadata and context
 - Long-term retention (90+ days)
@@ -102,15 +107,18 @@ This dual approach provides both **real-time operational insights** and **strate
 ## OSM-Notes-API Grafana
 
 ### Purpose
+
 Monitor the **API service** in real-time for operational purposes.
 
 ### Configuration
+
 - **Location**: `OSM-Notes-API/docker/grafana/`
 - **Port**: 3001
 - **Data Source**: Prometheus (scraping API `/metrics` endpoint)
 - **Deployment**: Docker Compose with `--profile monitoring`
 
 ### Dashboards
+
 1. **API Overview** (`api-overview.json`)
    - Requests per second
    - Latency percentiles (P50, P95, P99)
@@ -130,6 +138,7 @@ Monitor the **API service** in real-time for operational purposes.
    - User-Agent analysis
 
 ### Metrics Collected
+
 - `http_request_duration_seconds` - Request latency (histogram)
 - `http_requests_total` - Total HTTP requests (counter)
 - `http_errors_total` - HTTP errors (counter)
@@ -137,12 +146,14 @@ Monitor the **API service** in real-time for operational purposes.
 - Node.js system metrics (CPU, memory, event loop)
 
 ### Use Cases
+
 - **Debugging**: Identify performance bottlenecks in real-time
 - **Capacity Planning**: Understand API load patterns
 - **Incident Response**: Quick diagnosis of API issues
 - **Development**: Monitor API changes during development
 
 ### Access
+
 ```bash
 # Start monitoring services
 cd OSM-Notes-API
@@ -159,15 +170,18 @@ docker-compose --profile monitoring up -d prometheus grafana
 ## OSM-Notes-Monitoring Grafana
 
 ### Purpose
+
 Monitor the **entire OSM Notes ecosystem** for strategic insights and health management.
 
 ### Configuration
+
 - **Location**: `OSM-Notes-Monitoring/dashboards/grafana/`
 - **Port**: 3000 (default Grafana port)
 - **Data Source**: PostgreSQL (metrics table)
 - **Deployment**: Standalone Grafana instance
 
 ### Dashboards
+
 1. **Overview** (`overview.json`)
    - Component health status
    - Error rates across all components
@@ -205,6 +219,7 @@ Monitor the **entire OSM Notes ecosystem** for strategic insights and health man
    - Service dependencies
 
 ### Metrics Collected
+
 - Component health status
 - Error rates and counts
 - Performance metrics (response times, query times)
@@ -213,6 +228,7 @@ Monitor the **entire OSM Notes ecosystem** for strategic insights and health man
 - Security events
 
 ### Use Cases
+
 - **Health Management**: Monitor all components from one place
 - **Trend Analysis**: Understand long-term patterns
 - **Capacity Planning**: Plan infrastructure growth
@@ -220,6 +236,7 @@ Monitor the **entire OSM Notes ecosystem** for strategic insights and health man
 - **Reporting**: Generate reports for stakeholders
 
 ### Access
+
 ```bash
 # Configure Grafana to connect to PostgreSQL
 # Data source: PostgreSQL
@@ -237,6 +254,7 @@ Monitor the **entire OSM Notes ecosystem** for strategic insights and health man
 ## Data Flow
 
 ### OSM-Notes-API Flow
+
 ```
 API Service
     │
@@ -252,6 +270,7 @@ Grafana (API)
 ```
 
 ### OSM-Notes-Monitoring Flow
+
 ```
 All Components
     │
@@ -271,7 +290,8 @@ Grafana (Monitoring)
 ## Integration Points
 
 ### Option 1: Independent Deployments (Current)
-- **Pros**: 
+
+- **Pros**:
   - Clear separation of concerns
   - Different update frequencies
   - Independent scaling
@@ -280,6 +300,7 @@ Grafana (Monitoring)
   - No unified view
 
 ### Option 2: Unified Grafana (Future)
+
 - **Pros**:
   - Single Grafana instance
   - Unified view of all metrics
@@ -297,16 +318,18 @@ Grafana (Monitoring)
 ### Setting Up OSM-Notes-API Grafana
 
 1. **Configure Prometheus**:
+
    ```yaml
    # docker/prometheus/prometheus.yml
    scrape_configs:
-     - job_name: 'api'
+     - job_name: "api"
        scrape_interval: 15s
        static_configs:
-         - targets: ['api:3000']
+         - targets: ["api:3000"]
    ```
 
 2. **Configure Grafana**:
+
    ```yaml
    # docker/grafana/provisioning/datasources/prometheus.yml
    datasources:
@@ -321,6 +344,7 @@ Grafana (Monitoring)
 ### Setting Up OSM-Notes-Monitoring Grafana
 
 1. **Install Grafana**:
+
    ```bash
    # Using Docker
    docker run -d \
@@ -336,6 +360,7 @@ Grafana (Monitoring)
    - User: `postgres` (or your DB user)
 
 3. **Import Dashboards**:
+
    ```bash
    # Copy dashboards to Grafana provisioning directory
    cp dashboards/grafana/*.json /etc/grafana/provisioning/dashboards/
@@ -346,9 +371,9 @@ Grafana (Monitoring)
    # /etc/grafana/provisioning/dashboards/dashboard.yml
    apiVersion: 1
    providers:
-     - name: 'OSM Notes Monitoring'
+     - name: "OSM Notes Monitoring"
        orgId: 1
-       folder: ''
+       folder: ""
        type: file
        disableDeletion: false
        updateIntervalSeconds: 10
@@ -362,23 +387,28 @@ Grafana (Monitoring)
 ## Best Practices
 
 ### 1. Port Configuration
+
 - **OSM-Notes-API Grafana**: Use port 3001 to avoid conflicts
 - **OSM-Notes-Monitoring Grafana**: Use port 3000 (standard)
 
 ### 2. Authentication
+
 - Use strong passwords for both instances
 - Configure LDAP/OAuth if available
 - Use API keys for programmatic access
 
 ### 3. Data Retention
+
 - **Prometheus (API)**: 7-15 days (high-frequency data)
 - **PostgreSQL (Monitoring)**: 90+ days (strategic data)
 
 ### 4. Alerting
+
 - **API Grafana**: Use Prometheus Alertmanager for real-time alerts
 - **Monitoring Grafana**: Use built-in alerting system (email/Slack)
 
 ### 5. Backup
+
 - Backup Grafana dashboards regularly
 - Export dashboards as JSON files
 - Version control dashboard definitions
@@ -388,18 +418,21 @@ Grafana (Monitoring)
 ## Troubleshooting
 
 ### API Grafana Shows No Data
+
 1. Verify Prometheus is running: `curl http://localhost:9090/api/v1/targets`
 2. Check API metrics endpoint: `curl http://localhost:3000/metrics`
 3. Verify Grafana data source configuration
 4. Check Prometheus scrape configuration
 
 ### Monitoring Grafana Shows No Data
+
 1. Verify PostgreSQL connection in Grafana data source
 2. Check metrics table has data: `SELECT COUNT(*) FROM metrics;`
 3. Verify monitoring scripts are running
 4. Check dashboard SQL queries are correct
 
 ### Port Conflicts
+
 - API Grafana uses port 3001
 - Monitoring Grafana uses port 3000
 - If conflicts occur, change ports in docker-compose.yml or Grafana config
@@ -409,6 +442,7 @@ Grafana (Monitoring)
 ## Future Enhancements
 
 ### Potential Improvements
+
 1. **Unified Grafana Instance**: Single Grafana with both Prometheus and PostgreSQL datasources
 2. **Cross-Dashboard Links**: Link from Monitoring dashboards to API dashboards
 3. **Shared Alerting**: Unified alerting system across both deployments
@@ -416,7 +450,9 @@ Grafana (Monitoring)
 5. **Dashboard Templates**: Shared dashboard templates between projects
 
 ### Migration Path
+
 If consolidating to a single Grafana instance:
+
 1. Install Grafana with both datasources
 2. Import all dashboards
 3. Configure unified authentication
@@ -428,11 +464,13 @@ If consolidating to a single Grafana instance:
 ## References
 
 ### OSM-Notes-API
+
 - [Monitoring Documentation](../OSM-Notes-API/docs/MONITORING.md)
 - [Docker Configuration](../OSM-Notes-API/docker/README.md)
 - [Grafana Dashboards](../OSM-Notes-API/docker/grafana/provisioning/dashboards/)
 
 ### OSM-Notes-Monitoring
+
 - [Dashboard Guide](./DASHBOARD_GUIDE.md)
 - [Grafana Setup Guide](./GRAFANA_SETUP_GUIDE.md)
 - [Dashboard Scripts](../bin/dashboard/)
@@ -447,6 +485,7 @@ Both Grafana deployments serve **complementary purposes**:
 - **OSM-Notes-Monitoring Grafana**: Strategic, ecosystem-wide monitoring for system administrators
 
 This dual approach provides:
+
 - ✅ Real-time operational insights (API)
 - ✅ Strategic ecosystem visibility (Monitoring)
 - ✅ Appropriate data retention for each use case

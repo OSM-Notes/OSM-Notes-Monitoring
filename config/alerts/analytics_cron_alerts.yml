@@ -8,7 +8,9 @@ groups:
           severity: critical
         annotations:
           summary: "Analytics ETL: Cron job not running according to schedule"
-          description: "The ETL cron job has not executed in {{ $value | humanizeDuration }}. Expected to run every 15 minutes. Check cron configuration and logs."
+          description:
+            "The ETL cron job has not executed in {{ $value | humanizeDuration }}. Expected to run
+            every 15 minutes. Check cron configuration and logs."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsETLCronExecutionGap
@@ -18,7 +20,9 @@ groups:
           severity: warning
         annotations:
           summary: "Analytics ETL: Execution gap detected ({{ $value }} missing executions)"
-          description: "The ETL cron job has {{ $value }} missing executions in the last 24 hours. Expected {{ $value | humanizeDuration }} executions but only {{ $value }} occurred."
+          description:
+            "The ETL cron job has {{ $value }} missing executions in the last 24 hours. Expected {{
+            $value | humanizeDuration }} executions but only {{ $value }} occurred."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsDatamartCronNotRunning
@@ -28,7 +32,9 @@ groups:
           severity: critical
         annotations:
           summary: "Analytics Datamart: Cron job not running according to schedule"
-          description: "The Datamart cron job has not executed in {{ $value | humanizeDuration }}. Expected to run daily. Check cron configuration and logs."
+          description:
+            "The Datamart cron job has not executed in {{ $value | humanizeDuration }}. Expected to
+            run daily. Check cron configuration and logs."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsExportCronNotRunning
@@ -38,7 +44,9 @@ groups:
           severity: critical
         annotations:
           summary: "Analytics Export: Cron job not running according to schedule"
-          description: "The Export cron job has not executed in {{ $value | humanizeDuration }}. Expected to run daily. Check cron configuration and logs."
+          description:
+            "The Export cron job has not executed in {{ $value | humanizeDuration }}. Expected to
+            run daily. Check cron configuration and logs."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsETLCronGapDetected
@@ -48,7 +56,9 @@ groups:
           severity: warning
         annotations:
           summary: "Analytics ETL: Execution gap detected"
-          description: "A gap in ETL cron executions has been detected. The ETL job may have missed scheduled executions."
+          description:
+            "A gap in ETL cron executions has been detected. The ETL job may have missed scheduled
+            executions."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsDatamartCronGapDetected
@@ -58,7 +68,9 @@ groups:
           severity: warning
         annotations:
           summary: "Analytics Datamart: Execution gap detected"
-          description: "A gap in Datamart cron executions has been detected. The Datamart job may have missed scheduled executions."
+          description:
+            "A gap in Datamart cron executions has been detected. The Datamart job may have missed
+            scheduled executions."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsExportCronGapDetected
@@ -68,7 +80,9 @@ groups:
           severity: warning
         annotations:
           summary: "Analytics Export: Execution gap detected"
-          description: "A gap in Export cron executions has been detected. The Export job may have missed scheduled executions."
+          description:
+            "A gap in Export cron executions has been detected. The Export job may have missed
+            scheduled executions."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsETLCronLowExecutionCount
@@ -78,17 +92,24 @@ groups:
           severity: warning
         annotations:
           summary: "Analytics ETL: Low execution count ({{ $value }} executions in 24h)"
-          description: "The ETL cron job has only {{ $value }} executions in the last 24 hours, which is lower than expected (~96 executions). Check for missed executions."
+          description:
+            "The ETL cron job has only {{ $value }} executions in the last 24 hours, which is lower
+            than expected (~96 executions). Check for missed executions."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsCronLogUnavailable
-        expr: osm_analytics_cron_etl_last_execution_seconds{status="log_unavailable"} == 0 AND osm_analytics_cron_datamart_last_execution_seconds{status="log_unavailable"} == 0 AND osm_analytics_cron_export_last_execution_seconds{status="log_unavailable"} == 0
+        expr:
+          osm_analytics_cron_etl_last_execution_seconds{status="log_unavailable"} == 0 AND
+          osm_analytics_cron_datamart_last_execution_seconds{status="log_unavailable"} == 0 AND
+          osm_analytics_cron_export_last_execution_seconds{status="log_unavailable"} == 0
         for: 1h
         labels:
           severity: warning
         annotations:
           summary: "Analytics Cron: Cron log files unavailable"
-          description: "Cron log files are not accessible for monitoring. This prevents detection of cron job execution status."
+          description:
+            "Cron log files are not accessible for monitoring. This prevents detection of cron job
+            execution status."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"
 
       - alert: AnalyticsCronLockFilesStale
@@ -98,5 +119,7 @@ groups:
           severity: warning
         annotations:
           summary: "Analytics Cron: Stale lock files detected ({{ $value }} files)"
-          description: "There are {{ $value }} lock files present, which may indicate stuck or failed cron jobs. Check for stale processes."
+          description:
+            "There are {{ $value }} lock files present, which may indicate stuck or failed cron
+            jobs. Check for stale processes."
           runbook_url: "https://github.com/OSM-Notes/OSM-Notes-Monitoring/blob/main/docs/ANALYTICS_MONITORING_GUIDE.md"

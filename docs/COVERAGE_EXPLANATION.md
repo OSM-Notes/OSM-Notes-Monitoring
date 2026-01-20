@@ -2,7 +2,8 @@
 
 ## Overview
 
-This project uses **two different methods** to measure code coverage, each serving a different purpose:
+This project uses **two different methods** to measure code coverage, each serving a different
+purpose:
 
 1. **Estimated Coverage** (Fast, Optimistic)
 2. **Instrumented Coverage** (Slow, Accurate)
@@ -12,21 +13,25 @@ This project uses **two different methods** to measure code coverage, each servi
 ### Estimated Coverage (80% average)
 
 **What it measures:**
+
 - Presence of test files for each script
 - Number of test files per script
 - Heuristic calculation based on test file count
 
 **How it works:**
+
 - Counts test files matching each script name
 - Estimates coverage: 1 test = 40%, 2 tests = 60%, 3+ tests = 80%
 - Very fast (seconds)
 
 **Use when:**
+
 - Quick check of test coverage status
 - CI/CD pipelines (fast feedback)
 - Identifying scripts without tests
 
 **Limitations:**
+
 - Doesn't measure actual code execution
 - Assumes tests cover code well
 - Can be overly optimistic
@@ -34,22 +39,26 @@ This project uses **two different methods** to measure code coverage, each servi
 ### Instrumented Coverage (27% average)
 
 **What it measures:**
+
 - Lines of code **actually executed** during tests
 - Real code coverage using `bashcov` instrumentation
 - Precise measurement of executed vs total lines
 
 **How it works:**
+
 - Runs all tests with `bashcov` instrumentation
 - Tracks which lines are executed
 - Calculates: (executed lines / total lines) × 100
 - Very slow (hours)
 
 **Use when:**
+
 - Detailed analysis of code coverage
 - Identifying untested code paths
 - Before releases (comprehensive check)
 
 **Limitations:**
+
 - Very slow (requires running all tests)
 - Requires Ruby and bashcov installation
 - May show low coverage for valid reasons (see below)
@@ -61,12 +70,14 @@ The large gap between estimated (80%) and instrumented (27%) coverage is **norma
 ### 1. Unit Tests vs Full Execution
 
 **Unit tests:**
+
 - Test individual functions in isolation
 - Use `source` to load libraries
 - Don't execute the full script flow
 - Skip initialization code
 
 **Example:**
+
 ```bash
 # Test only tests the function
 source bin/lib/metricsFunctions.sh
@@ -82,11 +93,13 @@ record_metric "component" "metric" 100
 ### 2. Extensive Mocking
 
 **Mocks prevent real code execution:**
+
 - `psql` is mocked → database connection code never runs
 - `curl` is mocked → HTTP request code never runs
 - `mutt` is mocked → email sending code never runs
 
 **Example:**
+
 ```bash
 # Mock replaces real function
 psql() { echo "mocked"; }
@@ -99,11 +112,13 @@ psql -h "${dbhost}" -d "${dbname}" -c "${query}"
 ### 3. Conditional Code Paths
 
 **Code that only runs in production:**
+
 - `TEST_MODE=true` skips initialization
 - `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]` blocks only run when script executed directly
 - Production-only error handling
 
 **Example:**
+
 ```bash
 # Only runs when script executed directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -115,6 +130,7 @@ fi
 ### 4. Test Architecture
 
 **Tests focus on functions, not scripts:**
+
 - Tests call individual functions
 - Don't execute `main()` functions
 - Don't test command-line interfaces
@@ -123,12 +139,14 @@ fi
 ## Which Number Should You Trust?
 
 ### Use Estimated Coverage (80%) for:
+
 - ✅ Quick status checks
 - ✅ CI/CD pipelines
 - ✅ Identifying missing tests
 - ✅ General project health
 
 ### Use Instrumented Coverage (27%) for:
+
 - ✅ Detailed analysis
 - ✅ Finding untested code
 - ✅ Release preparation
@@ -155,8 +173,8 @@ This ensures scripts are tracked even if tests execute them with `bash script.sh
 
 ### 2. Add Integration Tests
 
-**Current:** Unit tests test functions in isolation
-**Improvement:** Add tests that execute full scripts
+**Current:** Unit tests test functions in isolation **Improvement:** Add tests that execute full
+scripts
 
 ```bash
 # Example: Test full script execution
@@ -168,8 +186,7 @@ This ensures scripts are tracked even if tests execute them with `bash script.sh
 
 ### 2. Reduce Mocking Where Possible
 
-**Current:** Everything is mocked
-**Improvement:** Use real dependencies in integration tests
+**Current:** Everything is mocked **Improvement:** Use real dependencies in integration tests
 
 ```bash
 # Instead of mocking psql, use test database
@@ -179,8 +196,7 @@ export TEST_DB_NAME="osm_notes_monitoring_test"
 
 ### 3. Test Main Functions
 
-**Current:** Only test individual functions
-**Improvement:** Test `main()` functions
+**Current:** Only test individual functions **Improvement:** Test `main()` functions
 
 ```bash
 # Source script and call main
@@ -191,8 +207,7 @@ assert_success
 
 ### 4. Test Initialization Code
 
-**Current:** `TEST_MODE=true` skips initialization
-**Improvement:** Test initialization separately
+**Current:** `TEST_MODE=true` skips initialization **Improvement:** Test initialization separately
 
 ```bash
 # Test initialization explicitly
@@ -206,18 +221,21 @@ assert_success
 **Strategy:** Mock only what's necessary, use real implementations when safe
 
 **Safe to Use Real:**
+
 - File system operations
 - Git commands (if git is available)
 - Environment variables
 - Logging functions
 
 **Should Mock:**
+
 - Database connections (unless test database available)
 - Email sending
 - Slack API calls
 - External HTTP requests
 
 **Example:**
+
 ```bash
 # Before: Mock everything
 psql() { echo "mocked"; }
@@ -249,10 +267,10 @@ curl() { echo "mocked"; }  # External API
     check_backup_freshness() { return 0; }
     check_repository_sync_status() { return 0; }
     # ... other checks
-    
+
     # Run main
     run main
-    
+
     # Verify success
     assert_success
 }
@@ -271,10 +289,10 @@ curl() { echo "mocked"; }  # External API
 @test "Full script execution: creates backup and checks freshness" {
     # Create real backup file
     echo "test backup" > "${TEST_BACKUP_DIR}/backup.sql"
-    
+
     # Execute script directly (not sourced)
     run bash bin/monitor/monitorData.sh backup_freshness
-    
+
     # Should execute without crashing
     assert [ ${status} -ge 0 ] && [ ${status} -le 1 ]
 }
@@ -295,15 +313,23 @@ When adding tests to improve coverage:
 ## Current Status
 
 **Tests Added:**
+
 - ✅ `tests/unit/monitor/test_monitorData_main.sh` - Main function tests for monitorData.sh
-- ✅ `tests/unit/monitor/test_monitorInfrastructure_main.sh` - Main function tests for monitorInfrastructure.sh
-- ✅ `tests/unit/monitor/test_monitorIngestion_main.sh` - Main function tests for monitorIngestion.sh
-- ✅ `tests/unit/monitor/test_monitorAnalytics_main.sh` - Main function tests for monitorAnalytics.sh
-- ✅ `tests/integration/test_monitorData_full_execution.sh` - Full execution tests for monitorData.sh
-- ✅ `tests/integration/test_monitorInfrastructure_full_execution.sh` - Full execution tests for monitorInfrastructure.sh
-- ✅ `tests/integration/test_monitorIngestion_full_execution.sh` - Full execution tests for monitorIngestion.sh
+- ✅ `tests/unit/monitor/test_monitorInfrastructure_main.sh` - Main function tests for
+  monitorInfrastructure.sh
+- ✅ `tests/unit/monitor/test_monitorIngestion_main.sh` - Main function tests for
+  monitorIngestion.sh
+- ✅ `tests/unit/monitor/test_monitorAnalytics_main.sh` - Main function tests for
+  monitorAnalytics.sh
+- ✅ `tests/integration/test_monitorData_full_execution.sh` - Full execution tests for
+  monitorData.sh
+- ✅ `tests/integration/test_monitorInfrastructure_full_execution.sh` - Full execution tests for
+  monitorInfrastructure.sh
+- ✅ `tests/integration/test_monitorIngestion_full_execution.sh` - Full execution tests for
+  monitorIngestion.sh
 
 **Remaining Opportunities:**
+
 - Add more integration tests for other scripts
 - Reduce mocking in existing tests
 - Add tests for initialization code
@@ -322,12 +348,14 @@ When adding tests to improve coverage:
 ## Generating Reports
 
 ### Estimated Coverage (Fast)
+
 ```bash
 bash scripts/generate_coverage_report.sh
 # Output: coverage/coverage_report.txt
 ```
 
 ### Instrumented Coverage (Slow)
+
 ```bash
 # Run in background (takes hours)
 bash scripts/run_bashcov_background.sh start
@@ -341,6 +369,7 @@ bash scripts/run_bashcov_background.sh status
 ```
 
 ### Combined Report (Both Side by Side)
+
 ```bash
 bash scripts/generate_coverage_combined.sh
 # Output: coverage/coverage_report_combined.txt
@@ -359,13 +388,17 @@ bash scripts/generate_coverage_combined.sh
 - **Instrumented 27%**: "27% of code lines are executed during tests"
 - **Gap 53%**: "Tests exist but don't execute much code (normal for unit tests)"
 
-This gap is **expected** and **acceptable** for a project with extensive unit tests and mocking. The goal is to gradually improve instrumented coverage by adding integration tests and testing main functions.
+This gap is **expected** and **acceptable** for a project with extensive unit tests and mocking. The
+goal is to gradually improve instrumented coverage by adding integration tests and testing main
+functions.
 
 ## How Scripts Are Tracked for Coverage
 
 ### The Problem
 
-bashcov has a limitation: it **cannot track scripts executed with `bash script.sh`** inside tests. When a test runs:
+bashcov has a limitation: it **cannot track scripts executed with `bash script.sh`** inside tests.
+When a test runs:
+
 ```bash
 run bash bin/monitor/monitorData.sh backup_freshness
 ```
@@ -374,7 +407,8 @@ bashcov doesn't track `monitorData.sh` because it's executed in a child process.
 
 ### The Solution
 
-The coverage script (`generate_coverage_instrumented_optimized.sh`) now **executes scripts directly with bashcov** after running all tests:
+The coverage script (`generate_coverage_instrumented_optimized.sh`) now **executes scripts directly
+with bashcov** after running all tests:
 
 ```bash
 # After running all tests, execute scripts directly
@@ -388,11 +422,13 @@ This ensures scripts are tracked even if tests execute them with `bash script.sh
 ### Result
 
 - **Before:** Scripts executed with `bash script.sh` showed **0% coverage**
-- **After:** Scripts executed directly with bashcov show **real coverage** (e.g., `monitorData.sh` shows 10%)
+- **After:** Scripts executed directly with bashcov show **real coverage** (e.g., `monitorData.sh`
+  shows 10%)
 
 ### Helper Function for Tests
 
-A helper function is available for tests that want to execute scripts in a way that bashcov can track:
+A helper function is available for tests that want to execute scripts in a way that bashcov can
+track:
 
 ```bash
 # Load helper
@@ -403,6 +439,7 @@ run_script_for_coverage "bin/monitor/monitorData.sh" "backup_freshness"
 ```
 
 This function:
+
 - Detects if running under bashcov
 - If yes: executes script directly (bashcov tracks it)
 - If no: executes with `bash` (normal test behavior)
@@ -411,7 +448,8 @@ This function:
 
 **Why the coverage was so low (27%):**
 
-Previously, integration tests were **excluded** from bashcov because they are slow. However, this significantly impacted coverage because:
+Previously, integration tests were **excluded** from bashcov because they are slow. However, this
+significantly impacted coverage because:
 
 - **22 integration tests** were excluded (~18% of all tests)
 - Integration tests execute **more code** than unit tests:
@@ -422,9 +460,11 @@ Previously, integration tests were **excluded** from bashcov because they are sl
 
 **Current behavior:**
 
-Integration tests are now **included by default** in bashcov to provide more accurate coverage. This should improve coverage from ~27% to ~40-50%.
+Integration tests are now **included by default** in bashcov to provide more accurate coverage. This
+should improve coverage from ~27% to ~40-50%.
 
 **To exclude integration tests (faster but less accurate):**
+
 ```bash
 SKIP_INTEGRATION_TESTS=true bash scripts/generate_coverage_instrumented_optimized.sh
 ```

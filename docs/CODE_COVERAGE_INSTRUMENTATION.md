@@ -2,16 +2,19 @@
 
 ## Overview
 
-This guide explains how to use the `bashcov` code instrumentation tool to measure **actual code coverage** for Bash scripts, rather than relying on estimates based on test file presence.
+This guide explains how to use the `bashcov` code instrumentation tool to measure **actual code
+coverage** for Bash scripts, rather than relying on estimates based on test file presence.
 
 ## Why Instrumentation?
 
 The current `generate_coverage_report.sh` script provides **estimated coverage** based on:
+
 - Presence of test files
 - Number of test files per script
 - Heuristic calculations
 
 **Instrumentation tools** provide **real coverage** by:
+
 - Tracking which lines of code are actually executed during tests
 - Identifying untested code paths
 - Providing detailed HTML reports showing covered/uncovered lines
@@ -22,11 +25,13 @@ The current `generate_coverage_report.sh` script provides **estimated coverage**
 ### Installation
 
 **Install bashcov:**
+
 ```bash
 gem install bashcov
 ```
 
 **Or use the installation script:**
+
 ```bash
 ./scripts/install_coverage_tools.sh bashcov
 ```
@@ -36,6 +41,7 @@ gem install bashcov
 **bashcov** is a Ruby-based coverage tool specifically for Bash scripts.
 
 **Advantages:**
+
 - Works well with source-based tests (tests that use `source` to load libraries)
 - Ruby-based (easy to install via gem)
 - Good integration with test frameworks
@@ -53,11 +59,13 @@ gem install bashcov
 ### Automated Report Generation
 
 **Generate coverage report (runs all tests):**
+
 ```bash
 bash scripts/generate_coverage_instrumented_optimized.sh
 ```
 
 **Run in background and monitor:**
+
 ```bash
 # Start bashcov in background
 bash scripts/run_bashcov_background.sh start
@@ -90,6 +98,7 @@ done
 ### bashcov Report Format
 
 bashcov generates a `.resultset.json` file in SimpleCov format:
+
 - Location: `coverage/.resultset.json`
 - Format: JSON with coverage data per file
 - Coverage data: Array indicating which lines were executed
@@ -97,9 +106,11 @@ bashcov generates a `.resultset.json` file in SimpleCov format:
 ### Coverage Report
 
 The script generates a text report at:
+
 - `coverage/coverage_report_instrumented.txt`
 
 This report shows:
+
 - Coverage percentage per script
 - Number of test files
 - Overall average coverage
@@ -109,11 +120,13 @@ This report shows:
 
 ### Source-based Tests
 
-This project uses source-based tests (tests that `source` library files directly). bashcov works well with this architecture as it can track coverage when libraries are sourced.
+This project uses source-based tests (tests that `source` library files directly). bashcov works
+well with this architecture as it can track coverage when libraries are sourced.
 
 ### Mock Functions
 
 Many tests use mock functions (e.g., `psql`, `curl`, `mutt`). This means:
+
 - The actual external commands are not executed
 - Coverage shows which code paths are tested, not necessarily which external commands are called
 - This is expected behavior for unit tests
@@ -123,6 +136,7 @@ Many tests use mock functions (e.g., `psql`, `curl`, `mutt`). This means:
 ### Issue: bashcov not found
 
 **Solution:**
+
 ```bash
 gem install bashcov
 ```
@@ -130,6 +144,7 @@ gem install bashcov
 ### Issue: bashcov is slow
 
 **Solution:**
+
 - This is expected - bashcov processes all tests sequentially
 - Use the background script: `bash scripts/run_bashcov_background.sh start`
 - Monitor progress: `bash scripts/monitor_bashcov.sh`
@@ -137,11 +152,13 @@ gem install bashcov
 ### Issue: Coverage shows 0%
 
 **Possible causes:**
+
 1. Tests use extensive mocks (expected)
 2. Code only runs in production mode (not TEST_MODE)
 3. Dependencies not available during tests
 
 **Solution:**
+
 - Review the estimated coverage report instead
 - Check that tests are actually executing code paths
 - Consider adding integration tests that run real code
@@ -163,7 +180,7 @@ gem install bashcov
   run: |
     gem install bashcov
     bash scripts/generate_coverage_instrumented_optimized.sh
-  continue-on-error: true  # Don't fail build if coverage is low
+  continue-on-error: true # Don't fail build if coverage is low
 ```
 
 ## References

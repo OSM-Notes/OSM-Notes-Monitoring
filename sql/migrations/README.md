@@ -5,11 +5,13 @@ This directory contains database migration scripts for schema changes and update
 ## Migration Script Naming Convention
 
 Migration scripts should follow this naming pattern:
+
 ```
 YYYYMMDD_HHMMSS_description.sql
 ```
 
 Examples:
+
 - `20251224_120000_add_metric_tags.sql`
 - `20250125_090000_add_alert_escalation.sql`
 
@@ -89,6 +91,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 ## Rollback Scripts
 
 For complex migrations, create rollback scripts:
+
 ```
 20251224_120000_description.sql          # Forward migration
 20251224_120000_description_rollback.sql # Rollback migration
@@ -96,11 +99,13 @@ For complex migrations, create rollback scripts:
 
 ## Migration Order
 
-Migrations are applied in alphabetical order (which matches chronological order with the naming convention).
+Migrations are applied in alphabetical order (which matches chronological order with the naming
+convention).
 
 ## Current Schema Version
 
-The current schema version is defined in `sql/init.sql`. After running migrations, the schema version should be updated.
+The current schema version is defined in `sql/init.sql`. After running migrations, the schema
+version should be updated.
 
 ## Notes
 
@@ -108,4 +113,3 @@ The current schema version is defined in `sql/init.sql`. After running migration
 - Create a new migration for any changes
 - Keep migrations small and focused
 - Test migrations thoroughly before applying to production
-

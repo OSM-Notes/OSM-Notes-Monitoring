@@ -24,7 +24,8 @@
 
 ### What is OSM Notes Monitoring?
 
-OSM Notes Monitoring is a centralized monitoring and alerting system for the entire OSM Notes ecosystem. It provides:
+OSM Notes Monitoring is a centralized monitoring and alerting system for the entire OSM Notes
+ecosystem. It provides:
 
 - **Unified Visibility**: Single dashboard to monitor all OSM Notes components
 - **Automated Alerting**: Get notified when issues occur
@@ -35,6 +36,7 @@ OSM Notes Monitoring is a centralized monitoring and alerting system for the ent
 ### Who Should Use This Guide?
 
 This guide is for:
+
 - **System Administrators**: Setting up and maintaining the monitoring system
 - **Operations Team**: Day-to-day monitoring and alert management
 - **Developers**: Understanding how monitoring integrates with their components
@@ -77,6 +79,7 @@ OSM Notes Monitoring provides two types of dashboards:
 Simple, lightweight dashboards that work without Grafana.
 
 **Access:**
+
 ```bash
 # Update dashboard data
 ./bin/dashboard/updateDashboard.sh html
@@ -86,6 +89,7 @@ open dashboards/html/overview.html
 ```
 
 **Available Dashboards:**
+
 - **Overview**: High-level view of all components
 - **Component Status**: Detailed view per component
 - **Health Check**: Quick health status
@@ -97,11 +101,13 @@ For more details, see [Dashboard Guide](./DASHBOARD_GUIDE.md).
 Advanced dashboards with rich visualization capabilities.
 
 **Access:**
+
 - Navigate to Grafana URL (typically `http://localhost:3000`)
 - Login with your credentials
 - Select dashboard from the dashboard list
 
 **Available Dashboards:**
+
 - **Overview**: System-wide overview
 - **Ingestion**: Ingestion component monitoring
 - **Analytics**: Analytics/DWH monitoring
@@ -149,6 +155,7 @@ Alerts notify you when something requires attention. Alerts have:
 #### Via Dashboard
 
 Alerts appear in dashboard panels showing:
+
 - Active alerts count
 - Recent alerts list
 - Alert details (component, level, message, timestamp)
@@ -156,6 +163,7 @@ Alerts appear in dashboard panels showing:
 #### Via Database
 
 Query alerts directly:
+
 ```sql
 -- View active alerts
 SELECT * FROM alerts WHERE status = 'active' ORDER BY created_at DESC;
@@ -187,6 +195,7 @@ When you're working on an issue, acknowledge the alert:
 ```
 
 Or via SQL:
+
 ```sql
 UPDATE alerts SET status = 'acknowledged' WHERE id = <alert_id>;
 ```
@@ -201,6 +210,7 @@ When the issue is fixed, resolve the alert:
 ```
 
 Or via SQL:
+
 ```sql
 UPDATE alerts SET status = 'resolved' WHERE id = <alert_id>;
 ```
@@ -230,6 +240,7 @@ Monitors the OSM-Notes-Ingestion component:
 - API download success rates
 
 **Key Metrics:**
+
 - `scripts_executable`: Number of executable scripts found
 - `error_rate_percent`: Percentage of operations that fail
 - `data_freshness_hours`: Hours since last data update
@@ -248,6 +259,7 @@ Monitors the OSM-Notes-Analytics component:
 - Disk usage
 
 **Key Metrics:**
+
 - `etl_jobs_running`: Number of ETL jobs currently running
 - `data_mart_freshness_hours`: Hours since last data mart update
 - `avg_query_time_ms`: Average query execution time
@@ -266,6 +278,7 @@ Monitors the OSM-Notes-WMS component:
 - Tile generation performance
 
 **Key Metrics:**
+
 - `service_availability`: Service is available (1) or not (0)
 - `service_response_time_ms`: HTTP response time
 - `health_status`: Health check status
@@ -284,6 +297,7 @@ Monitors the OSM-Notes-API component:
 - Response times
 
 **Key Metrics:**
+
 - `api_availability`: API is available (1) or not (0)
 - `request_rate_per_second`: Requests per second
 - `security_incidents_count`: Number of security incidents
@@ -302,6 +316,7 @@ Monitors server infrastructure:
 - Database health
 
 **Key Metrics:**
+
 - `cpu_usage_percent`: CPU utilization percentage
 - `memory_usage_percent`: Memory utilization percentage
 - `disk_usage_percent`: Disk space usage percentage
@@ -322,6 +337,7 @@ Rate limiting protects APIs from abuse:
 - **Per-Endpoint Limits**: Different limits for different endpoints
 
 **Viewing Rate Limits:**
+
 ```bash
 # Check rate limit statistics
 ./bin/security/rateLimiter.sh stats
@@ -341,6 +357,7 @@ Automatic DDoS detection and mitigation:
 - Alerts when DDoS is detected
 
 **Viewing DDoS Status:**
+
 ```bash
 # Check DDoS protection statistics
 ./bin/security/ddosProtection.sh stats
@@ -358,6 +375,7 @@ Detects and responds to abuse patterns:
 - Automatic IP blocking
 
 **Viewing Abuse Detection:**
+
 ```bash
 # Check abuse detection statistics
 ./bin/security/abuseDetection.sh stats
@@ -421,13 +439,13 @@ psql -d osm_notes_monitoring -c "SELECT * FROM component_health;"
 
 ```sql
 -- Last 24 hours of alerts
-SELECT * FROM alerts 
-WHERE created_at > NOW() - INTERVAL '24 hours' 
+SELECT * FROM alerts
+WHERE created_at > NOW() - INTERVAL '24 hours'
 ORDER BY created_at DESC;
 
 -- Alerts by component
-SELECT component, alert_level, COUNT(*) 
-FROM alerts 
+SELECT component, alert_level, COUNT(*)
+FROM alerts
 WHERE created_at > NOW() - INTERVAL '7 days'
 GROUP BY component, alert_level;
 ```
@@ -439,11 +457,13 @@ GROUP BY component, alert_level;
 ### Dashboard Shows No Data
 
 **Possible Causes:**
+
 1. Metrics haven't been generated yet
 2. Database connection issues
 3. Monitoring scripts haven't run
 
 **Solutions:**
+
 ```bash
 # Generate metrics
 ./bin/dashboard/generateMetrics.sh
@@ -458,11 +478,13 @@ psql -d osm_notes_monitoring -c "SELECT COUNT(*) FROM metrics;"
 ### Alerts Not Being Sent
 
 **Possible Causes:**
+
 1. Email/Slack not configured
 2. Alert deduplication preventing duplicates
 3. Alert level below threshold
 
 **Solutions:**
+
 ```bash
 # Check alert configuration
 cat config/alerts.conf
@@ -477,11 +499,13 @@ psql -d osm_notes_monitoring -c "SELECT * FROM alerts ORDER BY created_at DESC L
 ### Component Shows as Unknown
 
 **Possible Causes:**
+
 1. Monitoring script hasn't run
 2. Component not accessible
 3. Database connection issues
 
 **Solutions:**
+
 ```bash
 # Run monitoring for the component
 ./bin/monitor/monitorIngestion.sh  # or monitorAnalytics.sh, etc.
@@ -496,20 +520,22 @@ psql -d osm_notes_monitoring -c "SELECT * FROM component_health WHERE component 
 ### High Error Rates
 
 **Investigation Steps:**
+
 1. Check component logs
 2. Review recent alerts
 3. Check component health status
 4. Review metrics over time
 
 **Commands:**
+
 ```bash
 # View recent errors in metrics
 psql -d osm_notes_monitoring -c "
-  SELECT timestamp, metric_value 
-  FROM metrics 
-  WHERE component = 'ingestion' 
-    AND metric_name = 'error_rate_percent' 
-  ORDER BY timestamp DESC 
+  SELECT timestamp, metric_value
+  FROM metrics
+  WHERE component = 'ingestion'
+    AND metric_name = 'error_rate_percent'
+  ORDER BY timestamp DESC
   LIMIT 20;
 "
 
@@ -518,6 +544,7 @@ tail -f /path/to/component/logs/error.log
 ```
 
 For more troubleshooting, see component-specific troubleshooting guides:
+
 - [Ingestion Troubleshooting](./INGESTION_TROUBLESHOOTING_GUIDE.md)
 - [WMS Service Availability Runbook](./WMS_SERVICE_AVAILABILITY_RUNBOOK.md)
 - [ETL Monitoring Runbook](./ETL_MONITORING_RUNBOOK.md)

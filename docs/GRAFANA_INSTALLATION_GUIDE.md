@@ -5,7 +5,8 @@
 
 ## Summary
 
-This guide will help you install Grafana on the production server and connect it to the `notes_monitoring` database to visualize metrics collected by the monitoring system.
+This guide will help you install Grafana on the production server and connect it to the
+`notes_monitoring` database to visualize metrics collected by the monitoring system.
 
 ---
 
@@ -43,7 +44,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO grafana_read
 \q
 ```
 
-**Note:** If you prefer to use the existing `notes` user, you can skip this step, but it's less secure.
+**Note:** If you prefer to use the existing `notes` user, you can skip this step, but it's less
+secure.
 
 ### Step 3: Run script on production
 
@@ -55,6 +57,7 @@ sudo bash /tmp/install_grafana.sh --db-user grafana_readonly
 ```
 
 The script will prompt for:
+
 - PostgreSQL password for the database user (use the password you set above)
 - Grafana admin password (or press Enter to use "admin")
 
@@ -76,6 +79,7 @@ http://192.168.0.7:3000
 ```
 
 **Default credentials:**
+
 - Username: `admin`
 - Password: The one you configured during installation
 
@@ -222,11 +226,13 @@ sudo grafana-server -config /etc/grafana/grafana.ini -config /etc/grafana/grafan
 ### Can't connect to PostgreSQL
 
 1. Verify PostgreSQL is running:
+
    ```bash
    sudo systemctl status postgresql
    ```
 
 2. Verify database exists:
+
    ```bash
    psql -U grafana_readonly -d notes_monitoring -c "SELECT 1;"
    ```
@@ -247,7 +253,8 @@ sudo grafana-server -config /etc/grafana/grafana.ini -config /etc/grafana/grafan
 
 ### Error "invalid input syntax for type json"
 
-This error has been fixed in the code. If it appears, make sure you have the latest version of monitoring scripts.
+This error has been fixed in the code. If it appears, make sure you have the latest version of
+monitoring scripts.
 
 ---
 
@@ -263,13 +270,15 @@ http_port = 3001
 ```
 
 Then restart:
+
 ```bash
 sudo systemctl restart grafana-server
 ```
 
 ### Configure LDAP authentication
 
-See [official Grafana documentation](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/ldap/).
+See
+[official Grafana documentation](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/ldap/).
 
 ### Configure Grafana alerts
 
@@ -286,17 +295,20 @@ See [official Grafana documentation](https://grafana.com/docs/grafana/latest/set
 **Recommended:** Use a read-only database user (`grafana_readonly`)
 
 **Why:**
+
 - Grafana only needs to **read** data (SELECT queries)
 - Does **not** need to modify data (INSERT, UPDATE, DELETE)
 - Follows **principle of least privilege**
 - Reduces security risk if Grafana is compromised
 
 **Permissions needed:**
+
 - `CONNECT` on database
 - `USAGE` on schema
 - `SELECT` on all tables (current and future)
 
 **Not needed:**
+
 - `INSERT`, `UPDATE`, `DELETE`
 - `CREATE`, `DROP`, `ALTER`
 - `TRUNCATE`

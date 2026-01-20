@@ -1,350 +1,364 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSM Notes Monitoring - Overview Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        header {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .last-update {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .status-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 4px solid #3498db;
-        }
-        
-        .status-card.healthy {
-            border-left-color: #27ae60;
-        }
-        
-        .status-card.degraded {
-            border-left-color: #f39c12;
-        }
-        
-        .status-card.down {
-            border-left-color: #e74c3c;
-        }
-        
-        .status-card.unknown {
-            border-left-color: #95a5a6;
-        }
-        
-        .status-card h2 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-badge.healthy {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-badge.degraded {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-badge.down {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-badge.unknown {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .metric-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .metric-label {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        .metric-value {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .alerts-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-top: 20px;
-        }
-        
-        .alert-item {
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 4px;
-            border-left: 4px solid;
-        }
-        
-        .alert-item.critical {
-            background: #f8d7da;
-            border-left-color: #e74c3c;
-        }
-        
-        .alert-item.warning {
-            background: #fff3cd;
-            border-left-color: #f39c12;
-        }
-        
-        .alert-item.info {
-            background: #d1ecf1;
-            border-left-color: #3498db;
-        }
-        
-        .alert-time {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 4px;
-        }
-        
-        .refresh-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        
-        .refresh-btn:hover {
-            background: #2980b9;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .last-update {
+        color: #7f8c8d;
+        font-size: 14px;
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .status-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3498db;
+      }
+
+      .status-card.healthy {
+        border-left-color: #27ae60;
+      }
+
+      .status-card.degraded {
+        border-left-color: #f39c12;
+      }
+
+      .status-card.down {
+        border-left-color: #e74c3c;
+      }
+
+      .status-card.unknown {
+        border-left-color: #95a5a6;
+      }
+
+      .status-card h2 {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #2c3e50;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-badge.healthy {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-badge.degraded {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-badge.down {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-badge.unknown {
+        background: #e2e3e5;
+        color: #383d41;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .metric-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .metric-label {
+        color: #7f8c8d;
+        font-size: 14px;
+      }
+
+      .metric-value {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .alerts-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+
+      .alert-item {
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 4px;
+        border-left: 4px solid;
+      }
+
+      .alert-item.critical {
+        background: #f8d7da;
+        border-left-color: #e74c3c;
+      }
+
+      .alert-item.warning {
+        background: #fff3cd;
+        border-left-color: #f39c12;
+      }
+
+      .alert-item.info {
+        background: #d1ecf1;
+        border-left-color: #3498db;
+      }
+
+      .alert-time {
+        font-size: 12px;
+        color: #7f8c8d;
+        margin-top: 4px;
+      }
+
+      .refresh-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      .refresh-btn:hover {
+        background: #2980b9;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>OSM Notes Monitoring - Overview Dashboard</h1>
-            <div class="last-update" id="lastUpdate">Loading...</div>
-            <button class="refresh-btn" onclick="loadData()">Refresh</button>
-        </header>
-        
-        <div id="statusGrid" class="status-grid">
-            <div class="loading">Loading component status...</div>
+      <header>
+        <h1>OSM Notes Monitoring - Overview Dashboard</h1>
+        <div class="last-update" id="lastUpdate">Loading...</div>
+        <button class="refresh-btn" onclick="loadData()">Refresh</button>
+      </header>
+
+      <div id="statusGrid" class="status-grid">
+        <div class="loading">Loading component status...</div>
+      </div>
+
+      <div class="alerts-section">
+        <h2>Recent Alerts</h2>
+        <div id="alertsList">
+          <div class="loading">Loading alerts...</div>
         </div>
-        
-        <div class="alerts-section">
-            <h2>Recent Alerts</h2>
-            <div id="alertsList">
-                <div class="loading">Loading alerts...</div>
-            </div>
-        </div>
+      </div>
     </div>
-    
+
     <script>
-        // Load data from JSON files
-        async function loadData() {
-            const lastUpdate = document.getElementById('lastUpdate');
-            lastUpdate.textContent = 'Loading...';
-            
-            try {
-                // Load overview data
-                const overviewResponse = await fetch('overview_data.json');
-                const overviewData = await overviewResponse.json();
-                
-                // Load component health
-                const healthResponse = await fetch('component_health.json');
-                const healthData = await healthResponse.json();
-                
-                // Load recent alerts
-                const alertsResponse = await fetch('recent_alerts.json');
-                const alertsData = await alertsResponse.json();
-                
-                // Update UI
-                updateStatusGrid(overviewData, healthData);
-                updateAlerts(alertsData);
-                
-                lastUpdate.textContent = `Last updated: ${new Date().toLocaleString()}`;
-            } catch (error) {
-                console.error('Error loading data:', error);
-                lastUpdate.textContent = 'Error loading data';
-                document.getElementById('statusGrid').innerHTML = 
-                    '<div class="status-card"><p>Error loading data. Please check that the dashboard data files exist.</p></div>';
-            }
+      // Load data from JSON files
+      async function loadData() {
+        const lastUpdate = document.getElementById("lastUpdate");
+        lastUpdate.textContent = "Loading...";
+
+        try {
+          // Load overview data
+          const overviewResponse = await fetch("overview_data.json");
+          const overviewData = await overviewResponse.json();
+
+          // Load component health
+          const healthResponse = await fetch("component_health.json");
+          const healthData = await healthResponse.json();
+
+          // Load recent alerts
+          const alertsResponse = await fetch("recent_alerts.json");
+          const alertsData = await alertsResponse.json();
+
+          // Update UI
+          updateStatusGrid(overviewData, healthData);
+          updateAlerts(alertsData);
+
+          lastUpdate.textContent = `Last updated: ${new Date().toLocaleString()}`;
+        } catch (error) {
+          console.error("Error loading data:", error);
+          lastUpdate.textContent = "Error loading data";
+          document.getElementById("statusGrid").innerHTML =
+            '<div class="status-card"><p>Error loading data. Please check that the dashboard data files exist.</p></div>';
         }
-        
-        function updateStatusGrid(overviewData, healthData) {
-            const grid = document.getElementById('statusGrid');
-            const components = ['ingestion', 'analytics', 'wms', 'api', 'infrastructure', 'data'];
-            
-            grid.innerHTML = components.map(component => {
-                const health = healthData[component] || { status: 'unknown', last_check: null };
-                const metrics = overviewData[component] || [];
-                
-                // Calculate key metrics
-                const avgMetrics = calculateAvgMetrics(metrics);
-                
-                return `
+      }
+
+      function updateStatusGrid(overviewData, healthData) {
+        const grid = document.getElementById("statusGrid");
+        const components = ["ingestion", "analytics", "wms", "api", "infrastructure", "data"];
+
+        grid.innerHTML = components
+          .map((component) => {
+            const health = healthData[component] || { status: "unknown", last_check: null };
+            const metrics = overviewData[component] || [];
+
+            // Calculate key metrics
+            const avgMetrics = calculateAvgMetrics(metrics);
+
+            return `
                     <div class="status-card ${health.status}">
                         <h2>${component.charAt(0).toUpperCase() + component.slice(1)}</h2>
                         <span class="status-badge ${health.status}">${health.status}</span>
                         <div class="metrics-grid">
-                            ${Object.entries(avgMetrics).slice(0, 3).map(([key, value]) => `
+                            ${Object.entries(avgMetrics)
+                              .slice(0, 3)
+                              .map(
+                                ([key, value]) => `
                                 <div class="metric-item">
                                     <span class="metric-label">${formatMetricName(key)}</span>
                                     <span class="metric-value">${formatMetricValue(key, value)}</span>
                                 </div>
-                            `).join('')}
+                            `,
+                              )
+                              .join("")}
                         </div>
-                        ${health.last_check ? `<div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">Last check: ${new Date(health.last_check).toLocaleString()}</div>` : ''}
+                        ${health.last_check ? `<div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">Last check: ${new Date(health.last_check).toLocaleString()}</div>` : ""}
                     </div>
                 `;
-            }).join('');
+          })
+          .join("");
+      }
+
+      function calculateAvgMetrics(metrics) {
+        const grouped = {};
+
+        metrics.forEach((metric) => {
+          if (!grouped[metric.metric_name]) {
+            grouped[metric.metric_name] = [];
+          }
+          if (metric.metric_value !== null && metric.metric_value !== undefined) {
+            grouped[metric.metric_name].push(parseFloat(metric.metric_value));
+          }
+        });
+
+        const avgMetrics = {};
+        Object.keys(grouped).forEach((key) => {
+          const values = grouped[key];
+          if (values.length > 0) {
+            avgMetrics[key] = values.reduce((a, b) => a + b, 0) / values.length;
+          }
+        });
+
+        return avgMetrics;
+      }
+
+      function formatMetricName(name) {
+        return name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      }
+
+      function formatMetricValue(name, value) {
+        if (name.includes("percent") || name.includes("rate")) {
+          return `${value.toFixed(1)}%`;
         }
-        
-        function calculateAvgMetrics(metrics) {
-            const grouped = {};
-            
-            metrics.forEach(metric => {
-                if (!grouped[metric.metric_name]) {
-                    grouped[metric.metric_name] = [];
-                }
-                if (metric.metric_value !== null && metric.metric_value !== undefined) {
-                    grouped[metric.metric_name].push(parseFloat(metric.metric_value));
-                }
-            });
-            
-            const avgMetrics = {};
-            Object.keys(grouped).forEach(key => {
-                const values = grouped[key];
-                if (values.length > 0) {
-                    avgMetrics[key] = values.reduce((a, b) => a + b, 0) / values.length;
-                }
-            });
-            
-            return avgMetrics;
+        if (name.includes("bytes") || name.includes("size")) {
+          return formatBytes(value);
         }
-        
-        function formatMetricName(name) {
-            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        if (name.includes("time") || name.includes("duration")) {
+          return formatDuration(value);
         }
-        
-        function formatMetricValue(name, value) {
-            if (name.includes('percent') || name.includes('rate')) {
-                return `${value.toFixed(1)}%`;
-            }
-            if (name.includes('bytes') || name.includes('size')) {
-                return formatBytes(value);
-            }
-            if (name.includes('time') || name.includes('duration')) {
-                return formatDuration(value);
-            }
-            return value.toFixed(2);
+        return value.toFixed(2);
+      }
+
+      function formatBytes(bytes) {
+        const sizes = ["B", "KB", "MB", "GB", "TB"];
+        if (bytes === 0) return "0 B";
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
+      }
+
+      function formatDuration(seconds) {
+        if (seconds < 60) return `${seconds.toFixed(1)}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${(seconds % 60).toFixed(0)}s`;
+        return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+      }
+
+      function updateAlerts(alertsData) {
+        const alertsList = document.getElementById("alertsList");
+
+        if (!alertsData || alertsData.length === 0) {
+          alertsList.innerHTML = '<p style="color: #7f8c8d;">No recent alerts</p>';
+          return;
         }
-        
-        function formatBytes(bytes) {
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-            if (bytes === 0) return '0 B';
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-        }
-        
-        function formatDuration(seconds) {
-            if (seconds < 60) return `${seconds.toFixed(1)}s`;
-            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${(seconds % 60).toFixed(0)}s`;
-            return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-        }
-        
-        function updateAlerts(alertsData) {
-            const alertsList = document.getElementById('alertsList');
-            
-            if (!alertsData || alertsData.length === 0) {
-                alertsList.innerHTML = '<p style="color: #7f8c8d;">No recent alerts</p>';
-                return;
-            }
-            
-            alertsList.innerHTML = alertsData.slice(0, 10).map(alert => `
+
+        alertsList.innerHTML = alertsData
+          .slice(0, 10)
+          .map(
+            (alert) => `
                 <div class="alert-item ${alert.alert_level}">
                     <strong>${alert.component} - ${alert.alert_type}</strong>
                     <p>${alert.message}</p>
                     <div class="alert-time">${new Date(alert.created_at).toLocaleString()}</div>
                 </div>
-            `).join('');
-        }
-        
-        // Load data on page load
-        loadData();
-        
-        // Auto-refresh every 5 minutes
-        setInterval(loadData, 300000);
+            `,
+          )
+          .join("");
+      }
+
+      // Load data on page load
+      loadData();
+
+      // Auto-refresh every 5 minutes
+      setInterval(loadData, 300000);
     </script>
-</body>
+  </body>
 </html>

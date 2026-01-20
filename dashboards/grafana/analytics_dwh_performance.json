@@ -13,18 +13,20 @@
       "id": 1,
       "title": "DWH Schema Size",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_schema_size_bytes' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_schema_size_bytes' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -32,9 +34,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "green"},
-              {"value": 107374182400, "color": "yellow"},
-              {"value": 1073741824000, "color": "red"}
+              { "value": null, "color": "green" },
+              { "value": 107374182400, "color": "yellow" },
+              { "value": 1073741824000, "color": "red" }
             ]
           }
         }
@@ -44,18 +46,20 @@
       "id": 2,
       "title": "Facts Partition Sizes",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, labels->>'partition' AS partition, labels->>'year' AS year, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_facts_partition_size_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp, partition",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'partition' AS partition, labels->>'year' AS year, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_facts_partition_size_bytes' AND $__timeFilter(timestamp) ORDER BY timestamp, partition",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -80,18 +84,20 @@
       "id": 3,
       "title": "Cache Hit Ratio (%)",
       "type": "gauge",
-      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 4},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "table",
-        "rawQuery": true,
-        "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_cache_hit_ratio_percent' ORDER BY timestamp DESC LIMIT 1",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_cache_hit_ratio_percent' ORDER BY timestamp DESC LIMIT 1",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -101,9 +107,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "red"},
-              {"value": 90, "color": "yellow"},
-              {"value": 95, "color": "green"}
+              { "value": null, "color": "red" },
+              { "value": 90, "color": "yellow" },
+              { "value": 95, "color": "green" }
             ]
           }
         }
@@ -113,18 +119,20 @@
       "id": 4,
       "title": "Slow Queries Count",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 9, "x": 6, "y": 8},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_slow_queries_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_slow_queries_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -132,9 +140,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "green"},
-              {"value": 1, "color": "yellow"},
-              {"value": 5, "color": "red"}
+              { "value": null, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 5, "color": "red" }
             ]
           }
         }
@@ -144,18 +152,20 @@
       "id": 5,
       "title": "Active Connections by Application",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 9, "x": 15, "y": 8},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, labels->>'application' AS application, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_active_connections' AND $__timeFilter(timestamp) ORDER BY timestamp, application",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 8 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, labels->>'application' AS application, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_active_connections' AND $__timeFilter(timestamp) ORDER BY timestamp, application",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -180,18 +190,20 @@
       "id": 6,
       "title": "Active Locks Count",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
-      "targets": [{
-        "datasource": {
-          "type": "postgres",
-          "uid": "PostgreSQL"
-        },
-        "editorMode": "code",
-        "format": "time_series",
-        "rawQuery": true,
-        "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_active_locks_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
-        "refId": "A"
-      }],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "PostgreSQL"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ANALYTICS' AND metric_name = 'db_active_locks_count' AND $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -199,9 +211,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "green"},
-              {"value": 10, "color": "yellow"},
-              {"value": 50, "color": "red"}
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 50, "color": "red" }
             ]
           }
         }
@@ -211,7 +223,7 @@
       "id": 7,
       "title": "Table Bloat (%)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "targets": [
         {
           "datasource": {
@@ -245,14 +257,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": null, "color": "green"},
-              {"value": 10, "color": "yellow"},
-              {"value": 20, "color": "red"}
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 20, "color": "red" }
             ]
           }
         }
       }
     }
   ],
-  "time": {"from": "now-24h", "to": "now"}
+  "time": { "from": "now-24h", "to": "now" }
 }

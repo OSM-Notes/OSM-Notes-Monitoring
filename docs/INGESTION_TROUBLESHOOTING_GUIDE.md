@@ -42,6 +42,7 @@ Use this checklist to quickly identify common issues:
 ### Issue 1: Monitoring Script Not Running
 
 **Symptoms:**
+
 - No metrics being collected
 - No logs generated
 - Cron job not executing
@@ -49,22 +50,26 @@ Use this checklist to quickly identify common issues:
 **Diagnostic Steps:**
 
 1. **Check script permissions:**
+
 ```bash
 ls -la bin/monitor/monitorIngestion.sh
 chmod +x bin/monitor/monitorIngestion.sh
 ```
 
 2. **Test script execution:**
+
 ```bash
 ./bin/monitor/monitorIngestion.sh --dry-run --verbose
 ```
 
 3. **Check cron job:**
+
 ```bash
 crontab -l | grep monitorIngestion
 ```
 
 4. **Check cron service:**
+
 ```bash
 # Systemd
 systemctl status cron
@@ -78,6 +83,7 @@ tail -50 /var/log/cron
 ```
 
 5. **Check script syntax:**
+
 ```bash
 bash -n bin/monitor/monitorIngestion.sh
 ```
@@ -95,6 +101,7 @@ bash -n bin/monitor/monitorIngestion.sh
 ### Issue 2: Database Connection Errors
 
 **Symptoms:**
+
 - Errors: "could not connect to database"
 - Errors: "authentication failed"
 - Errors: "connection refused"
@@ -102,6 +109,7 @@ bash -n bin/monitor/monitorIngestion.sh
 **Diagnostic Steps:**
 
 1. **Check database server status:**
+
 ```bash
 # Check if PostgreSQL is running
 systemctl status postgresql
@@ -110,11 +118,13 @@ pg_isready -h ${DBHOST} -p ${DBPORT}
 ```
 
 2. **Test database connection:**
+
 ```bash
 psql -h ${DBHOST} -p ${DBPORT} -U ${DBUSER} -d ${DBNAME} -c "SELECT 1;"
 ```
 
 3. **Check credentials:**
+
 ```bash
 # Check configuration
 cat etc/properties.sh | grep -E "DBNAME|DBHOST|DBPORT|DBUSER"
@@ -128,6 +138,7 @@ chmod 600 ~/.pgpass
 ```
 
 4. **Check network connectivity:**
+
 ```bash
 # Ping database host
 ping -c 3 ${DBHOST}
@@ -139,6 +150,7 @@ telnet ${DBHOST} ${DBPORT}
 ```
 
 5. **Check PostgreSQL logs:**
+
 ```bash
 # Find PostgreSQL log location
 sudo find /var/log -name "*postgresql*.log" 2>/dev/null
@@ -151,7 +163,8 @@ sudo journalctl -u postgresql | tail -50
 - Start PostgreSQL if stopped: `systemctl start postgresql`
 - Fix credentials in `etc/properties.sh`
 - Set `PGPASSWORD` environment variable
-- Create/update `.pgpass` file: `echo "${DBHOST}:${DBPORT}:${DBNAME}:${DBUSER}:${PASSWORD}" >> ~/.pgpass`
+- Create/update `.pgpass` file:
+  `echo "${DBHOST}:${DBPORT}:${DBNAME}:${DBUSER}:${PASSWORD}" >> ~/.pgpass`
 - Fix network connectivity issues
 - Check PostgreSQL `pg_hba.conf` for access rules
 - Verify database user has required permissions
@@ -161,6 +174,7 @@ sudo journalctl -u postgresql | tail -50
 ### Issue 3: Metrics Not Being Stored
 
 **Symptoms:**
+
 - Script runs successfully
 - No errors in output
 - No metrics in database
@@ -168,38 +182,44 @@ sudo journalctl -u postgresql | tail -50
 **Diagnostic Steps:**
 
 1. **Verify database connection:**
+
 ```bash
 # Test connection
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "SELECT 1;"
 ```
 
 2. **Check database schema:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "\d metrics"
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "\d alerts"
 ```
 
 3. **Check user permissions:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT grantee, privilege_type 
-FROM information_schema.role_table_grants 
+SELECT grantee, privilege_type
+FROM information_schema.role_table_grants
 WHERE table_name = 'metrics';
 "
 ```
 
 4. **Run monitoring with verbose output:**
+
 ```bash
 ./bin/monitor/monitorIngestion.sh --verbose 2>&1 | tee /tmp/monitoring_debug.log
 ```
 
 5. **Check monitoring logs:**
+
 ```bash
 tail -100 ${LOG_DIR}/monitoring.log
 tail -100 ${LOG_DIR}/ingestion.log
 ```
 
 6. **Test metric storage manually:**
+
 ```bash
 # Source monitoring functions
 source bin/lib/monitoringFunctions.sh
@@ -210,10 +230,10 @@ store_metric "ingestion" "test_metric" "100" "count" "null"
 
 # Verify it was stored
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT * FROM metrics 
-WHERE component = 'ingestion' 
-  AND metric_name = 'test_metric' 
-ORDER BY timestamp DESC 
+SELECT * FROM metrics
+WHERE component = 'ingestion'
+  AND metric_name = 'test_metric'
+ORDER BY timestamp DESC
 LIMIT 1;
 "
 ```
@@ -232,6 +252,7 @@ LIMIT 1;
 ### Issue 4: Scripts Not Found
 
 **Symptoms:**
+
 - Alert: "Low number of scripts found"
 - `scripts_found` metric is low
 - Scripts exist but not detected
@@ -239,17 +260,20 @@ LIMIT 1;
 **Diagnostic Steps:**
 
 1. **Check repository path:**
+
 ```bash
 echo $INGESTION_REPO_PATH
 ls -la ${INGESTION_REPO_PATH}
 ```
 
 2. **Check scripts directory:**
+
 ```bash
 ls -la ${INGESTION_REPO_PATH}/bin/
 ```
 
 3. **Check expected scripts:**
+
 ```bash
 # Check scripts in process/ directory
 for script in processAPINotes.sh processAPINotesDaemon.sh processPlanetNotes.sh updateCountries.sh; do
@@ -271,11 +295,13 @@ done
 ```
 
 4. **Check script permissions:**
+
 ```bash
 ls -la ${INGESTION_REPO_PATH}/bin/*.sh
 ```
 
 5. **Verify configuration:**
+
 ```bash
 grep INGESTION_REPO_PATH config/monitoring.conf
 ```
@@ -294,6 +320,7 @@ grep INGESTION_REPO_PATH config/monitoring.conf
 ### Issue 5: High Error Rates
 
 **Symptoms:**
+
 - Alert: "High error rate detected"
 - `error_rate_percent` metric is high
 - Many errors in logs
@@ -301,16 +328,19 @@ grep INGESTION_REPO_PATH config/monitoring.conf
 **Diagnostic Steps:**
 
 1. **Check error count:**
+
 ```bash
 grep -i error ${INGESTION_LOG_DIR}/*.log | wc -l
 ```
 
 2. **Review recent errors:**
+
 ```bash
 grep -i error ${INGESTION_LOG_DIR}/*.log | tail -50
 ```
 
 3. **Identify error patterns:**
+
 ```bash
 grep -i error ${INGESTION_LOG_DIR}/*.log | \
     sed 's/.*ERROR: //' | \
@@ -318,11 +348,13 @@ grep -i error ${INGESTION_LOG_DIR}/*.log | \
 ```
 
 4. **Check database connectivity:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "SELECT 1;"
 ```
 
 5. **Check system resources:**
+
 ```bash
 # Disk space
 df -h
@@ -335,6 +367,7 @@ top -bn1 | head -20
 ```
 
 6. **Check API connectivity (if applicable):**
+
 ```bash
 curl -I ${API_URL}
 ```
@@ -354,6 +387,7 @@ curl -I ${API_URL}
 ### Issue 6: Alerts Not Being Sent
 
 **Symptoms:**
+
 - Alerts stored in database
 - No email/Slack notifications received
 - Alert delivery failing
@@ -361,22 +395,25 @@ curl -I ${API_URL}
 **Diagnostic Steps:**
 
 1. **Check alert configuration:**
+
 ```bash
 grep -E "SEND_ALERT_EMAIL|SLACK_ENABLED|ADMIN_EMAIL" config/alerts.conf
 ```
 
 2. **Check if alerts are stored:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT alert_level, message, timestamp 
-FROM alerts 
-WHERE component = 'INGESTION' 
-ORDER BY timestamp DESC 
+SELECT alert_level, message, timestamp
+FROM alerts
+WHERE component = 'INGESTION'
+ORDER BY timestamp DESC
 LIMIT 10;
 "
 ```
 
 3. **Test email sending:**
+
 ```bash
 # Test mail command
 echo "Test alert" | mail -s "Test Alert" ${ADMIN_EMAIL}
@@ -386,6 +423,7 @@ echo "Test alert" | mutt -s "Test Alert" ${ADMIN_EMAIL}
 ```
 
 4. **Test Slack webhook (if configured):**
+
 ```bash
 curl -X POST -H 'Content-type: application/json' \
     --data '{"text":"Test alert"}' \
@@ -393,6 +431,7 @@ curl -X POST -H 'Content-type: application/json' \
 ```
 
 5. **Check alert logs:**
+
 ```bash
 grep -i alert ${LOG_DIR}/*.log | tail -50
 ```
@@ -468,8 +507,8 @@ echo
 
 echo "7. Recent Metrics:"
 recent_metrics=$(psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -t -c "
-SELECT COUNT(*) FROM metrics 
-WHERE component = 'ingestion' 
+SELECT COUNT(*) FROM metrics
+WHERE component = 'ingestion'
   AND timestamp > NOW() - INTERVAL '1 hour';
 " 2>/dev/null | tr -d ' ')
 echo "  Metrics in last hour: ${recent_metrics}"
@@ -507,25 +546,25 @@ echo
 
 echo "4. Permissions Check:"
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT grantee, privilege_type 
-FROM information_schema.role_table_grants 
+SELECT grantee, privilege_type
+FROM information_schema.role_table_grants
 WHERE table_name = 'metrics' AND grantee = '${DBUSER}';
 "
 echo
 
 echo "5. Recent Activity:"
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     COUNT(*) as total_metrics,
     MAX(timestamp) as latest_metric
-FROM metrics 
+FROM metrics
 WHERE component = 'ingestion';
 "
 echo
 
 echo "6. Database Size:"
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     pg_size_pretty(pg_database_size('${DBNAME}')) as database_size;
 "
 echo
@@ -589,11 +628,11 @@ echo $?
 ```bash
 # Check if metrics are being collected
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     metric_name,
     COUNT(*) as count,
     MAX(timestamp) as latest
-FROM metrics 
+FROM metrics
 WHERE component = 'ingestion'
 GROUP BY metric_name
 ORDER BY latest DESC;
@@ -605,13 +644,13 @@ ORDER BY latest DESC;
 ```bash
 # Check recent alerts
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     alert_level,
     message,
     timestamp
-FROM alerts 
+FROM alerts
 WHERE component = 'INGESTION'
-ORDER BY timestamp DESC 
+ORDER BY timestamp DESC
 LIMIT 10;
 "
 ```
@@ -623,15 +662,17 @@ LIMIT 10;
 ### Issue: Database Connection Timeout
 
 **Symptoms:**
+
 - Connection attempts timeout
 - Slow database responses
 
 **Solutions:**
 
 1. **Check database server load:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     count(*) as active_connections,
     count(*) FILTER (WHERE state = 'active') as active_queries
 FROM pg_stat_activity;
@@ -639,6 +680,7 @@ FROM pg_stat_activity;
 ```
 
 2. **Check for locks:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
 SELECT * FROM pg_locks WHERE NOT granted;
@@ -646,9 +688,10 @@ SELECT * FROM pg_locks WHERE NOT granted;
 ```
 
 3. **Check slow queries:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     pid,
     now() - pg_stat_activity.query_start AS duration,
     query
@@ -662,9 +705,10 @@ WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes';
 **Solutions:**
 
 1. **Analyze table sizes:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
@@ -675,9 +719,10 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ```
 
 2. **Check indexes:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT 
+SELECT
     tablename,
     indexname,
     indexdef
@@ -688,6 +733,7 @@ ORDER BY tablename, indexname;
 ```
 
 3. **Vacuum and analyze:**
+
 ```bash
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "VACUUM ANALYZE metrics;"
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "VACUUM ANALYZE alerts;"
@@ -700,12 +746,14 @@ psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "VACUUM ANALYZE alerts;"
 ### Issue: Configuration Not Loading
 
 **Symptoms:**
+
 - Default values being used
 - Configuration changes not taking effect
 
 **Solutions:**
 
 1. **Check configuration file syntax:**
+
 ```bash
 # Check for syntax errors
 bash -n etc/properties.sh
@@ -714,6 +762,7 @@ bash -n config/alerts.conf
 ```
 
 2. **Verify configuration is sourced:**
+
 ```bash
 # Add debug output to scripts
 set -x
@@ -722,6 +771,7 @@ set +x
 ```
 
 3. **Check for conflicting environment variables:**
+
 ```bash
 env | grep -E "DB|INGESTION|LOG|ALERT"
 ```
@@ -735,22 +785,26 @@ env | grep -E "DB|INGESTION|LOG|ALERT"
 **Solutions:**
 
 1. **Measure execution time:**
+
 ```bash
 time ./bin/monitor/monitorIngestion.sh
 ```
 
 2. **Run performance tests:**
+
 ```bash
 ./tests/performance/test_monitoring_overhead.sh
 ```
 
 3. **Reduce monitoring frequency:**
+
 ```bash
 # Change cron from every 15 minutes to hourly
 # */15 * * * * -> 0 * * * *
 ```
 
 4. **Disable non-critical checks:**
+
 ```bash
 # Comment out checks in monitoring script
 # Or create a lightweight monitoring script
@@ -765,6 +819,7 @@ time ./bin/monitor/monitorIngestion.sh
 **Solutions:**
 
 1. **Enable alert deduplication:**
+
 ```bash
 # In config/alerts.conf
 ALERT_DEDUPLICATION_ENABLED="true"
@@ -772,6 +827,7 @@ ALERT_DEDUPLICATION_WINDOW=3600
 ```
 
 2. **Adjust alert thresholds:**
+
 ```bash
 # Increase thresholds in config/monitoring.conf
 INGESTION_MAX_ERROR_RATE=10  # Was 5
@@ -779,12 +835,13 @@ INGESTION_ERROR_COUNT_THRESHOLD=2000  # Was 1000
 ```
 
 3. **Review and acknowledge alerts:**
+
 ```bash
 # Mark alerts as acknowledged
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-UPDATE alerts 
-SET status = 'acknowledged' 
-WHERE component = 'INGESTION' 
+UPDATE alerts
+SET status = 'acknowledged'
+WHERE component = 'INGESTION'
   AND status = 'active';
 "
 ```
@@ -874,16 +931,16 @@ crontab -l | grep -v monitorIngestion | crontab -
 
 # 2. Clear old metrics (optional, be careful!)
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-DELETE FROM metrics 
-WHERE component = 'ingestion' 
+DELETE FROM metrics
+WHERE component = 'ingestion'
   AND timestamp < NOW() - INTERVAL '90 days';
 "
 
 # 3. Clear old alerts (optional)
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-DELETE FROM alerts 
-WHERE component = 'INGESTION' 
-  AND status = 'resolved' 
+DELETE FROM alerts
+WHERE component = 'INGESTION'
+  AND status = 'resolved'
   AND timestamp < NOW() - INTERVAL '30 days';
 "
 
@@ -914,9 +971,9 @@ ps aux | grep monitorIngestion
 
 # Check recent metrics
 psql -h ${DBHOST} -U ${DBUSER} -d ${DBNAME} -c "
-SELECT COUNT(*) 
-FROM metrics 
-WHERE component = 'ingestion' 
+SELECT COUNT(*)
+FROM metrics
+WHERE component = 'ingestion'
   AND timestamp > NOW() - INTERVAL '1 hour';
 "
 ```
@@ -964,4 +1021,3 @@ If issues persist:
 
 **Last Updated**: 2025-12-26  
 **Version**: 1.0.0
-

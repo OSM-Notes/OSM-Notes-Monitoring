@@ -1,6 +1,7 @@
 # Contributing to OSM-Notes-Monitoring
 
-Thank you for your interest in contributing to OSM-Notes-Monitoring! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to OSM-Notes-Monitoring! This document provides
+guidelines and instructions for contributing to the project.
 
 ## Code of Conduct
 
@@ -96,4 +97,3 @@ If you have questions, feel free to:
 - Contact the maintainers
 
 Thank you for contributing to OSM-Notes-Monitoring!
-

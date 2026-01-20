@@ -3,7 +3,8 @@
 > **Last Updated:** 2025-12-24  
 > **Version:** 1.0.0
 
-Documentation of recommended changes in OSM-Notes-Ingestion for better integration with OSM-Notes-Monitoring.
+Documentation of recommended changes in OSM-Notes-Ingestion for better integration with
+OSM-Notes-Monitoring.
 
 ## Table of Contents
 
@@ -18,7 +19,8 @@ Documentation of recommended changes in OSM-Notes-Ingestion for better integrati
 
 ## Overview
 
-This document outlines recommended changes in OSM-Notes-Ingestion to improve integration with OSM-Notes-Monitoring. These changes are **optional** but recommended for:
+This document outlines recommended changes in OSM-Notes-Ingestion to improve integration with
+OSM-Notes-Monitoring. These changes are **optional** but recommended for:
 
 - Better monitoring integration
 - Consistent logging
@@ -27,11 +29,13 @@ This document outlines recommended changes in OSM-Notes-Ingestion to improve int
 
 ### Current State
 
-OSM-Notes-Monitoring currently calls OSM-Notes-Ingestion scripts without requiring modifications. Scripts are executed as-is and their output is parsed.
+OSM-Notes-Monitoring currently calls OSM-Notes-Ingestion scripts without requiring modifications.
+Scripts are executed as-is and their output is parsed.
 
 ### Future State (Recommended)
 
 With recommended changes, scripts can:
+
 - Use shared logging libraries
 - Send alerts through unified system
 - Record metrics automatically
@@ -155,6 +159,7 @@ Migrate scripts to use shared libraries (see `docs/ADAPTING_SCRIPTS.md`):
 **Recommended Changes:**
 
 1. **Add exit codes:**
+
 ```bash
 # At end of script
 if [[ ${discrepancies_found} -gt 0 ]]; then
@@ -167,6 +172,7 @@ fi
 ```
 
 2. **Add structured output:**
+
 ```bash
 # Output summary
 echo "SUMMARY:discrepancies=${discrepancies_found}"
@@ -175,6 +181,7 @@ echo "SUMMARY:duration=${duration}"
 ```
 
 3. **Support monitoring integration:**
+
 ```bash
 # Check if called from monitoring
 if [[ -n "${MONITORING_MODE}" ]]; then
@@ -189,6 +196,7 @@ fi
 **Recommended Changes:**
 
 1. **Add progress output:**
+
 ```bash
 # Add progress indicators
 echo "PROGRESS:step=download,status=running"
@@ -197,6 +205,7 @@ echo "PROGRESS:step=import,status=running"
 ```
 
 2. **Add timing information:**
+
 ```bash
 # Add timing
 start_time=$(date +%s)
@@ -211,6 +220,7 @@ echo "TIMING:total_duration=${duration}"
 **Recommended Changes:**
 
 1. **Structured output:**
+
 ```bash
 # Current output (colored, human-readable)
 # Add machine-readable output
@@ -218,6 +228,7 @@ echo "METRICS:passes=${pass_count},failures=${fail_count},warnings=${warning_cou
 ```
 
 2. **Exit codes:**
+
 ```bash
 # Add exit codes
 if [[ ${fail_count} -gt 0 ]]; then
@@ -266,17 +277,20 @@ Support these environment variables:
 ### Test Integration Points
 
 1. **Test exit codes:**
+
 ```bash
 ./bin/monitor/notesCheckVerifier.sh
 echo "Exit code: $?"
 ```
 
 2. **Test structured output:**
+
 ```bash
 ./bin/monitor/analyzeDatabasePerformance.sh | grep "METRICS:"
 ```
 
 3. **Test monitoring mode:**
+
 ```bash
 MONITORING_MODE=true ./bin/monitor/notesCheckVerifier.sh
 ```
@@ -284,11 +298,13 @@ MONITORING_MODE=true ./bin/monitor/notesCheckVerifier.sh
 ### Test Library Integration
 
 1. **Test optional library loading:**
+
 ```bash
 OSM_NOTES_MONITORING_ROOT="/path/to/OSM-Notes-Monitoring" ./bin/monitor/notesCheckVerifier.sh
 ```
 
 2. **Verify backward compatibility:**
+
 ```bash
 # Should work without monitoring
 ./bin/monitor/notesCheckVerifier.sh
@@ -397,6 +413,7 @@ fi
 ## Questions?
 
 For questions about integration changes:
+
 - See `docs/ADAPTING_SCRIPTS.md` for library migration guide
 - See `docs/Existing_Monitoring_Components.md` for current integration
 - Contact OSM-Notes-Monitoring maintainers
@@ -404,4 +421,3 @@ For questions about integration changes:
 ---
 
 **Last Updated:** 2025-12-24
-

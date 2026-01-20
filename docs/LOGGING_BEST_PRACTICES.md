@@ -25,9 +25,12 @@ Comprehensive guide to logging best practices for OSM-Notes-Monitoring.
 ### When to Use Each Level
 
 #### DEBUG
-Use DEBUG for detailed diagnostic information that is only useful during development or troubleshooting.
+
+Use DEBUG for detailed diagnostic information that is only useful during development or
+troubleshooting.
 
 **Use cases:**
+
 - Function entry/exit points
 - Variable values and state
 - Detailed execution flow
@@ -35,6 +38,7 @@ Use DEBUG for detailed diagnostic information that is only useful during develop
 - Database query details
 
 **Example:**
+
 ```bash
 log_debug "Processing note ${note_id}"
 log_debug "Database query: SELECT * FROM notes WHERE id=${note_id}"
@@ -42,14 +46,17 @@ log_debug "Response time: ${response_time}ms"
 ```
 
 **Guidelines:**
+
 - Never log sensitive information (passwords, tokens, API keys)
 - Keep DEBUG logs concise
 - Use DEBUG sparingly in production (enable only when needed)
 
 #### INFO
+
 Use INFO for general informational messages about normal operation.
 
 **Use cases:**
+
 - Component startup/shutdown
 - Successful operations
 - Status updates
@@ -58,6 +65,7 @@ Use INFO for general informational messages about normal operation.
 - Scheduled task execution
 
 **Example:**
+
 ```bash
 log_info "Monitoring started for component: ${component}"
 log_info "Health check passed: ${component} (response_time=${time}ms)"
@@ -65,14 +73,17 @@ log_info "Configuration loaded: ${config_file}"
 ```
 
 **Guidelines:**
+
 - Use INFO for events that are important but not errors
 - Include relevant metrics (response times, counts, etc.)
 - Keep messages clear and actionable
 
 #### WARNING
+
 Use WARNING for potentially problematic situations that don't prevent operation.
 
 **Use cases:**
+
 - Recoverable errors
 - Degraded performance
 - Configuration issues
@@ -81,6 +92,7 @@ Use WARNING for potentially problematic situations that don't prevent operation.
 - Retry attempts
 
 **Example:**
+
 ```bash
 log_warning "High error rate detected: ${error_rate}% (threshold=${threshold}%)"
 log_warning "Response time above threshold: ${response_time}ms (threshold=${threshold}ms)"
@@ -88,14 +100,17 @@ log_warning "Retrying operation (attempt ${attempt}/${max_attempts})"
 ```
 
 **Guidelines:**
+
 - Warnings should indicate something that needs attention
 - Include context about why it's a warning
 - Provide actionable information
 
 #### ERROR
+
 Use ERROR for failures that need immediate attention.
 
 **Use cases:**
+
 - Component failures
 - Database connection errors
 - Critical system errors
@@ -104,6 +119,7 @@ Use ERROR for failures that need immediate attention.
 - Data corruption
 
 **Example:**
+
 ```bash
 log_error "Failed to connect to database: ${error} (host=${DBHOST}, port=${DBPORT})"
 log_error "Component ${component} is down: ${error_message}"
@@ -111,6 +127,7 @@ log_error "Data validation failed: ${validation_error}"
 ```
 
 **Guidelines:**
+
 - Always include error details
 - Include context (what was being done, relevant parameters)
 - Use ERROR sparingly (only for actual errors)
@@ -128,6 +145,7 @@ All log messages should follow this format:
 ```
 
 **Example:**
+
 ```bash
 log_info "INGESTION: Processing batch - batch_id=${batch_id}, size=${size}, duration=${duration}ms"
 log_error "DATABASE: Connection failed - host=${host}, error=${error}"
@@ -148,6 +166,7 @@ log_info "Health check passed"
 ### Timestamp Format
 
 Timestamps are automatically added by the logging system:
+
 - Format: `YYYY-MM-DD HH:MM:SS`
 - Timezone: System timezone (use UTC in production)
 
@@ -158,11 +177,13 @@ Timestamps are automatically added by the logging system:
 ### Always Include Context
 
 **Good:**
+
 ```bash
 log_error "Database query failed: query='${query}', error='${error}', host='${DBHOST}', database='${DBNAME}'"
 ```
 
 **Bad:**
+
 ```bash
 log_error "Query failed"
 ```
@@ -170,11 +191,13 @@ log_error "Query failed"
 ### Include Relevant Metrics
 
 **Good:**
+
 ```bash
 log_info "Batch processed: batch_id=${batch_id}, items=${count}, duration=${duration}ms, errors=${errors}"
 ```
 
 **Bad:**
+
 ```bash
 log_info "Batch processed"
 ```
@@ -182,11 +205,13 @@ log_info "Batch processed"
 ### Use Meaningful Variable Names
 
 **Good:**
+
 ```bash
 log_info "Processing ingestion batch: batch_id=${batch_id}, source=${source_repo}"
 ```
 
 **Bad:**
+
 ```bash
 log_info "Processing: id=${id}, src=${src}"
 ```
@@ -198,6 +223,7 @@ log_info "Processing: id=${id}, src=${src}"
 ### Never Log Sensitive Information
 
 **Never log:**
+
 - Passwords
 - API keys
 - Authentication tokens
@@ -206,6 +232,7 @@ log_info "Processing: id=${id}, src=${src}"
 - Database credentials
 
 **Example:**
+
 ```bash
 # Good
 log_info "Connecting to database: host=${DBHOST}, port=${DBPORT}, user=${DBUSER}"
@@ -242,11 +269,13 @@ log_error "SECURITY: Unauthorized access attempt - ip=${ip}, endpoint=${endpoint
 ### Avoid Excessive Logging
 
 **Guidelines:**
+
 - Don't log in tight loops
 - Use appropriate log levels (DEBUG for verbose, INFO for important)
 - Consider performance impact of logging
 
 **Example:**
+
 ```bash
 # Bad: Logging in tight loop
 for item in "${items[@]}"; do
@@ -352,12 +381,14 @@ log_error "Permanent failure: ${error}"
 ### Monitoring Components
 
 **Startup:**
+
 ```bash
 log_info "MONITORING: Starting ${component} monitoring"
 log_info "MONITORING: Configuration loaded - interval=${interval}s, timeout=${timeout}s"
 ```
 
 **Health Checks:**
+
 ```bash
 log_info "MONITORING: Health check - component=${component}, status=${status}, response_time=${time}ms"
 log_warning "MONITORING: Health check degraded - component=${component}, response_time=${time}ms (threshold=${threshold}ms)"
@@ -365,6 +396,7 @@ log_error "MONITORING: Health check failed - component=${component}, error=${err
 ```
 
 **Shutdown:**
+
 ```bash
 log_info "MONITORING: Shutting down ${component} monitoring"
 ```
@@ -372,12 +404,14 @@ log_info "MONITORING: Shutting down ${component} monitoring"
 ### Security Components
 
 **Rate Limiting:**
+
 ```bash
 log_warning "SECURITY: Rate limit exceeded - ip=${ip}, endpoint=${endpoint}, count=${count}/${limit}"
 log_error "SECURITY: IP blocked - ip=${ip}, reason=${reason}, duration=${duration}"
 ```
 
 **Authentication:**
+
 ```bash
 log_info "SECURITY: Authentication successful - user=${user}, ip=${ip}"
 log_warning "SECURITY: Authentication failed - user=${user}, ip=${ip}, reason=${reason}"
@@ -387,12 +421,14 @@ log_error "SECURITY: Multiple authentication failures - user=${user}, ip=${ip}, 
 ### Database Operations
 
 **Connections:**
+
 ```bash
 log_info "DATABASE: Connected - host=${DBHOST}, database=${DBNAME}"
 log_error "DATABASE: Connection failed - host=${DBHOST}, error=${error}"
 ```
 
 **Queries:**
+
 ```bash
 log_debug "DATABASE: Executing query - query='${query}'"
 log_info "DATABASE: Query completed - rows=${rows}, duration=${duration}ms"
@@ -408,9 +444,9 @@ log_error "DATABASE: Query failed - query='${query}', error=${error}"
 ```bash
 function process_data() {
     log_debug "process_data: Entry - input_size=${#input[@]}"
-    
+
     # Process data
-    
+
     log_debug "process_data: Exit - output_size=${#output[@]}, duration=${duration}ms"
 }
 ```
@@ -521,17 +557,17 @@ log_info "${message}"
 function monitor_component() {
     local component="${1}"
     local timeout="${2:-30}"
-    
+
     log_info "MONITORING: Starting health check - component=${component}, timeout=${timeout}s"
-    
+
     local start_time
     start_time=$(date +%s)
-    
+
     if check_health "${component}" "${timeout}"; then
         local end_time
         end_time=$(date +%s)
         local duration=$((end_time - start_time))
-        
+
         log_info "MONITORING: Health check passed - component=${component}, duration=${duration}s"
         return 0
     else
@@ -539,7 +575,7 @@ function monitor_component() {
         end_time=$(date +%s)
         local duration=$((end_time - start_time))
         local error="${?}"
-        
+
         log_error "MONITORING: Health check failed - component=${component}, duration=${duration}s, error=${error}"
         return 1
     fi
@@ -552,12 +588,12 @@ function monitor_component() {
 function process_batch() {
     local batch_id="${1}"
     local items=("${@:2}")
-    
+
     log_info "BATCH: Processing started - batch_id=${batch_id}, items=${#items[@]}"
-    
+
     local processed=0
     local errors=0
-    
+
     for item in "${items[@]}"; do
         if process_item "${item}"; then
             processed=$((processed + 1))
@@ -567,14 +603,14 @@ function process_batch() {
             log_warning "BATCH: Item failed - batch_id=${batch_id}, item=${item}, error=${error}"
         fi
     done
-    
+
     log_info "BATCH: Processing completed - batch_id=${batch_id}, processed=${processed}, errors=${errors}, total=${#items[@]}"
-    
+
     if [[ ${errors} -gt 0 ]]; then
         log_warning "BATCH: Completed with errors - batch_id=${batch_id}, error_rate=$((errors * 100 / ${#items[@]}))%"
         return 1
     fi
-    
+
     return 0
 }
 ```
@@ -584,18 +620,18 @@ function process_batch() {
 ```bash
 function load_configuration() {
     local config_file="${1}"
-    
+
     log_info "CONFIG: Loading configuration - file=${config_file}"
-    
+
     if [[ ! -f "${config_file}" ]]; then
         log_error "CONFIG: Configuration file not found - file=${config_file}"
         return 1
     fi
-    
+
     # Source configuration
     if source "${config_file}" 2>&1; then
         log_info "CONFIG: Configuration loaded - file=${config_file}"
-        
+
         # Validate configuration
         if validate_config; then
             log_info "CONFIG: Configuration validated successfully"
@@ -631,4 +667,3 @@ When writing log statements, ensure:
 ---
 
 **Last Updated:** 2025-12-24
-

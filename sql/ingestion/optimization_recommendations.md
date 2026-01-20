@@ -52,8 +52,8 @@ CREATE INDEX IF NOT EXISTS idx_processing_log_status_time ON processing_log(stat
 
 ```sql
 -- Instead of scanning all rows, use partial index for recent updates
-CREATE INDEX IF NOT EXISTS idx_notes_recent_updates 
-ON notes(updated_at DESC) 
+CREATE INDEX IF NOT EXISTS idx_notes_recent_updates
+ON notes(updated_at DESC)
 WHERE updated_at > NOW() - INTERVAL '30 days';
 ```
 
@@ -62,7 +62,7 @@ WHERE updated_at > NOW() - INTERVAL '30 days';
 ```sql
 -- Create materialized view for frequently accessed freshness data
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_data_freshness_summary AS
-SELECT 
+SELECT
     'notes' AS table_name,
     MAX(updated_at) AS last_update,
     COUNT(*) AS total_records,
@@ -105,7 +105,7 @@ CREATE TABLE processing_log_2025_12 PARTITION OF processing_log
 
 ```sql
 -- Covering index for common queries
-CREATE INDEX IF NOT EXISTS idx_processing_log_covering 
+CREATE INDEX IF NOT EXISTS idx_processing_log_covering
 ON processing_log(status, execution_time DESC, duration_seconds, notes_processed);
 ```
 
@@ -138,7 +138,7 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
 ```sql
 -- Add constraints to prevent invalid data
-ALTER TABLE notes 
+ALTER TABLE notes
 ADD CONSTRAINT check_valid_latitude CHECK (latitude BETWEEN -90 AND 90),
 ADD CONSTRAINT check_valid_longitude CHECK (longitude BETWEEN -180 AND 180),
 ADD CONSTRAINT check_updated_after_created CHECK (updated_at >= created_at);
@@ -155,8 +155,8 @@ CREATE INDEX IF NOT EXISTS idx_notes_note_id_hash ON notes USING hash(note_id);
 
 ```sql
 -- Index only records that might have quality issues
-CREATE INDEX IF NOT EXISTS idx_notes_quality_check 
-ON notes(id) 
+CREATE INDEX IF NOT EXISTS idx_notes_quality_check
+ON notes(id)
 WHERE latitude IS NULL OR longitude IS NULL OR updated_at < created_at;
 ```
 
@@ -166,7 +166,7 @@ WHERE latitude IS NULL OR longitude IS NULL OR updated_at < created_at;
 
 ```sql
 -- Use GIN index for text search in error messages
-CREATE INDEX IF NOT EXISTS idx_processing_log_error_message_gin 
+CREATE INDEX IF NOT EXISTS idx_processing_log_error_message_gin
 ON processing_log USING gin(to_tsvector('english', error_message));
 ```
 
@@ -175,7 +175,7 @@ ON processing_log USING gin(to_tsvector('english', error_message));
 ```sql
 -- Materialized view for error statistics
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_error_statistics AS
-SELECT 
+SELECT
     DATE_TRUNC('hour', execution_time) AS hour,
     status,
     COUNT(*) AS error_count,
@@ -247,7 +247,7 @@ SET statement_timeout = 30000;  -- 30 seconds
 
 ```sql
 -- Check unused indexes
-SELECT 
+SELECT
     schemaname,
     tablename,
     indexname,
@@ -311,4 +311,3 @@ After applying optimizations:
 ---
 
 **Last Updated:** 2025-12-24
-

@@ -1,0 +1,14 @@
+# SQLFluff configuration for OSM-Notes-Monitoring
+# Author: Andres Gomez (AngocA)
+# Version: 2025-01-27
+# Compatible with SQLFluff 1.4.5
+
+[sqlfluff]
+dialect = postgres
+max_line_length = 100
+
+[sqlfluff:indentation]
+indent_unit = space
+tab_space_size = 2
+indented_joins = true
+indented_using_on = true

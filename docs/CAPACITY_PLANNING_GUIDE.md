@@ -6,7 +6,9 @@
 
 ## Overview
 
-This guide provides a comprehensive approach to capacity planning for the OSM Notes Monitoring system. It covers how to use monitoring data to predict resource needs, plan for growth, and optimize infrastructure utilization.
+This guide provides a comprehensive approach to capacity planning for the OSM Notes Monitoring
+system. It covers how to use monitoring data to predict resource needs, plan for growth, and
+optimize infrastructure utilization.
 
 ## Table of Contents
 
@@ -27,7 +29,9 @@ This guide provides a comprehensive approach to capacity planning for the OSM No
 
 ### What is Capacity Planning?
 
-Capacity planning is the process of determining the production capacity needed by an organization to meet changing demands for its products or services. In the context of infrastructure monitoring, it involves:
+Capacity planning is the process of determining the production capacity needed by an organization to
+meet changing demands for its products or services. In the context of infrastructure monitoring, it
+involves:
 
 - **Analyzing Current Usage:** Understanding how resources are currently utilized
 - **Predicting Future Needs:** Forecasting resource requirements based on growth trends
@@ -51,7 +55,7 @@ Collect historical monitoring data:
 
 ```sql
 -- Get resource usage trends (last 30 days)
-SELECT 
+SELECT
     DATE(timestamp) as date,
     AVG(CASE WHEN metric_name = 'cpu_usage_percent' THEN metric_value::numeric END) as avg_cpu,
     AVG(CASE WHEN metric_name = 'memory_usage_percent' THEN metric_value::numeric END) as avg_memory,
@@ -71,7 +75,7 @@ Identify growth patterns:
 ```sql
 -- Calculate growth rates
 WITH daily_avg AS (
-    SELECT 
+    SELECT
         DATE(timestamp) as date,
         AVG(CASE WHEN metric_name = 'cpu_usage_percent' THEN metric_value::numeric END) as avg_cpu
     FROM metrics
@@ -80,11 +84,11 @@ WITH daily_avg AS (
       AND timestamp > NOW() - INTERVAL '90 days'
     GROUP BY date
 )
-SELECT 
+SELECT
     date,
     avg_cpu,
     LAG(avg_cpu) OVER (ORDER BY date) as prev_avg_cpu,
-    CASE 
+    CASE
         WHEN LAG(avg_cpu) OVER (ORDER BY date) > 0 THEN
             ((avg_cpu - LAG(avg_cpu) OVER (ORDER BY date)) / LAG(avg_cpu) OVER (ORDER BY date)) * 100
         ELSE 0
@@ -100,7 +104,7 @@ Project future requirements:
 ```sql
 -- Project disk usage (assuming linear growth)
 WITH current_usage AS (
-    SELECT 
+    SELECT
         AVG(CASE WHEN metric_name = 'disk_usage_percent' THEN metric_value::numeric END) as current_usage,
         AVG(CASE WHEN metric_name = 'disk_total_bytes' THEN metric_value::numeric END) as total_bytes
     FROM metrics
@@ -109,10 +113,10 @@ WITH current_usage AS (
       AND timestamp > NOW() - INTERVAL '7 days'
 ),
 growth_rate AS (
-    SELECT 
+    SELECT
         ((MAX(avg_usage) - MIN(avg_usage)) / MIN(avg_usage)) / COUNT(*) as daily_growth_rate
     FROM (
-        SELECT 
+        SELECT
             DATE(timestamp) as date,
             AVG(CASE WHEN metric_name = 'disk_usage_percent' THEN metric_value::numeric END) as avg_usage
         FROM metrics
@@ -122,13 +126,13 @@ growth_rate AS (
         GROUP BY date
     ) daily_avg
 )
-SELECT 
+SELECT
     current_usage,
     total_bytes,
     (current_usage * total_bytes / 100) as current_used_bytes,
     (total_bytes - (current_usage * total_bytes / 100)) as available_bytes,
     daily_growth_rate * 100 as daily_growth_percent,
-    CASE 
+    CASE
         WHEN daily_growth_rate > 0 THEN
             ((90 - current_usage) / (daily_growth_rate * 100))
         ELSE NULL
@@ -162,7 +166,7 @@ Determine capacity additions needed:
 
 ```sql
 -- CPU usage statistics
-SELECT 
+SELECT
     MIN(metric_value::numeric) as min_cpu,
     MAX(metric_value::numeric) as max_cpu,
     AVG(metric_value::numeric) as avg_cpu,
@@ -179,7 +183,7 @@ WHERE component = 'INFRASTRUCTURE'
 ```sql
 -- Project CPU usage 30 days ahead
 WITH cpu_trend AS (
-    SELECT 
+    SELECT
         DATE(timestamp) as date,
         AVG(metric_value::numeric) as avg_cpu
     FROM metrics
@@ -190,16 +194,16 @@ WITH cpu_trend AS (
     ORDER BY date
 ),
 growth_calc AS (
-    SELECT 
+    SELECT
         AVG(avg_cpu) as current_avg,
         (MAX(avg_cpu) - MIN(avg_cpu)) / COUNT(*) as daily_increase
     FROM cpu_trend
 )
-SELECT 
+SELECT
     current_avg as current_cpu_percent,
     daily_increase as daily_increase_percent,
     (current_avg + (daily_increase * 30)) as projected_cpu_30_days,
-    CASE 
+    CASE
         WHEN daily_increase > 0 THEN
             ((80 - current_avg) / daily_increase)
         ELSE NULL
@@ -213,11 +217,11 @@ FROM growth_calc;
 
 ```sql
 -- Memory usage and capacity
-SELECT 
+SELECT
     AVG(CASE WHEN metric_name = 'memory_usage_percent' THEN metric_value::numeric END) as avg_memory_percent,
     AVG(CASE WHEN metric_name = 'memory_total_bytes' THEN metric_value::numeric END) as total_memory_bytes,
     AVG(CASE WHEN metric_name = 'memory_available_bytes' THEN metric_value::numeric END) as available_memory_bytes,
-    (AVG(CASE WHEN metric_name = 'memory_total_bytes' THEN metric_value::numeric END) - 
+    (AVG(CASE WHEN metric_name = 'memory_total_bytes' THEN metric_value::numeric END) -
      AVG(CASE WHEN metric_name = 'memory_available_bytes' THEN metric_value::numeric END)) as used_memory_bytes
 FROM metrics
 WHERE component = 'INFRASTRUCTURE'
@@ -230,7 +234,7 @@ WHERE component = 'INFRASTRUCTURE'
 ```sql
 -- Project memory needs
 WITH memory_trend AS (
-    SELECT 
+    SELECT
         DATE(timestamp) as date,
         AVG(CASE WHEN metric_name = 'memory_usage_percent' THEN metric_value::numeric END) as avg_memory_pct,
         AVG(CASE WHEN metric_name = 'memory_total_bytes' THEN metric_value::numeric END) as total_bytes
@@ -242,13 +246,13 @@ WITH memory_trend AS (
     ORDER BY date
 ),
 growth_calc AS (
-    SELECT 
+    SELECT
         AVG(avg_memory_pct) as current_avg_pct,
         AVG(total_bytes) as current_total_bytes,
         (MAX(avg_memory_pct) - MIN(avg_memory_pct)) / COUNT(*) as daily_pct_increase
     FROM memory_trend
 )
-SELECT 
+SELECT
     current_avg_pct,
     current_total_bytes,
     (current_total_bytes * current_avg_pct / 100) as current_used_bytes,
@@ -264,7 +268,7 @@ FROM growth_calc;
 
 ```sql
 -- Disk usage and growth
-SELECT 
+SELECT
     DATE(timestamp) as date,
     AVG(CASE WHEN metric_name = 'disk_usage_percent' THEN metric_value::numeric END) as avg_disk_pct,
     AVG(CASE WHEN metric_name = 'disk_total_bytes' THEN metric_value::numeric END) as total_bytes,
@@ -282,7 +286,7 @@ ORDER BY date DESC;
 ```sql
 -- Project disk usage and time to threshold
 WITH disk_trend AS (
-    SELECT 
+    SELECT
         DATE(timestamp) as date,
         AVG(CASE WHEN metric_name = 'disk_usage_percent' THEN metric_value::numeric END) as avg_disk_pct,
         AVG(CASE WHEN metric_name = 'disk_total_bytes' THEN metric_value::numeric END) as total_bytes
@@ -294,13 +298,13 @@ WITH disk_trend AS (
     ORDER BY date
 ),
 growth_calc AS (
-    SELECT 
+    SELECT
         AVG(avg_disk_pct) as current_avg_pct,
         AVG(total_bytes) as current_total_bytes,
         (MAX(avg_disk_pct) - MIN(avg_disk_pct)) / COUNT(*) as daily_pct_increase
     FROM disk_trend
 )
-SELECT 
+SELECT
     current_avg_pct,
     current_total_bytes,
     (current_total_bytes * current_avg_pct / 100) as current_used_bytes,
@@ -308,12 +312,12 @@ SELECT
     daily_pct_increase,
     (current_avg_pct + (daily_pct_increase * 30)) as projected_pct_30_days,
     (current_avg_pct + (daily_pct_increase * 90)) as projected_pct_90_days,
-    CASE 
+    CASE
         WHEN daily_pct_increase > 0 THEN
             ((90 - current_avg_pct) / daily_pct_increase)
         ELSE NULL
     END as days_until_warning_threshold,
-    CASE 
+    CASE
         WHEN daily_pct_increase > 0 THEN
             ((95 - current_avg_pct) / daily_pct_increase)
         ELSE NULL
@@ -347,7 +351,7 @@ Account for seasonal patterns:
 
 ```sql
 -- Identify seasonal patterns
-SELECT 
+SELECT
     EXTRACT(MONTH FROM timestamp) as month,
     AVG(metric_value::numeric) as avg_usage
 FROM metrics
@@ -376,7 +380,7 @@ ORDER BY month;
 ```sql
 -- Comprehensive capacity planning metrics
 WITH resource_metrics AS (
-    SELECT 
+    SELECT
         metric_name,
         AVG(metric_value::numeric) as avg_value,
         MAX(metric_value::numeric) as max_value,
@@ -389,11 +393,11 @@ WITH resource_metrics AS (
     GROUP BY metric_name
 ),
 growth_rates AS (
-    SELECT 
+    SELECT
         metric_name,
         (MAX(avg_daily) - MIN(avg_daily)) / COUNT(*) as daily_growth_rate
     FROM (
-        SELECT 
+        SELECT
             metric_name,
             DATE(timestamp) as date,
             AVG(metric_value::numeric) as avg_daily
@@ -405,14 +409,14 @@ growth_rates AS (
     ) daily_avg
     GROUP BY metric_name
 )
-SELECT 
+SELECT
     rm.metric_name,
     rm.avg_value as current_avg,
     rm.max_value as current_peak,
     rm.p95_value as current_p95,
     (rm.max_value - rm.avg_value) as peak_headroom,
     gr.daily_growth_rate,
-    CASE 
+    CASE
         WHEN gr.daily_growth_rate > 0 AND rm.metric_name = 'cpu_usage_percent' THEN
             ((80 - rm.avg_value) / gr.daily_growth_rate)
         WHEN gr.daily_growth_rate > 0 AND rm.metric_name = 'memory_usage_percent' THEN
@@ -432,11 +436,13 @@ LEFT JOIN growth_rates gr ON rm.metric_name = gr.metric_name;
 ### Scenario 1: Steady Growth
 
 **Assumptions:**
+
 - Consistent 1% daily growth
 - Linear growth pattern
 - No seasonal variations
 
 **Planning:**
+
 - Calculate time to threshold
 - Plan upgrades 30-60 days before threshold
 - Include 20% buffer for unexpected growth
@@ -444,11 +450,13 @@ LEFT JOIN growth_rates gr ON rm.metric_name = gr.metric_name;
 ### Scenario 2: Accelerating Growth
 
 **Assumptions:**
+
 - Increasing growth rate
 - Exponential growth pattern
 - Business expansion expected
 
 **Planning:**
+
 - Use exponential growth model
 - Plan upgrades earlier
 - Consider larger capacity increases
@@ -457,11 +465,13 @@ LEFT JOIN growth_rates gr ON rm.metric_name = gr.metric_name;
 ### Scenario 3: Seasonal Variations
 
 **Assumptions:**
+
 - Predictable seasonal patterns
 - Higher usage during certain periods
 - Lower usage during off-peak
 
 **Planning:**
+
 - Account for seasonal peaks
 - Plan upgrades before peak seasons
 - Consider temporary capacity scaling
@@ -502,16 +512,19 @@ LEFT JOIN growth_rates gr ON rm.metric_name = gr.metric_name;
 ### Regular Reviews
 
 **Weekly:**
+
 - Review current utilization trends
 - Check for anomalies
 - Verify alert thresholds
 
 **Monthly:**
+
 - Analyze growth trends
 - Update projections
 - Review capacity plans
 
 **Quarterly:**
+
 - Comprehensive capacity review
 - Update long-term projections
 - Plan major upgrades
@@ -580,21 +593,25 @@ LEFT JOIN growth_rates gr ON rm.metric_name = gr.metric_name;
 ### Formulas
 
 **Linear Growth:**
+
 ```
 Projected = Current + (Growth Rate × Days)
 ```
 
 **Exponential Growth:**
+
 ```
 Projected = Current × (1 + Growth Rate)^Days
 ```
 
 **Time to Threshold:**
+
 ```
 Days = (Threshold - Current) / Growth Rate
 ```
 
 **Capacity Headroom:**
+
 ```
 Headroom = Max Capacity - Current Usage
 ```
@@ -604,8 +621,8 @@ Headroom = Max Capacity - Current Usage
 ## Support
 
 For capacity planning assistance:
+
 1. Review historical metrics
 2. Use SQL queries in this guide
 3. Consult infrastructure monitoring guide
 4. Review project documentation
-
