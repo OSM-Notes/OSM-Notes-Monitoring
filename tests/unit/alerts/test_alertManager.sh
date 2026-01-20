@@ -151,8 +151,11 @@ setup() {
             
             # SELECT status queries (for checking alert status)
             if [[ "${query}" =~ SELECT.*status.*WHERE.*id ]]; then
+                # Read current mock status from file (always read fresh)
+                local current_status_fresh
+                current_status_fresh=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
                 # Return current mock status
-                echo "${current_status}"
+                echo "${current_status_fresh}"
                 return 0
             fi
             
@@ -390,6 +393,9 @@ teardown() {
 @test "Resolve alert updates status" {
     # Create test alert
     send_alert "INGESTION" "warning" "test_type" "Test message"
+    
+    # Ensure mock status is set to active before resolving
+    echo "active" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
     
     # Get alert ID
     local alert_id
