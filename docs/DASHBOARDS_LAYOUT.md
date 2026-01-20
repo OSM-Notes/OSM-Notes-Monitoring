@@ -164,13 +164,14 @@
 └──────────────────────────┴──────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────┐
 │                                                              │
-│  Notes Processed Per Cycle                                  │
+│  Notes & Comments Processed Per Cycle                       │
 │                                                              │
 │  [Multi-line chart]                                          │
 │                                                              │
-│  - Total Processed (blue)                                    │
-│  - New (green)                                              │
-│  - Updated (yellow)                                          │
+│  - Notes Total (blue)                                        │
+│  - Notes New (green)                                         │
+│  - Notes Updated (yellow)                                    │
+│  - Comments (purple)                                         │
 │  X-axis: time (24h)                                          │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
@@ -386,44 +387,60 @@
 
 ### 8. Daemon Processing Rate & Cycles
 
-**Type:** Timeseries Chart (12 columns, multi-line)  
+**Type:** Timeseries Chart (12 columns, multi-line, dual Y-axis)  
 **Data Source:** `metrics` table  
 **SQL Queries:**
 - Notes/sec: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_processing_rate_notes_per_second' AND $__timeFilter(timestamp) ORDER BY timestamp`
 - Cycles/hour: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_cycles_per_hour' AND $__timeFilter(timestamp) ORDER BY timestamp`
 
 **Values Meaning:**
-- **Notes/sec (blue):** Processing throughput - notes processed per second
-- **Cycles/hour (green):** Cycle frequency - how often daemon completes cycles
+- **Notes/sec (blue, left Y-axis):** Processing throughput - notes processed per second in the last completed cycle
+- **Cycles/hour (green, right Y-axis):** Cycle frequency - number of cycles completed in the last 60 minutes
 
-**Purpose:** Shows processing throughput and cycle frequency trends. Low values may indicate bottlenecks.
+**Purpose:** Shows processing throughput and cycle frequency trends. Uses dual Y-axis to accommodate different scales (Notes/sec: 0-100+, Cycles/hour: 0-70).
+
+**Normal Behavior:**
+- **Notes/sec = 0:** Normal when OSM API has no new notes to process. The daemon completes cycles successfully but finds nothing to process.
+- **Cycles/hour = 50-60:** Expected range when daemon is running normally (approximately 1 cycle per minute).
+- **Cycles/hour showing periodic peaks:** This is expected behavior - the metric counts cycles in the last hour, so values accumulate and reset as time windows shift.
 
 **Troubleshooting:**
+- **If Notes/sec = 0 for extended periods:** Normal if no OSM activity - verify daemon is running and check OSM API for new notes
 - **If Notes/sec declining:** Processing slowing down - check API response times, database performance, or system resources
-- **If Cycles/hour low:** Daemon completing fewer cycles - may indicate longer cycle durations or delays
+- **If Cycles/hour consistently < 50:** Daemon completing fewer cycles - may indicate longer cycle durations, delays, or daemon issues
+- **If Cycles/hour = 0:** Daemon may be stopped or not processing - check daemon status and logs
 
 ---
 
-### 9. Notes Processed Per Cycle
+### 9. Notes & Comments Processed Per Cycle
 
 **Type:** Timeseries Chart (12 columns, multi-line)  
 **Data Source:** `metrics` table  
 **SQL Queries:**
-- Total: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_processed_per_cycle' AND $__timeFilter(timestamp) ORDER BY timestamp`
-- New: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_new_count' AND $__timeFilter(timestamp) ORDER BY timestamp`
-- Updated: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_updated_count' AND $__timeFilter(timestamp) ORDER BY timestamp`
+- Notes Total: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_processed_per_cycle' AND $__timeFilter(timestamp) ORDER BY timestamp`
+- Notes New: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_new_count' AND $__timeFilter(timestamp) ORDER BY timestamp`
+- Notes Updated: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_notes_updated_count' AND $__timeFilter(timestamp) ORDER BY timestamp`
+- Comments: `SELECT timestamp AS time, metric_value AS value FROM metrics WHERE component = 'ingestion' AND metric_name = 'daemon_comments_processed_per_cycle' AND $__timeFilter(timestamp) ORDER BY timestamp`
 
 **Values Meaning:**
-- **Total Processed (blue):** Total notes processed in each cycle
-- **New (green):** New notes added to database
-- **Updated (yellow):** Existing notes updated
+- **Notes Total (blue):** Total notes processed in each cycle
+- **Notes New (green):** New notes added to database
+- **Notes Updated (yellow):** Existing notes updated
+- **Comments (purple):** Total comments processed per cycle (a single note can have multiple comments)
 
-**Purpose:** Shows processing volume per cycle. Helps identify workload patterns and correlate with performance issues.
+**Purpose:** Shows processing volume per cycle for both notes and comments. Helps identify workload patterns and correlate with performance issues. Comments are tracked separately because a single note can have many comments, making this metric important for understanding actual processing load.
+
+**When Values Are Zero:**
+- **Normal behavior:** If the daemon is running but there's no new activity from OSM API, values will be 0
+- **No activity:** OSM API may not have new notes/comments to process
+- **Daemon idle:** The daemon completes cycles successfully but finds nothing to process
 
 **Troubleshooting:**
+- **If all values are 0 for extended period:** Normal if no OSM activity - verify daemon is running and check OSM API for new notes
 - **If Total drops suddenly:** May indicate API issues or no new data available
 - **If New = 0 for extended period:** No new notes being ingested - check API connectivity
 - **If Updated >> New:** Many updates happening - may indicate data synchronization issues
+- **If Comments = 0 but Notes > 0:** Notes are being processed but no comments found (normal for new notes without comments)
 
 ---
 
