@@ -45,51 +45,57 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 
 ### High-Level Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    OSM-Notes-Monitoring                          │
-│                    (Centralized Monitoring)                      │
-│                    Monitors All 8 Projects                       │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│   Ingestion   │    │   Analytics   │    │     WMS       │
-│   Monitoring  │    │   Monitoring  │    │   Monitoring  │
-│  (Base Project)│    │  (DWH/ETL)   │    │  (GeoServer)  │
-└───────────────┘    └───────────────┘    └───────────────┘
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│     API       │    │     Data      │    │    Viewer     │
-│  Monitoring   │    │   Freshness   │    │   Monitoring  │
-│  + Security   │    │   Monitoring  │    │  (Web App)    │
-└───────────────┘    └───────────────┘    └───────────────┘
-        │
-        ▼
-┌───────────────┐
-│  Common       │  ← Shared libraries (submodule)
-│  Monitoring   │    (version compatibility)
-└───────────────┘
-        │
-        ▼
-┌───────────────────────────────────────┐
-│      Centralized Dashboard            │
-│  (Grafana / Custom Web Interface)    │
-│  - Health status of all 8 projects   │
-│  - Cross-project dependencies        │
-│  - Performance metrics               │
-└───────────────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────────────┐
-│      Alerting System                  │
-│  (Email, PagerDuty, Slack, etc.)      │
-│  - Unified alerts for all projects    │
-│  - Escalation policies                │
-└───────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Monitoring["OSM-Notes-Monitoring"]
+        CENTRAL[Centralized Monitoring<br/>Monitors All 8 Projects]
+    end
+    
+    subgraph Layer1["Primary Monitoring Layer"]
+        INGESTION_MON[Ingestion Monitoring<br/>Base Project]
+        ANALYTICS_MON[Analytics Monitoring<br/>DWH/ETL]
+        WMS_MON[WMS Monitoring<br/>GeoServer]
+    end
+    
+    subgraph Layer2["Secondary Monitoring Layer"]
+        API_MON[API Monitoring<br/>+ Security]
+        DATA_MON[Data Freshness<br/>Monitoring]
+        VIEWER_MON[Viewer Monitoring<br/>Web App]
+    end
+    
+    subgraph Support["Support Layer"]
+        COMMON_MON[Common Monitoring<br/>Shared libraries submodule<br/>version compatibility]
+    end
+    
+    subgraph Dashboard["Dashboard Layer"]
+        DASHBOARD[Centralized Dashboard<br/>Grafana / Custom Web Interface<br/>- Health status of all 8 projects<br/>- Cross-project dependencies<br/>- Performance metrics]
+    end
+    
+    subgraph Alerting["Alerting Layer"]
+        ALERTS[Alerting System<br/>Email, PagerDuty, Slack, etc.<br/>- Unified alerts for all projects<br/>- Escalation policies]
+    end
+    
+    CENTRAL -->|Monitors| INGESTION_MON
+    CENTRAL -->|Monitors| ANALYTICS_MON
+    CENTRAL -->|Monitors| WMS_MON
+    
+    INGESTION_MON -->|Monitors| API_MON
+    ANALYTICS_MON -->|Monitors| DATA_MON
+    WMS_MON -->|Monitors| VIEWER_MON
+    
+    API_MON -->|Monitors| COMMON_MON
+    COMMON_MON -->|Feeds| DASHBOARD
+    DASHBOARD -->|Triggers| ALERTS
+    
+    style CENTRAL fill:#F0E68C
+    style INGESTION_MON fill:#90EE90
+    style ANALYTICS_MON fill:#FFFFE0
+    style WMS_MON fill:#FFE4B5
+    style API_MON fill:#FFB6C1
+    style DATA_MON fill:#E0F6FF
+    style VIEWER_MON fill:#DDA0DD
+    style DASHBOARD fill:#ADD8E6
+    style ALERTS fill:#FFB6C1
 ```
 
 ## Components to Monitor

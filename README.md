@@ -1,3 +1,21 @@
+---
+title: "OSM-Notes-Monitoring"
+description: "Centralized Monitoring, Alerting, and API Security for OpenStreetMap Notes"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "alerting"
+  - "security"
+audience:
+  - "system-admins"
+  - "devops"
+  - "sre"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
 # OSM-Notes-Monitoring
 
 **Centralized Monitoring, Alerting, and API Security for OpenStreetMap Notes**
@@ -16,6 +34,18 @@ OSM-Notes-Monitoring is the operational command center for the OSM Notes ecosyst
 - **Data Freshness**: Monitor data freshness across all sources
 - **Performance Tracking**: Monitor performance metrics across all components
 - **Security Monitoring**: Detect and respond to security incidents
+
+## 📚 Ecosystem Documentation
+
+For shared documentation of the complete ecosystem, see:
+
+- **[OSM Notes Ecosystem](https://github.com/OSM-Notes/OSM-Notes)** - Ecosystem landing page
+- **[Global Glossary](https://github.com/OSM-Notes/OSM-Notes-Common/blob/main/docs/GLOSSARY.md)** - Terms and definitions
+- **[Complete Installation Guide](https://github.com/OSM-Notes/OSM-Notes-Common/blob/main/docs/INSTALLATION.md)** - Step-by-step installation of all projects
+- **[End-to-End Data Flow](https://github.com/OSM-Notes/OSM-Notes-Common/blob/main/docs/DATA_FLOW.md)** - Complete data flow
+- **[Decision Guide](https://github.com/OSM-Notes/OSM-Notes-Common/blob/main/docs/DECISION_GUIDE.md)** - Which project do I need?
+
+---
 
 ## OSM-Notes Ecosystem
 
@@ -68,18 +98,58 @@ for all others. **This Monitoring project monitors all other projects** in the e
 
 ### Project Relationships
 
-```
-OSM Planet/API
-    ↓
-[OSM-Notes-Ingestion] ← Base project
-    ├─→ [OSM-Notes-Analytics] → ETL → Data Warehouse
-    │       ├─→ [OSM-Notes-Data] → JSON files (GitHub Pages)
-    │       │       └─→ [OSM-Notes-Viewer]
-    │       └─→ [OSM-Notes-API] → REST API
-    └─→ [OSM-Notes-WMS] → WMS layers
+```mermaid
+graph TB
+    subgraph External["External Sources"]
+        OSM[OSM Planet/API]
+    end
     
-[OSM-Notes-Monitoring] → Monitors all projects (this project)
-[OSM-Notes-Common] → Shared libraries (submodule, used by Monitoring)
+    subgraph Base["Base Project"]
+        INGESTION[OSM-Notes-Ingestion<br/>Base project]
+    end
+    
+    subgraph Processing["Processing Layer"]
+        ANALYTICS[OSM-Notes-Analytics<br/>ETL → Data Warehouse]
+        WMS[OSM-Notes-WMS<br/>WMS layers]
+    end
+    
+    subgraph Delivery["Delivery Layer"]
+        DATA[OSM-Notes-Data<br/>JSON files<br/>GitHub Pages]
+        API[OSM-Notes-API<br/>REST API]
+        VIEWER[OSM-Notes-Viewer]
+    end
+    
+    subgraph Support["Support Layer"]
+        MONITORING[OSM-Notes-Monitoring<br/>Monitors all projects<br/>this project]
+        COMMON[OSM-Notes-Common<br/>Shared libraries<br/>submodule<br/>used by Monitoring]
+    end
+    
+    OSM -->|Downloads| INGESTION
+    INGESTION -->|Base Tables| ANALYTICS
+    INGESTION -->|Same Database| WMS
+    ANALYTICS -->|JSON Export| DATA
+    ANALYTICS -->|Data Warehouse| API
+    DATA -->|JSON Files| VIEWER
+    MONITORING -.->|Monitors| INGESTION
+    MONITORING -.->|Monitors| ANALYTICS
+    MONITORING -.->|Monitors| WMS
+    MONITORING -.->|Monitors| API
+    MONITORING -.->|Monitors| DATA
+    MONITORING -.->|Monitors| VIEWER
+    COMMON -.->|Used by| INGESTION
+    COMMON -.->|Used by| ANALYTICS
+    COMMON -.->|Used by| WMS
+    COMMON -.->|Used by| MONITORING
+    
+    style OSM fill:#ADD8E6
+    style INGESTION fill:#90EE90
+    style ANALYTICS fill:#FFFFE0
+    style WMS fill:#FFE4B5
+    style DATA fill:#E0F6FF
+    style API fill:#FFB6C1
+    style VIEWER fill:#DDA0DD
+    style MONITORING fill:#F0E68C
+    style COMMON fill:#D3D3D3
 ```
 
 ### Installation Order
