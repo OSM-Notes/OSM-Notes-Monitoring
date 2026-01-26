@@ -10,13 +10,14 @@
 This document proposes the creation of **OSM-Notes-Monitoring**, an 8th repository in the OSM Notes
 ecosystem to provide centralized monitoring, alerting, and security for all components:
 
-- **OSM-Notes-Ingestion** (data ingestion)
-- **OSM-Notes-Analytics** (DWH/ETL)
-- **OSM-Notes-WMS** (viewer/map service)
-- **OSM-Notes-API** (future API service)
-- **OSM-Notes-Data** (data backups)
-- **OSM-Notes-Common** (shared libraries)
-- **OSM-Notes-Profile** (legacy/alternative name)
+1. **OSM-Notes-Ingestion** (base project) - Data ingestion from Planet/API
+2. **OSM-Notes-Analytics** - ETL and data warehouse (DWH)
+3. **OSM-Notes-API** - REST API for programmatic access
+4. **OSM-Notes-Data** - JSON files exported from Analytics (GitHub Pages)
+5. **OSM-Notes-Viewer** - Web application consuming Data
+6. **OSM-Notes-WMS** - Web Map Service for geographic visualization
+7. **OSM-Notes-Monitoring** (this project) - Centralized monitoring and alerting
+8. **OSM-Notes-Common** - Shared libraries (Git submodule)
 
 ## Why a Separate Monitoring Repository?
 
@@ -48,6 +49,7 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 ┌─────────────────────────────────────────────────────────────────┐
 │                    OSM-Notes-Monitoring                          │
 │                    (Centralized Monitoring)                      │
+│                    Monitors All 8 Projects                       │
 └─────────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -56,25 +58,37 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
 │   Ingestion   │    │   Analytics   │    │     WMS       │
 │   Monitoring  │    │   Monitoring  │    │   Monitoring  │
+│  (Base Project)│    │  (DWH/ETL)   │    │  (GeoServer)  │
 └───────────────┘    └───────────────┘    └───────────────┘
         │                     │                     │
         ▼                     ▼                     ▼
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
-│     API       │    │     Data      │    │  Infrastructure│
+│     API       │    │     Data      │    │    Viewer     │
 │  Monitoring   │    │   Freshness   │    │   Monitoring  │
-│  + Security   │    │   Monitoring  │    │               │
+│  + Security   │    │   Monitoring  │    │  (Web App)    │
 └───────────────┘    └───────────────┘    └───────────────┘
+        │
+        ▼
+┌───────────────┐
+│  Common       │  ← Shared libraries (submodule)
+│  Monitoring   │    (version compatibility)
+└───────────────┘
         │
         ▼
 ┌───────────────────────────────────────┐
 │      Centralized Dashboard            │
 │  (Grafana / Custom Web Interface)    │
+│  - Health status of all 8 projects   │
+│  - Cross-project dependencies        │
+│  - Performance metrics               │
 └───────────────────────────────────────┘
         │
         ▼
 ┌───────────────────────────────────────┐
 │      Alerting System                  │
 │  (Email, PagerDuty, Slack, etc.)      │
+│  - Unified alerts for all projects    │
+│  - Escalation policies                │
 └───────────────────────────────────────┘
 ```
 
@@ -139,7 +153,7 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 - Performance degradation
 - Storage capacity warnings
 
-### 3. Viewer/WMS Monitoring (OSM-Notes-WMS)
+### 3. WMS Monitoring (OSM-Notes-WMS)
 
 **What to Monitor:**
 
@@ -168,7 +182,39 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 - Cache misses
 - Geographic coverage gaps
 
-### 4. API Monitoring & Security (OSM-Notes-API)
+### 4. Viewer Monitoring (OSM-Notes-Viewer)
+
+**What to Monitor:**
+
+- Web application availability
+- Page load times
+- User traffic patterns
+- Data consumption from OSM-Notes-Data
+- API integration health (if using OSM-Notes-API)
+- WMS layer loading (if using OSM-Notes-WMS)
+- Error rates (client-side and server-side)
+- GitHub Pages deployment status
+
+**Metrics:**
+
+- Application uptime
+- Page views per day
+- Average page load time
+- Data fetch success rate
+- API call success rate (if applicable)
+- WMS layer load success rate (if applicable)
+- Error rate percentage
+- User engagement metrics
+
+**Alerts:**
+
+- Application downtime
+- High error rates
+- Slow page load times
+- Data fetch failures
+- GitHub Pages deployment failures
+
+### 5. API Monitoring & Security (OSM-Notes-API)
 
 **What to Monitor:**
 
@@ -219,7 +265,7 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 - Automatic IP blocking
 - Connection limits
 
-### 5. Data Freshness Monitoring (OSM-Notes-Data)
+### 6. Data Freshness Monitoring (OSM-Notes-Data)
 
 **What to Monitor:**
 
@@ -244,7 +290,30 @@ ecosystem to provide centralized monitoring, alerting, and security for all comp
 - Repository sync failures
 - File integrity issues
 
-### 6. Infrastructure Monitoring
+### 7. Common Libraries Monitoring (OSM-Notes-Common)
+
+**What to Monitor:**
+
+- Submodule version compatibility
+- Library usage across projects
+- Version synchronization status
+- Breaking changes impact
+- Dependency conflicts
+
+**Metrics:**
+
+- Submodule commit hash per project
+- Version consistency across projects
+- Library update frequency
+- Breaking change detection
+
+**Alerts:**
+
+- Version mismatches across projects
+- Breaking changes detected
+- Dependency conflicts
+
+### 8. Infrastructure Monitoring
 
 **What to Monitor:**
 
