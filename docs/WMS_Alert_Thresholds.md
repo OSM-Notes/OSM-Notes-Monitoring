@@ -238,7 +238,7 @@ WMS_LOG_DIR="/var/log/wms"
 
 - **[WMS_METRICS.md](./WMS_Metrics.md)**: Complete metric definitions
 - **[WMS_MONITORING_GUIDE.md](./WMS_Monitoring_Guide.md)**: Monitoring setup guide
-- **[ETL_MONITORING_RUNBOOK.md](./ETL_MONITORING_Runbook.md)**: Alert response procedures
+- **[ETL_MONITORING_RUNBOOK.md](./ETL_Monitoring_Runbook.md)**: Alert response procedures
   (reference)
 - **[CONFIGURATION_REFERENCE.md](./Configuration_Reference.md)**: Configuration options
 

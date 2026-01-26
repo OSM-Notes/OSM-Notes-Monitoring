@@ -858,7 +858,7 @@ For complete alert threshold definitions, see
 
 ### Related Documentation
 
-- **[Monitoring_SETUP_Guide.md](./Monitoring_SETUP_Guide.md)**: Initial setup guide
+- **[Monitoring_SETUP_Guide.md](./Monitoring_Setup_Guide.md)**: Initial setup guide
 - **[DATABASE_SCHEMA.md](./Database_Schema.md)**: Database schema documentation
 - **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System
   architecture overview

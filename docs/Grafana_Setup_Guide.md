@@ -716,7 +716,7 @@ sudo systemctl restart grafana-server
 
 ### Related Documentation
 
-- [Grafana Architecture](./GRAFANA_Architecture.md) - Dual Grafana deployment
+- [Grafana Architecture](./Grafana_Architecture.md) - Dual Grafana deployment
 - [Dashboard Guide](./Dashboard_Guide.md) - Using dashboards
 - [Dashboard Customization Guide](./Dashboard_Customization_Guide.md) - Customizing dashboards
 

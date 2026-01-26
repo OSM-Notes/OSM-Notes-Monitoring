@@ -579,7 +579,7 @@ open dashboards/html/health_check.html
 
 ### Related Documentation
 
-- [Grafana Architecture](./GRAFANA_Architecture.md) - Dual Grafana deployment
+- [Grafana Architecture](./Grafana_Architecture.md) - Dual Grafana deployment
 - [Grafana Setup Guide](./Grafana_Setup_Guide.md) - Grafana installation and configuration
 - [Dashboard Customization Guide](./Dashboard_Customization_Guide.md) - Customizing dashboards
 

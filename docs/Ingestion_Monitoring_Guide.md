@@ -511,7 +511,7 @@ For complete metric definitions, see [INGESTION_METRICS.md](./Ingestion_Metrics.
 3. Archive old data files
 4. Consider expanding disk space
 
-For complete alert documentation, see [INGESTION_ALERT_RUNBOOK.md](./INGESTION_ALERT_Runbook.md).
+For complete alert documentation, see [INGESTION_ALERT_RUNBOOK.md](./Ingestion_Alert_Runbook.md).
 
 ### Viewing Alerts
 
@@ -662,12 +662,12 @@ ORDER BY count DESC;
 
 - **[INGESTION_METRICS.md](./Ingestion_Metrics.md)**: Complete metric definitions
 - **[INGESTION_ALERT_THRESHOLDS.md](./Ingestion_Alert_Thresholds.md)**: All alert thresholds
-- **[INGESTION_ALERT_RUNBOOK.md](./INGESTION_ALERT_Runbook.md)**: Detailed alert response procedures
+- **[INGESTION_ALERT_RUNBOOK.md](./Ingestion_Alert_Runbook.md)**: Detailed alert response procedures
 - **[CONFIGURATION_REFERENCE.md](./Configuration_Reference.md)**: Complete configuration reference
 
 ### Related Documentation
 
-- **[Monitoring_SETUP_Guide.md](./Monitoring_SETUP_Guide.md)**: Initial setup guide
+- **[Monitoring_SETUP_Guide.md](./Monitoring_Setup_Guide.md)**: Initial setup guide
 - **[DATABASE_SCHEMA.md](./Database_Schema.md)**: Database schema documentation
 - **[Monitoring_Architecture_Proposal.md](./Monitoring_Architecture_Proposal.md)**: System
   architecture overview

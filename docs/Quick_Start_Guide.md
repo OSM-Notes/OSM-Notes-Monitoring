@@ -23,7 +23,7 @@ status: "active"
 ## Overview
 
 This guide will help you get OSM Notes Monitoring running in 15 minutes. For detailed setup, see the
-[Setup Guide](./Monitoring_SETUP_Guide.md).
+[Setup Guide](./Monitoring_Setup_Guide.md).
 
 ---
 
@@ -240,7 +240,7 @@ grep -i error logs/*.log
 ### Documentation
 
 - [User Guide](./User_Guide.md): Comprehensive user documentation
-- [Setup Guide](./Monitoring_SETUP_Guide.md): Detailed setup instructions
+- [Setup Guide](./Monitoring_Setup_Guide.md): Detailed setup instructions
 - [Configuration Reference](./Configuration_Reference.md): All configuration options
 - [Dashboard Guide](./Dashboard_Guide.md): Using dashboards
 - [Alerting Guide](./Alerting_Guide.md): Alert system configuration

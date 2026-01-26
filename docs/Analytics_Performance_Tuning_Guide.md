@@ -911,7 +911,7 @@ psql -d analytics_db -c "
 ### Related Documentation
 
 - **[ANALYTICS_MONITORING_GUIDE.md](./Analytics_Monitoring_Guide.md)**: Complete monitoring guide
-- **[ETL_MONITORING_RUNBOOK.md](./ETL_MONITORING_Runbook.md)**: ETL alert response procedures
+- **[ETL_MONITORING_RUNBOOK.md](./ETL_Monitoring_Runbook.md)**: ETL alert response procedures
 - **[ANALYTICS_METRICS.md](./Analytics_Metrics.md)**: Metric definitions
 
 ---

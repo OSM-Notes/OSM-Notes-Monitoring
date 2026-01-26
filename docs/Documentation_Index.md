@@ -25,7 +25,7 @@ status: "active"
 
 - **[Quick Start Guide](./Quick_Start_Guide.md)**: Get started in 15 minutes
 - **[User Guide](./User_Guide.md)**: Comprehensive user documentation
-- **[Setup Guide](./Monitoring_SETUP_Guide.md)**: Detailed setup instructions
+- **[Setup Guide](./Monitoring_Setup_Guide.md)**: Detailed setup instructions
 - **[Configuration Reference](./Configuration_Reference.md)**: All configuration options
 
 ---
@@ -38,14 +38,14 @@ status: "active"
 | ------------------------------------------- | -------------------------------- | --------------------- |
 | [Quick Start Guide](./Quick_Start_Guide.md) | Get up and running quickly       | New users             |
 | [User Guide](./User_Guide.md)               | Comprehensive user documentation | All users             |
-| [Setup Guide](./Monitoring_SETUP_Guide.md)  | Detailed setup instructions      | System administrators |
+| [Setup Guide](./Monitoring_Setup_Guide.md)  | Detailed setup instructions      | System administrators |
 
 ### Configuration
 
 | Document                                                            | Purpose                    | Audience              |
 | ------------------------------------------------------------------- | -------------------------- | --------------------- |
 | [Configuration Reference](./Configuration_Reference.md)             | All configuration options  | System administrators |
-| [Alert Configuration Reference](./ALERT_Configuration_Reference.md) | Alert system configuration | Operations team       |
+| [Alert Configuration Reference](./Alert_Configuration_Reference.md) | Alert system configuration | Operations team       |
 | [Adapting Scripts](./Adapting_Scripts.md)                           | Adapting existing scripts  | Developers            |
 
 ### Monitoring Guides
@@ -65,14 +65,14 @@ status: "active"
 | [Dashboard Guide](./Dashboard_Guide.md)                             | Using dashboards       | All users             |
 | [Dashboard Customization Guide](./Dashboard_Customization_Guide.md) | Customizing dashboards | Developers            |
 | [Grafana Setup Guide](./Grafana_Setup_Guide.md)                     | Setting up Grafana     | System administrators |
-| [Grafana Architecture](./GRAFANA_Architecture.md)                   | Grafana architecture   | System administrators |
+| [Grafana Architecture](./Grafana_Architecture.md)                   | Grafana architecture   | System administrators |
 
 ### Alerting
 
 | Document                                                            | Purpose                  | Audience              |
 | ------------------------------------------------------------------- | ------------------------ | --------------------- |
 | [Alerting Guide](./Alerting_Guide.md)                               | Alert system usage       | Operations team       |
-| [Alert Configuration Reference](./ALERT_Configuration_Reference.md) | Alert configuration      | System administrators |
+| [Alert Configuration Reference](./Alert_Configuration_Reference.md) | Alert configuration      | System administrators |
 | [On-Call Procedures](./Oncall_Procedures.md)                        | On-call responsibilities | On-call engineers     |
 
 ### Security
@@ -85,18 +85,18 @@ status: "active"
 | [Security Best Practices](./Security_Best_Practices.md)                       | Security guidelines         | All users     |
 | [Security Audit Guide](./Security_Audit_Guide.md)                             | Code-level security checks  | Security team |
 | [Vulnerability Scanning Guide](./Vulnerability_Scanning_Guide.md)             | Vulnerability detection     | Security team |
-| [Penetration Testing Guide](./PENETRATION_Testing_Guide.md)                   | Penetration testing         | Security team |
-| [Security Incident Response Runbook](./SECURITY_INCIDENT_RESPONSE_Runbook.md) | Security incident response  | Security team |
+| [Penetration Testing Guide](./Penetration_Testing_Guide.md)                   | Penetration testing         | Security team |
+| [Security Incident Response Runbook](./Security_Incident_Response_Runbook.md) | Security incident response  | Security team |
 
 ### Troubleshooting
 
 | Document                                                                      | Purpose            | Audience        |
 | ----------------------------------------------------------------------------- | ------------------ | --------------- |
-| [Ingestion Troubleshooting Guide](./INGESTION_Troubleshooting_Guide.md)       | Ingestion issues   | Operations team |
-| [WMS Service Availability Runbook](./WMS_SERVICE_AVAILABILITY_Runbook.md)     | WMS issues         | Operations team |
-| [ETL Monitoring Runbook](./ETL_MONITORING_Runbook.md)                         | ETL issues         | Operations team |
-| [Security Incident Response Runbook](./SECURITY_INCIDENT_RESPONSE_Runbook.md) | Security incidents | Security team   |
-| [Ingestion Alert Runbook](./INGESTION_ALERT_Runbook.md)                       | Ingestion alerts   | Operations team |
+| [Ingestion Troubleshooting Guide](./Ingestion_Troubleshooting_Guide.md)       | Ingestion issues   | Operations team |
+| [WMS Service Availability Runbook](./WMS_Service_Availability_Runbook.md)     | WMS issues         | Operations team |
+| [ETL Monitoring Runbook](./ETL_Monitoring_Runbook.md)                         | ETL issues         | Operations team |
+| [Security Incident Response Runbook](./Security_Incident_Response_Runbook.md) | Security incidents | Security team   |
+| [Ingestion Alert Runbook](./Ingestion_Alert_Runbook.md)                       | Ingestion alerts   | Operations team |
 
 ### Metrics and Thresholds
 
@@ -162,7 +162,7 @@ status: "active"
 
 ### For System Administrators
 
-1. [Setup Guide](./Monitoring_SETUP_Guide.md)
+1. [Setup Guide](./Monitoring_Setup_Guide.md)
 2. [Configuration Reference](./Configuration_Reference.md)
 3. [Grafana Setup Guide](./Grafana_Setup_Guide.md)
 4. [Capacity Planning Guide](./Capacity_Planning_Guide.md)
@@ -181,8 +181,8 @@ status: "active"
 2. [Security Best Practices](./Security_Best_Practices.md)
 3. [Security Audit Guide](./Security_Audit_Guide.md)
 4. [Vulnerability Scanning Guide](./Vulnerability_Scanning_Guide.md)
-5. [Penetration Testing Guide](./PENETRATION_Testing_Guide.md)
-6. [Security Incident Response Runbook](./SECURITY_INCIDENT_RESPONSE_Runbook.md)
+5. [Penetration Testing Guide](./Penetration_Testing_Guide.md)
+6. [Security Incident Response Runbook](./Security_Incident_Response_Runbook.md)
 
 ### For Developers
 
@@ -198,7 +198,7 @@ status: "active"
 1. [On-Call Procedures](./Oncall_Procedures.md)
 2. [Alerting Guide](./Alerting_Guide.md)
 3. Troubleshooting guides (Ingestion, WMS, ETL)
-4. [Security Incident Response Runbook](./SECURITY_INCIDENT_RESPONSE_Runbook.md)
+4. [Security Incident Response Runbook](./Security_Incident_Response_Runbook.md)
 5. Component monitoring guides
 
 ---

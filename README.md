@@ -473,13 +473,13 @@ For detailed architecture documentation, see:
 - [Monitoring Resumen Ejecutivo](./docs/Monitoring_Resumen_Ejecutivo.md) (Spanish)
 - [Existing Monitoring Components](./docs/Existing_Monitoring_Components.md): Integration with
   OSM-Notes-Ingestion monitoring scripts
-- [Grafana Architecture](./docs/GRAFANA_Architecture.md): Dual Grafana deployment (API + Monitoring)
+- [Grafana Architecture](./docs/Grafana_Architecture.md): Dual Grafana deployment (API + Monitoring)
 - [Query Performance Optimization](./docs/Query_Performance_Optimization.md): SQL query optimization
   guide
 - [Security Audit Guide](./docs/Security_Audit_Guide.md): Code-level security checks
 - [Vulnerability Scanning Guide](./docs/Vulnerability_Scanning_Guide.md): Automated vulnerability
   detection
-- [Penetration Testing Guide](./docs/PENETRATION_Testing_Guide.md): Security penetration testing
+- [Penetration Testing Guide](./docs/Penetration_Testing_Guide.md): Security penetration testing
   procedures
 - [Code Coverage Instrumentation](./docs/Code_Coverage_Instrumentation.md): Using bashcov for real
   coverage measurement
@@ -679,7 +679,7 @@ For complete configuration reference, see:
 
 - **[Quick Start Guide](./docs/Quick_Start_Guide.md)**: Get up and running in 15 minutes
 - **[User Guide](./docs/User_Guide.md)**: Comprehensive user documentation
-- **[Setup Guide](./docs/Monitoring_SETUP_Guide.md)**: Detailed setup instructions
+- **[Setup Guide](./docs/Monitoring_Setup_Guide.md)**: Detailed setup instructions
 - **[Documentation Index](./docs/Documentation_Index.md)**: Complete index of all documentation
 
 ### Configuration and Usage

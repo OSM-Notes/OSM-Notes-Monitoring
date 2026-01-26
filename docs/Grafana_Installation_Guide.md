@@ -335,7 +335,7 @@ See
 ## References
 
 - [Grafana Setup Guide](./Grafana_Setup_Guide.md) - Complete guide in English
-- [Grafana Architecture](./GRAFANA_Architecture.md) - System architecture
+- [Grafana Architecture](./Grafana_Architecture.md) - System architecture
 - [Dashboard Guide](./Dashboard_Guide.md) - Dashboard usage guide
 
 ---

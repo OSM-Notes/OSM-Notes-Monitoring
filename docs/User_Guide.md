@@ -80,7 +80,7 @@ Before using OSM Notes Monitoring, ensure you have:
 
 For a quick setup guide, see [Quick Start Guide](./Quick_Start_Guide.md).
 
-For detailed setup instructions, see [Setup Guide](./Monitoring_SETUP_Guide.md).
+For detailed setup instructions, see [Setup Guide](./Monitoring_Setup_Guide.md).
 
 ---
 
@@ -561,9 +561,9 @@ tail -f /path/to/component/logs/error.log
 
 For more troubleshooting, see component-specific troubleshooting guides:
 
-- [Ingestion Troubleshooting](./INGESTION_Troubleshooting_Guide.md)
-- [WMS Service Availability Runbook](./WMS_SERVICE_AVAILABILITY_Runbook.md)
-- [ETL Monitoring Runbook](./ETL_MONITORING_Runbook.md)
+- [Ingestion Troubleshooting](./Ingestion_Troubleshooting_Guide.md)
+- [WMS Service Availability Runbook](./WMS_Service_Availability_Runbook.md)
+- [ETL Monitoring Runbook](./ETL_Monitoring_Runbook.md)
 
 ---
 
@@ -604,7 +604,7 @@ For more troubleshooting, see component-specific troubleshooting guides:
 ### Setup and Configuration
 
 - [Quick Start Guide](./Quick_Start_Guide.md): Get started quickly
-- [Setup Guide](./Monitoring_SETUP_Guide.md): Detailed setup instructions
+- [Setup Guide](./Monitoring_Setup_Guide.md): Detailed setup instructions
 - [Configuration Reference](./Configuration_Reference.md): All configuration options
 - [Grafana Setup Guide](./Grafana_Setup_Guide.md): Grafana dashboard setup
 
@@ -618,7 +618,7 @@ For more troubleshooting, see component-specific troubleshooting guides:
 ### Alerting and Security
 
 - [Alerting Guide](./Alerting_Guide.md): Alert system usage
-- [Alert Configuration Reference](./ALERT_Configuration_Reference.md): Alert configuration
+- [Alert Configuration Reference](./Alert_Configuration_Reference.md): Alert configuration
 - [API Security Guide](./API_Security_Guide.md): API security features
 - [Rate Limiting Guide](./Rate_Limiting_Guide.md): Rate limiting configuration
 - [Security Best Practices](./Security_Best_Practices.md): Security guidelines
@@ -630,10 +630,10 @@ For more troubleshooting, see component-specific troubleshooting guides:
 
 ### Troubleshooting
 
-- [Ingestion Troubleshooting Guide](./INGESTION_Troubleshooting_Guide.md): Ingestion issues
-- [WMS Service Availability Runbook](./WMS_SERVICE_AVAILABILITY_Runbook.md): WMS issues
-- [ETL Monitoring Runbook](./ETL_MONITORING_Runbook.md): ETL issues
-- [Security Incident Response Runbook](./SECURITY_INCIDENT_RESPONSE_Runbook.md): Security incidents
+- [Ingestion Troubleshooting Guide](./Ingestion_Troubleshooting_Guide.md): Ingestion issues
+- [WMS Service Availability Runbook](./WMS_Service_Availability_Runbook.md): WMS issues
+- [ETL Monitoring Runbook](./ETL_Monitoring_Runbook.md): ETL issues
+- [Security Incident Response Runbook](./Security_Incident_Response_Runbook.md): Security incidents
 
 ### Operations
 
