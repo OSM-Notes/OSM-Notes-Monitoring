@@ -23,71 +23,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Add detailed entry points for monitoring, metrics collection, alerting, security, and dashboard operations in README.md
-- Add CI testing script and remove obsolete validation script
-- Add configuration files for code formatting and linting
-- Enhance argument validation and add wrapper functions for IP blocking scripts
-- Update INGESTION_ALERT_RUNBOOK.md to address false positives in alert monitoring
-- Add test template file to .gitignore to prevent tracking of generated test files
-- Enhance alert management functionality in `alertManager.sh` with new processing commands and status retrieval
-- Implement robust timestamp parsing in `collectDaemonMetrics.sh` and `monitorIngestion.sh`
-- Enhance Grafana overview dashboard with new display overrides
-- Update Grafana dashboards with title adjustments and new overrides
-- Enhance ingestion monitoring with new metrics and dashboard updates
-- Update CI workflow to install additional dependencies and enhance unit test script
-- Implement timeout handling for analyzeDatabasePerformance.sh in monitorIngestion.sh
-- Update CI workflow and unit tests to implement timeout handling
-- Add logging and monitoring enhancements
-- Fix unit tests in CI: Add database environment variables
-- Add complete analytics monitoring implementation across 7 phases
-- Add cron job metrics collection and monitoring functionality
-- Add export metrics collection and monitoring functionality
-- Add analytics system metrics collection and monitoring functionality
-- ... and 41 more additions
+- **CI/CD Testing Infrastructure**: Added local CI testing scripts and improved test workflows
+- **Analytics Monitoring**: Complete implementation of analytics monitoring across 7 phases with Grafana dashboards and alert rules
+- **Alert Management**: Enhanced alert management functionality with new processing commands and status retrieval
+- **IP Blocking**: Enhanced argument validation and wrapper functions for IP blocking scripts
+- **Metrics Collection**: Added cron job metrics, export metrics, and analytics system metrics collection
 
 ### Changed
 
-- Enhance API download success rate checking in `monitorIngestion.sh`
-- Update DASHBOARDS_LAYOUT.md to enhance clarity and detail in metrics descriptions
-- Enhance alert rule removal functionality in `alertRules.sh` and improve Grafana dashboard configuration
-- Enhance database metrics testing in `test_collectDatabaseMetrics.sh`
-- Enhance alert routing and escalation handling in `alertRules.sh` and `escalation.sh`
-- Enhance action handling in `escalation.sh` to support both short and long options
-- Enhance metrics calculation and logging in `collectDaemonMetrics.sh` and `monitorIngestion.sh`
-- Enhance validation time metrics calculation in `parseStructuredLogs.sh`
-- Enhance log parsing in `parseStructuredLogs.sh` for improved metrics accuracy
-- Enhance database metrics collection and update Grafana dashboards
-- Enhance log parsing in metrics scripts for improved accuracy
-- Enhance log parsing and Grafana dashboards for improved metrics tracking
-- Enhance metrics extraction in collectDaemonMetrics.sh and update Grafana dashboard
-- Update Grafana overview dashboard with enhanced SQL query and field configurations
-- Enhance unit test execution with sorting and precise timing
-- ... and 48 more changes
-
-### Fixed
-
-- Refactor dashboard export scripts and enhance error handling
-- Refactor `load_config` function in `alertRules.sh` to save and restore original configuration values, preventing overwriting during tests. Updated regex escaping in `remove_rule` function to handle special characters correctly. Ensured all date fields in the file are updated to the current date, adhering to date handling guidelines.
-- Enhance alert management scripts with improved action handling and error logging
-- Improve ingestion performance checks by distinguishing technical failures from performance issues
-- Enhance monitoring scripts with PATH management and error handling improvements
-- Enhance alert handling in alertFunctions.sh for improved deduplication and error logging
-- Refactor logging and database execution functions for improved flexibility and error handling
-- Enhance debugging capabilities in monitorIngestion.sh and test_monitorIngestion.sh
-- Enhance debugging output in monitorIngestion.sh for API download success rate checks
-
-### Removed
-
-- Remove obsolete links to the Performance Tuning Guide and Metrics Guide across multiple documentation files to streamline content and improve navigation. Updated references in the Analytics Alert Thresholds, Analytics Metrics, Capacity Planning Guide, Infrastructure Monitoring Guide, and Grafana Setup Guide for consistency.
-
-### Documentation
-
-- Comprehensive documentation updates (33 commits)
-  - Standardized documentation links and file naming conventions
-  - Added metadata sections (frontmatter) to documentation files
-  - Enhanced README files with improved navigation and structure
-  - Converted ASCII diagrams to Mermaid format for better visualization
-  - Updated cross-references and internal links
+- **Documentation**: Comprehensive documentation updates including standardized links, metadata sections, and Mermaid diagrams
+- **Performance**: Optimized SQL queries, export processes, and added locking mechanisms
+- **Grafana Dashboards**: Enhanced dashboards with new display overrides and improved SQL queries
+- **Alert Handling**: Improved alert routing, escalation handling, and deduplication logic
+- **ETL Process**: Enhanced ETL execution with improved phase handling and closed dimension date updates
+- **Database**: Updated SQL scripts to use public schema and improved query optimization
 
 
 ## [1.2.0] - 2026-01-10
