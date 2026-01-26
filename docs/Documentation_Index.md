@@ -148,7 +148,7 @@ status: "active"
 
 | Document                                                          | Purpose                     | Audience   |
 | ----------------------------------------------------------------- | --------------------------- | ---------- |
-| [Monitoring Resumen Ejecutivo](./Monitoring_Resumen_Ejecutivo.md) | Executive summary (Spanish) | Management |
+| Monitoring Resumen Ejecutivo | Executive summary (Spanish) - Documentation pending | Management |
 
 ---
 

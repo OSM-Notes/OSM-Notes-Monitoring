@@ -557,4 +557,3 @@ These metrics can be used to create Grafana dashboards showing:
 
 - [Analytics Monitoring Guide](Analytics_Monitoring_Guide.md) - How to use analytics monitoring
 - [ETL Monitoring Runbook](ETL_Monitoring_Runbook.md) - Troubleshooting ETL issues
-- [Performance Tuning Guide](PERFORMANCE_TUNING_GUIDE.md) - Optimizing analytics performance

@@ -721,7 +721,6 @@ tail -f logs/infrastructure.log
 
 - [Configuration Reference](../docs/Configuration_Reference.md)
 - [Alerting Guide](../docs/Alerting_Guide.md)
-- [Metrics Guide](../docs/METRICS_GUIDE.md)
 
 ### Command Reference
 

@@ -598,7 +598,6 @@ LEFT JOIN growth_rates gr ON rm.metric_name = gr.metric_name;
 
 - [Infrastructure Monitoring Guide](./Infrastructure_Monitoring_Guide.md)
 - [Configuration Reference](./Configuration_Reference.md)
-- [Metrics Guide](./METRICS_GUIDE.md)
 
 ### Tools
 

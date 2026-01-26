@@ -28,7 +28,7 @@ This guide covers installing and configuring Grafana for the OSM Notes Monitorin
 provides advanced visualization capabilities for monitoring all OSM Notes components.
 
 **Note:** This guide is for the **OSM-Notes-Monitoring Grafana** deployment. For API-specific
-Grafana setup, see [OSM-Notes-API Monitoring Documentation](../OSM-Notes-API/docs/Monitoring.md).
+Grafana setup, see [OSM-Notes-API Monitoring Documentation](../../OSM-Notes-API/docs/Monitoring.md).
 
 ---
 

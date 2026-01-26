@@ -407,4 +407,3 @@ Use storage and performance thresholds to plan for growth:
 - [Analytics Metrics Definition](Analytics_Metrics.md) - Complete list of analytics metrics
 - [Analytics Monitoring Guide](Analytics_Monitoring_Guide.md) - How to use analytics monitoring
 - [ETL Monitoring Runbook](ETL_Monitoring_Runbook.md) - Troubleshooting ETL issues
-- [Performance Tuning Guide](PERFORMANCE_TUNING_GUIDE.md) - Optimizing analytics performance
