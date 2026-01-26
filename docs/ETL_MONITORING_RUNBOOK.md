@@ -1,3 +1,20 @@
+---
+title: "ETL Monitoring Runbook"
+description: "This runbook provides detailed information about each ETL monitoring alert type for the OSM-Notes-Analytics component, including:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "etl"
+  - "monitoring"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # ETL Monitoring Runbook
 
 > **Purpose:** Comprehensive guide for understanding and responding to ETL monitoring alerts  

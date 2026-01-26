@@ -1,3 +1,20 @@
+---
+title: "Analytics Monitoring Guide"
+description: "The Analytics Monitoring system provides comprehensive monitoring for the OSM-Notes-Analytics component, tracking:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Analytics Monitoring Guide
 
 > **Purpose:** Comprehensive guide for monitoring the OSM-Notes-Analytics component  

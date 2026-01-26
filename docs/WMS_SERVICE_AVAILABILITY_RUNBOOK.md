@@ -1,3 +1,19 @@
+---
+title: "WMS Service Availability Runbook"
+description: "This runbook provides detailed information about each WMS monitoring alert type, including:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # WMS Service Availability Runbook
 
 > **Purpose:** Comprehensive guide for understanding and responding to WMS service availability

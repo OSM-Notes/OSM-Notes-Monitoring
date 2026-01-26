@@ -1,3 +1,20 @@
+---
+title: "WMS Monitoring Guide"
+description: "The WMS Monitoring system provides comprehensive monitoring for the OSM-Notes-WMS component, tracking:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # WMS Monitoring Guide
 
 > **Purpose:** Comprehensive guide for monitoring the OSM-Notes-WMS component  

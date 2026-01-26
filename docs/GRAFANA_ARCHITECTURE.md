@@ -1,3 +1,18 @@
+---
+title: "Grafana Architecture - Dual Deployment"
+description: "The OSM Notes ecosystem uses  to provide comprehensive monitoring coverage:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "architecture"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Grafana Architecture - Dual Deployment
 
 > **Purpose:** Document the dual Grafana deployment architecture across OSM-Notes-API and

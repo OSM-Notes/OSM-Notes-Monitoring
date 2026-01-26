@@ -1,3 +1,19 @@
+---
+title: "Ingestion Alert Runbook"
+description: "This runbook provides detailed information about each alert type for the OSM-Notes-Ingestion component, including:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Ingestion Alert Runbook
 
 > **Purpose:** Comprehensive guide for understanding and responding to ingestion alerts  

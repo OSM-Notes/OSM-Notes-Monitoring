@@ -1,3 +1,20 @@
+---
+title: "Grafana Setup Guide"
+description: "This guide covers installing and configuring Grafana for the OSM Notes Monitoring system. Grafana"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "installation"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Grafana Setup Guide
 
 > **Purpose:** Step-by-step guide for installing and configuring Grafana for OSM Notes Monitoring  

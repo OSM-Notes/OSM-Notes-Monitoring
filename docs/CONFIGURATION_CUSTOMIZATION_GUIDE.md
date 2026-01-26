@@ -1,3 +1,18 @@
+---
+title: "Configuration Customization Guide"
+description: "Guide for customizing OSM-Notes-Monitoring configuration for your specific needs."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Configuration Customization Guide
 
 > **Last Updated:** 2026-01-01  

@@ -1,3 +1,19 @@
+---
+title: "Pre-Deployment Checklist"
+description: "Complete checklist to verify readiness for production deployment."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "installation"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Pre-Deployment Checklist
 
 > **Last Updated:** 2026-01-01  

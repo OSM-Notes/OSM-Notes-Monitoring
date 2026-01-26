@@ -1,3 +1,19 @@
+---
+title: "Analytics Performance Tuning Guide"
+description: "This guide provides comprehensive strategies and techniques for optimizing the performance of:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "performance"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Analytics Performance Tuning Guide
 
 > **Purpose:** Comprehensive guide for optimizing analytics monitoring and data warehouse

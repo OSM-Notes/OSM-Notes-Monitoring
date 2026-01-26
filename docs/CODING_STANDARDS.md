@@ -1,3 +1,18 @@
+---
+title: "Coding Standards - OSM-Notes-Monitoring"
+description: "Every script must start with:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Coding Standards - OSM-Notes-Monitoring
 
 > **Purpose:** Coding standards and best practices for the project  

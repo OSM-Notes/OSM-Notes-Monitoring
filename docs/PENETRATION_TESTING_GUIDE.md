@@ -1,3 +1,19 @@
+---
+title: "Penetration Testing Guide"
+description: "This guide provides instructions for performing penetration testing on the OSM-Notes-Monitoring"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "testing"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Penetration Testing Guide
 
 **Version:** 1.0.0  

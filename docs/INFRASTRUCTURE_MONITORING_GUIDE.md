@@ -1,3 +1,20 @@
+---
+title: "Infrastructure Monitoring Guide"
+description: "Infrastructure Monitoring"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Infrastructure Monitoring Guide
 
 **Version:** 1.1.0  

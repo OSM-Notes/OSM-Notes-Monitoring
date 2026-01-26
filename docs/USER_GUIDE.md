@@ -1,3 +1,19 @@
+---
+title: "OSM Notes Monitoring - User Guide"
+description: "OSM Notes Monitoring is a centralized monitoring and alerting system for the entire OSM Notes"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "guide"
+audience:
+  - "users"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # OSM Notes Monitoring - User Guide
 
 > **Purpose:** Comprehensive guide for end users of the OSM Notes Monitoring system  

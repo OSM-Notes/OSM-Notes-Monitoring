@@ -1,3 +1,18 @@
+---
+title: "Rate Limiting Guide"
+description: "Rate limiting protects the API from abuse by limiting the number of requests that can be made within"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Rate Limiting Guide
 
 > **Purpose:** Detailed guide for rate limiting implementation and usage  

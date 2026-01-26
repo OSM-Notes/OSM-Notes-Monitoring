@@ -1,3 +1,18 @@
+---
+title: "Logging Guide"
+description: "Complete guide to logging in OSM-Notes-Monitoring."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Logging Guide
 
 > **Last Updated:** 2025-12-24  

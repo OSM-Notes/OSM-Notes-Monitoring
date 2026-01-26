@@ -1,3 +1,18 @@
+---
+title: "Configuration Reference"
+description: "Complete reference for all configuration options in OSM-Notes-Monitoring."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Configuration Reference
 
 > **Last Updated:** 2025-12-24  

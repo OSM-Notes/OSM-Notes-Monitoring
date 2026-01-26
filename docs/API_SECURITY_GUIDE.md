@@ -1,3 +1,20 @@
+---
+title: "API Security Guide"
+description: "The API Security system provides comprehensive protection and monitoring for the OSM-Notes-API component, including:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "api"
+  - "security"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # API Security Guide
 
 > **Purpose:** Comprehensive guide for API security monitoring and protection  

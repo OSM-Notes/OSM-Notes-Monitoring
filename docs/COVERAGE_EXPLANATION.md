@@ -1,3 +1,18 @@
+---
+title: "Code Coverage Explanation"
+description: "This project uses  to measure code coverage, each serving a different purpose:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Code Coverage Explanation
 
 ## Overview

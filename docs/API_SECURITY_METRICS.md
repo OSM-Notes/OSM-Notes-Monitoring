@@ -1,3 +1,20 @@
+---
+title: "API Security Metrics Definition"
+description: "This document defines all metrics collected for the OSM-Notes-API security component. These metrics"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "performance"
+  - "api"
+  - "security"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # API Security Metrics Definition
 
 > **Purpose:** Comprehensive definition of all API security-specific metrics  

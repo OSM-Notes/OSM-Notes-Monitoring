@@ -1,3 +1,21 @@
+---
+title: "Guía de Setup Inicial - OSM-Notes-Monitoring"
+description: "1. Ve a https://github.com/OSM-Notes"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "installation"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Guía de Setup Inicial - OSM-Notes-Monitoring
 
 > **Propósito:** Guía paso a paso para crear y configurar el repositorio OSM-Notes-Monitoring  

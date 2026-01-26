@@ -1,3 +1,20 @@
+---
+title: "API Security Alert Thresholds"
+description: "This document defines all alert thresholds for the OSM-Notes-API security component. These"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "api"
+  - "security"
+  - "monitoring"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # API Security Alert Thresholds
 
 > **Purpose:** Comprehensive definition of all alert thresholds for API security monitoring  

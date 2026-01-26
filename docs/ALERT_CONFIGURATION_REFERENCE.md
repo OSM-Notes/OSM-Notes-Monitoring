@@ -1,3 +1,18 @@
+---
+title: "Alert Configuration Reference"
+description: "This document provides a comprehensive reference for all alert configuration options in the OSM-Notes-Monitoring system."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Alert Configuration Reference
 
 > **Purpose:** Comprehensive reference for alert configuration options  

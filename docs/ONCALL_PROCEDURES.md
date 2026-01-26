@@ -1,3 +1,18 @@
+---
+title: "On-Call Procedures"
+description: "This document provides procedures and guidelines for on-call operations in the OSM-Notes-Monitoring system."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # On-Call Procedures
 
 > **Purpose:** Procedures and guidelines for on-call operations  

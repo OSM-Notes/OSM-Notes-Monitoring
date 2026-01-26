@@ -1,3 +1,19 @@
+---
+title: "Documentation Index"
+description: "Complete index of all OSM Notes Monitoring documentation, organized by topic and use case"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+  - "system-admins"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Documentation Index
 
 > **Purpose:** Complete index of all OSM Notes Monitoring documentation  

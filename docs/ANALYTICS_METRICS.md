@@ -1,3 +1,18 @@
+---
+title: "Analytics Metrics Definition"
+description: "This document defines all metrics collected for the OSM-Notes-Analytics component. These metrics are"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "performance"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Analytics Metrics Definition
 
 > **Purpose:** Comprehensive definition of all analytics-specific metrics  

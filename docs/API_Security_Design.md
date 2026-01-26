@@ -1,3 +1,20 @@
+---
+title: "API Security & Protection Design"
+description: "This document details the security and protection mechanisms for the OSM-Notes-API service to"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "architecture"
+  - "api"
+  - "security"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # API Security & Protection Design
 
 > **Purpose:** Detailed design for API security and protection mechanisms  

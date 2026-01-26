@@ -1,3 +1,20 @@
+---
+title: "Existing Monitoring Components in OSM-Notes-Ingestion"
+description: "OSM-Notes-Ingestion already contains several monitoring components that are specific to data"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "architecture"
+  - "monitoring"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Existing Monitoring Components in OSM-Notes-Ingestion
 
 > **Purpose:** Document existing monitoring components in OSM-Notes-Ingestion that

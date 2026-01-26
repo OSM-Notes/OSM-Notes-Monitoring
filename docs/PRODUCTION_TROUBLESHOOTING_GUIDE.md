@@ -1,3 +1,20 @@
+---
+title: "Production Troubleshooting Guide"
+description: "Comprehensive troubleshooting guide for OSM-Notes-Monitoring production issues."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "troubleshooting"
+  - "guide"
+audience:
+  - "users"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Production Troubleshooting Guide
 
 > **Last Updated:** 2026-01-01  

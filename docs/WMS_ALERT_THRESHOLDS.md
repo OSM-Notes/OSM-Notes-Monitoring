@@ -1,3 +1,18 @@
+---
+title: "WMS Alert Thresholds"
+description: "This document defines all alert thresholds for the OSM-Notes-WMS component. These thresholds are"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # WMS Alert Thresholds
 
 > **Purpose:** Comprehensive documentation of all alert thresholds for WMS monitoring  

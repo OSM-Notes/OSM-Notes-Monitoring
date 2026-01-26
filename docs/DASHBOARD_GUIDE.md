@@ -1,3 +1,19 @@
+---
+title: "Dashboard Guide"
+description: "OSM Notes Monitoring provides two types of dashboards:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Dashboard Guide
 
 > **Purpose:** Comprehensive guide for using OSM Notes Monitoring dashboards  

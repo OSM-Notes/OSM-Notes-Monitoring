@@ -1,3 +1,18 @@
+---
+title: "Integration Changes for OSM-Notes-Ingestion"
+description: "Documentation of recommended changes in OSM-Notes-Ingestion for better integration with"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Integration Changes for OSM-Notes-Ingestion
 
 > **Last Updated:** 2025-12-24  

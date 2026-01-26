@@ -1,3 +1,18 @@
+---
+title: "Migration Guide"
+description: "This guide covers migrating monitoring functionality from OSM-Notes-Ingestion to OSM-Notes-Monitoring. The migration process is designed to be:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Migration Guide
 
 > **Last Updated:** 2026-01-01  

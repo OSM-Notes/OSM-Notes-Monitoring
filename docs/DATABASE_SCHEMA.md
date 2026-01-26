@@ -1,3 +1,18 @@
+---
+title: "Database Schema Documentation"
+description: "The OSM-Notes-Monitoring database stores monitoring metrics, alerts, security events, and component health status for the entire OSM Notes ecosystem."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "database"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Database Schema Documentation
 
 > **Last Updated:** 2025-12-31  

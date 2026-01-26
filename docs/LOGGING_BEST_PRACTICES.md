@@ -1,3 +1,18 @@
+---
+title: "Logging Best Practices"
+description: "Comprehensive guide to logging best practices for OSM-Notes-Monitoring."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Logging Best Practices
 
 > **Last Updated:** 2025-12-24  

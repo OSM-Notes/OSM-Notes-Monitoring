@@ -1,3 +1,20 @@
+---
+title: "Grafana Dashboards Layout"
+description: "Visual documentation of panel layout in each Grafana dashboard with detailed information about data sources, value meanings, thresholds, and troubleshooting"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "grafana"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Grafana Dashboards Layout
 
 > **Date:** 2026-01-15  

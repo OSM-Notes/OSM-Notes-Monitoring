@@ -1,3 +1,19 @@
+---
+title: "Security Audit Guide"
+description: "This guide provides instructions for performing security audits of the OSM-Notes-Monitoring system."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "security"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Security Audit Guide
 
 **Version:** 1.0.0  

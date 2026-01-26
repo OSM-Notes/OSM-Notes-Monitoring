@@ -1,3 +1,18 @@
+---
+title: "Ingestion Alert Thresholds"
+description: "This document defines all alert thresholds for the OSM-Notes-Ingestion component. These thresholds"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Ingestion Alert Thresholds
 
 > **Purpose:** Comprehensive documentation of all alert thresholds for ingestion monitoring  

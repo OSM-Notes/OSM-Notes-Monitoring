@@ -1,3 +1,18 @@
+---
+title: "Security Best Practices"
+description: "This document provides comprehensive best practices for implementing and maintaining API security"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "security"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Security Best Practices
 
 > **Purpose:** Comprehensive guide for security best practices in API monitoring and protection  

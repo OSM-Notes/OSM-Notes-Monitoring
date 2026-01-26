@@ -1,3 +1,20 @@
+---
+title: "Testing Deployment Guide"
+description: "Guide for testing the deployment process before going to production."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "testing"
+  - "installation"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Testing Deployment Guide
 
 > **Last Updated:** 2026-01-01  

@@ -1,3 +1,20 @@
+---
+title: "Grafana Installation Guide"
+description: "This guide will help you install Grafana on the production server and connect it to the"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "installation"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Grafana Installation Guide
 
 > **Date:** 2026-01-08  

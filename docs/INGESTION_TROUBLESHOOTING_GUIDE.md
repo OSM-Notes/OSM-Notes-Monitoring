@@ -1,3 +1,20 @@
+---
+title: "Ingestion Monitoring Troubleshooting Guide"
+description: "Use this checklist to quickly identify common issues:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "troubleshooting"
+  - "guide"
+audience:
+  - "users"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Ingestion Monitoring Troubleshooting Guide
 
 > **Purpose:** Comprehensive troubleshooting guide for ingestion monitoring issues  

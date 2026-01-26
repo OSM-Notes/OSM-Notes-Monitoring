@@ -1,3 +1,18 @@
+---
+title: "Quick Start Guide"
+description: "This guide will help you get OSM Notes Monitoring running in 15 minutes. For detailed setup, see the ."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Quick Start Guide
 
 > **Purpose:** Get OSM Notes Monitoring up and running quickly  

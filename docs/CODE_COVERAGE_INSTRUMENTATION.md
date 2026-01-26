@@ -1,3 +1,18 @@
+---
+title: "Code Coverage Instrumentation Guide"
+description: "This guide explains how to use the `bashcov` code instrumentation tool to measure actual code"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Code Coverage Instrumentation Guide
 
 ## Overview

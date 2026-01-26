@@ -1,3 +1,18 @@
+---
+title: "Adapting Scripts to Use Shared Libraries"
+description: "OSM-Notes-Monitoring provides shared libraries that can be used by scripts in OSM-Notes-Ingestion and other repositories. These libraries provide:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Adapting Scripts to Use Shared Libraries
 
 > **Last Updated:** 2025-12-24  

@@ -1,3 +1,19 @@
+---
+title: "Alerting System Guide"
+description: "The OSM-Notes-Monitoring alerting system provides comprehensive alert management including:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Alerting System Guide
 
 > **Purpose:** Comprehensive guide for the OSM-Notes-Monitoring alerting system  

@@ -1,3 +1,20 @@
+---
+title: "OSM-Notes-Monitoring - Architecture Proposal"
+description: "Design document for centralized monitoring system across all OSM Notes repositories, proposing the creation of OSM-Notes-Monitoring as the 8th repository"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "architecture"
+  - "monitoring"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # OSM-Notes-Monitoring - Architecture Proposal
 
 > **Purpose:** Design document for centralized monitoring system across all OSM Notes repositories  

@@ -1,3 +1,18 @@
+---
+title: "Performance Analysis Integration Guide"
+description: "The `analyzeDatabasePerformance.sh` script is very resource-intensive and should run"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "performance"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Performance Analysis Integration Guide
 
 > **Purpose:** Guide for integrating monthly performance analysis execution with metrics storage  

@@ -1,3 +1,19 @@
+---
+title: "Dashboard Customization Guide"
+description: "This guide explains how to customize both HTML and Grafana dashboards to meet your specific monitoring needs."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "monitoring"
+  - "guide"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Dashboard Customization Guide
 
 > **Purpose:** Guide for customizing OSM Notes Monitoring dashboards  

@@ -1,3 +1,19 @@
+---
+title: "Operations Runbook"
+description: "Operations runbook for OSM-Notes-Monitoring production system."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "documentation"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Operations Runbook
 
 > **Last Updated:** 2026-01-07  

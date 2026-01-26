@@ -1,3 +1,19 @@
+---
+title: "Capacity Planning Guide"
+description: "Infrastructure & Data Monitoring"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Capacity Planning Guide
 
 **Version:** 1.0.0  

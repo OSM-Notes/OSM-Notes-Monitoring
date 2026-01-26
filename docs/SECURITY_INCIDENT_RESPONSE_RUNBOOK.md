@@ -1,3 +1,19 @@
+---
+title: "Security Incident Response Runbook"
+description: "This runbook provides detailed information about security incidents and how to respond to them, including:"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "security"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Security Incident Response Runbook
 
 > **Purpose:** Comprehensive guide for understanding and responding to security incidents  

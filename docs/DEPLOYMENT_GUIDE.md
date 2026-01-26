@@ -1,3 +1,20 @@
+---
+title: "Deployment Guide"
+description: "Complete guide for deploying OSM-Notes-Monitoring to production."
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "installation"
+  - "guide"
+audience:
+  - "system-admins"
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Deployment Guide
 
 > **Last Updated:** 2026-01-01  

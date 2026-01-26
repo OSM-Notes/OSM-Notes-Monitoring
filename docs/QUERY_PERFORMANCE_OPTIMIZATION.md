@@ -1,3 +1,18 @@
+---
+title: "Query Performance Optimization Guide"
+description: "This guide provides strategies and tools for optimizing SQL query performance in the"
+version: "1.0.0"
+last_updated: "2026-01-25"
+author: "AngocA"
+tags:
+  - "performance"
+audience:
+  - "developers"
+project: "OSM-Notes-Monitoring"
+status: "active"
+---
+
+
 # Query Performance Optimization Guide
 
 **Version:** 1.0.0  
