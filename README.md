@@ -195,6 +195,145 @@ This system monitors the following repositories and components:
 
 **Total time: ~2.5 hours** for complete developer overview.
 
+## Entry Points
+
+**Main entry points** for using and operating Monitoring:
+
+### Monitoring Script Entry Points
+
+1. **Monitor Ingestion** (`bin/monitor/monitorIngestion.sh`)
+   ```bash
+   # Monitor OSM-Notes-Ingestion component
+   ./bin/monitor/monitorIngestion.sh
+   ```
+
+2. **Monitor Analytics** (`bin/monitor/monitorAnalytics.sh`)
+   ```bash
+   # Monitor OSM-Notes-Analytics component
+   ./bin/monitor/monitorAnalytics.sh
+   ```
+
+3. **Monitor API** (`bin/monitor/monitorAPI.sh`)
+   ```bash
+   # Monitor OSM-Notes-API component
+   ./bin/monitor/monitorAPI.sh
+   ```
+
+4. **Monitor WMS** (`bin/monitor/monitorWMS.sh`)
+   ```bash
+   # Monitor OSM-Notes-WMS component
+   ./bin/monitor/monitorWMS.sh
+   ```
+
+5. **Monitor Data** (`bin/monitor/monitorData.sh`)
+   ```bash
+   # Monitor OSM-Notes-Data freshness
+   ./bin/monitor/monitorData.sh
+   ```
+
+6. **Monitor Infrastructure** (`bin/monitor/monitorInfrastructure.sh`)
+   ```bash
+   # Monitor system infrastructure (CPU, memory, disk)
+   ./bin/monitor/monitorInfrastructure.sh
+   ```
+
+### Metric Collection Entry Points
+
+1. **Collect Database Metrics** (`bin/monitor/collectDatabaseMetrics.sh`)
+   ```bash
+   # Collect database performance metrics
+   ./bin/monitor/collectDatabaseMetrics.sh
+   ```
+
+2. **Collect ETL Metrics** (`bin/monitor/collect_etl_metrics.sh`)
+   ```bash
+   # Collect ETL job metrics from Analytics
+   ./bin/monitor/collect_etl_metrics.sh
+   ```
+
+3. **Collect System Metrics** (`bin/monitor/collectSystemMetrics.sh`)
+   ```bash
+   # Collect system-level metrics
+   ./bin/monitor/collectSystemMetrics.sh
+   ```
+
+### Alerting Entry Points
+
+1. **Alert Manager** (`bin/alerts/alertManager.sh`)
+   ```bash
+   # Manage and send alerts
+   ./bin/alerts/alertManager.sh
+   ```
+
+2. **Send Alert** (`bin/alerts/sendAlert.sh`)
+   ```bash
+   # Send individual alert
+   ./bin/alerts/sendAlert.sh [severity] [message]
+   ```
+
+3. **Alert Rules** (`bin/alerts/alertRules.sh`)
+   ```bash
+   # Configure and manage alert rules
+   ./bin/alerts/alertRules.sh
+   ```
+
+### Security Entry Points
+
+1. **Rate Limiter** (`bin/security/rateLimiter.sh`)
+   ```bash
+   # Manage rate limiting for API
+   ./bin/security/rateLimiter.sh
+   ```
+
+2. **IP Blocking** (`bin/security/ipBlocking.sh`)
+   ```bash
+   # Manage IP whitelist/blacklist
+   ./bin/security/ipBlocking.sh
+   ```
+
+3. **Abuse Detection** (`bin/security/abuseDetection.sh`)
+   ```bash
+   # Detect and respond to abuse patterns
+   ./bin/security/abuseDetection.sh
+   ```
+
+4. **DDoS Protection** (`bin/security/ddosProtection.sh`)
+   ```bash
+   # DDoS detection and mitigation
+   ./bin/security/ddosProtection.sh
+   ```
+
+### Dashboard Entry Points
+
+1. **Update Dashboard** (`bin/dashboard/updateDashboard.sh`)
+   ```bash
+   # Update monitoring dashboard with latest metrics
+   ./bin/dashboard/updateDashboard.sh
+   ```
+
+2. **Generate Metrics** (`bin/dashboard/generateMetrics.sh`)
+   ```bash
+   # Generate metrics for dashboard visualization
+   ./bin/dashboard/generateMetrics.sh
+   ```
+
+### Configuration Entry Point
+
+- **Monitoring Properties**: `etc/properties.sh` - Main configuration file
+  ```bash
+  # Copy example and configure
+  cp etc/properties.sh.example etc/properties.sh
+  vi etc/properties.sh
+  ```
+
+- **Alert Configuration**: `config/alerts.conf` - Alert settings
+  ```bash
+  export ADMIN_EMAIL="admin@example.com"
+  export SEND_ALERT_EMAIL="true"
+  ```
+
+See [docs/CONFIGURATION_REFERENCE.md](./docs/CONFIGURATION_REFERENCE.md) for complete configuration options.
+
 ## Quick Start
 
 ### Installation
