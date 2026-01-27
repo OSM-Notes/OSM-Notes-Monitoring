@@ -27,6 +27,7 @@ setup() {
     export LOG_DIR="${TEST_LOG_DIR}"
     export SEND_ALERT_EMAIL="false"
     export SLACK_ENABLED="false"
+    export ALERT_DEDUPLICATION_ENABLED="false"
     init_logging "${LOG_DIR}/test_sendAlert_third.log" "test_sendAlert_third"
     init_alerting
 }
@@ -116,6 +117,7 @@ teardown() {
 ##
 @test "main handles --slack option" {
     export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/TEST/TEST/TEST"
+    export ALERT_DEDUPLICATION_ENABLED="false"
     
     # Mock enhanced_send_alert
     # shellcheck disable=SC2317

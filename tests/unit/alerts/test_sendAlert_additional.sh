@@ -39,6 +39,7 @@ setup() {
     export SEND_ALERT_EMAIL="false"
     export SLACK_ENABLED="false"
     export ADMIN_EMAIL="test@example.com"
+    export ALERT_DEDUPLICATION_ENABLED="false"
     
     init_logging "${LOG_DIR}/test_sendAlert_additional.log" "test_sendAlert_additional"
     init_alerting
@@ -55,7 +56,7 @@ teardown() {
     local html
     html=$(format_html "TEST_COMPONENT" "warning" "test_alert" "Test message")
     
-    assert [[ -n "${html}" ]]
+    [ -n "${html}" ] || return 1
     assert echo "${html}" | grep -q "warning"
 }
 
@@ -63,7 +64,7 @@ teardown() {
     local html
     html=$(format_html "TEST_COMPONENT" "info" "test_alert" "Test message")
     
-    assert [[ -n "${html}" ]]
+    [ -n "${html}" ] || return 1
     assert echo "${html}" | grep -q "info"
 }
 
@@ -74,7 +75,7 @@ teardown() {
     local json
     json=$(format_json "TEST_COMPONENT" "critical" "test_alert" "Test message" '{"key":"value"}')
     
-    assert [[ -n "${json}" ]]
+    [ -n "${json}" ] || return 1
     assert echo "${json}" | grep -q "key"
 }
 
@@ -133,7 +134,9 @@ teardown() {
     html=$(format_html "TEST_COMPONENT" "critical" "test_alert" "Test <script>alert('xss')</script> message")
     
     # Should not contain unescaped script tags
-    assert ! echo "${html}" | grep -q "<script>"
+    if echo "${html}" | grep -q "<script>"; then
+        return 1
+    fi
 }
 
 ##
@@ -143,7 +146,7 @@ teardown() {
     local json
     json=$(format_json "TEST_COMPONENT" "critical" "test_alert" "Test message" "")
     
-    assert [[ -n "${json}" ]]
+    [ -n "${json}" ] || return 1
 }
 
 ##
@@ -152,6 +155,7 @@ teardown() {
 @test "main handles --slack-channel option" {
     export SLACK_ENABLED="true"
     export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/TEST/TEST/TEST"
+    export ALERT_DEDUPLICATION_ENABLED="false"
     
     # Mock send_alert
     # shellcheck disable=SC2317
