@@ -33,17 +33,17 @@ teardown() {
     local test_file="${TEST_LOG_DIR}/test_dashboard.json"
     echo '{"dashboard": {"title": "Test"}}' > "${test_file}"
     
-    # Mock psql
-    # shellcheck disable=SC2317
-    function psql() {
-        return 0
-    }
-    export -f psql
+    # Set DASHBOARD_OUTPUT_DIR
+    # shellcheck disable=SC2030,SC2031
+    # SC2030/SC2031: Variable modification in subshell is expected in BATS tests
+    export DASHBOARD_OUTPUT_DIR="${TEST_LOG_DIR}/dashboards"
+    mkdir -p "${DASHBOARD_OUTPUT_DIR}/grafana"
     
-    run import_dashboard "${test_file}" "overwrite"
+    run import_grafana_dashboard "${test_file}" "true"
     assert_success
     
     rm -f "${test_file}"
+    rm -rf "${DASHBOARD_OUTPUT_DIR}"
 }
 
 ##
@@ -53,17 +53,17 @@ teardown() {
     local test_file="${TEST_LOG_DIR}/test_dashboard.json"
     echo '{"dashboard": {"title": "Test"}}' > "${test_file}"
     
-    # Mock psql
-    # shellcheck disable=SC2317
-    function psql() {
-        return 0
-    }
-    export -f psql
+    # Set DASHBOARD_OUTPUT_DIR
+    # shellcheck disable=SC2030,SC2031
+    # SC2030/SC2031: Variable modification in subshell is expected in BATS tests
+    export DASHBOARD_OUTPUT_DIR="${TEST_LOG_DIR}/dashboards"
+    mkdir -p "${DASHBOARD_OUTPUT_DIR}/grafana"
     
-    run import_dashboard "${test_file}" "skip"
+    run import_grafana_dashboard "${test_file}" "false"
     assert_success
     
     rm -f "${test_file}"
+    rm -rf "${DASHBOARD_OUTPUT_DIR}"
 }
 
 ##
@@ -73,15 +73,15 @@ teardown() {
     local test_file="${TEST_LOG_DIR}/test_dashboard.json"
     echo '{"dashboard": {"title": "Test"}}' > "${test_file}"
     
-    # Mock import_dashboard
-    # shellcheck disable=SC2317
-    function import_dashboard() {
-        return 0
-    }
-    export -f import_dashboard
+    # Set DASHBOARD_OUTPUT_DIR
+    # shellcheck disable=SC2030,SC2031
+    # SC2030/SC2031: Variable modification in subshell is expected in BATS tests
+    export DASHBOARD_OUTPUT_DIR="${TEST_LOG_DIR}/dashboards"
+    mkdir -p "${DASHBOARD_OUTPUT_DIR}/grafana"
     
-    run main --overwrite --file "${test_file}"
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --overwrite "${test_file}" grafana
     assert_success
     
     rm -f "${test_file}"
+    rm -rf "${DASHBOARD_OUTPUT_DIR}"
 }

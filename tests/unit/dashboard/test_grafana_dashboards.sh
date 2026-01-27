@@ -58,13 +58,13 @@ setup() {
 @test "ingestion.json has required dashboard structure" {
     assert_file_exists "${TEST_DASHBOARD_DIR}/ingestion.json"
     
-    # Check for dashboard object
-    run jq -e '.dashboard' "${TEST_DASHBOARD_DIR}/ingestion.json" > /dev/null 2>&1
-    assert_success "ingestion.json missing dashboard object"
-    
-    # Check for title
-    run jq -e '.dashboard.title' "${TEST_DASHBOARD_DIR}/ingestion.json" > /dev/null 2>&1
+    # Check for title (structure is at root level, not under .dashboard)
+    run jq -e '.title' "${TEST_DASHBOARD_DIR}/ingestion.json" > /dev/null 2>&1
     assert_success "ingestion.json missing title"
+    
+    # Check for panels
+    run jq -e '.panels' "${TEST_DASHBOARD_DIR}/ingestion.json" > /dev/null 2>&1
+    assert_success "ingestion.json missing panels"
 }
 
 ##
@@ -121,17 +121,17 @@ setup() {
         local json_file="${TEST_DASHBOARD_DIR}/${dashboard}.json"
         assert_file_exists "${json_file}"
         
-        # Check for dashboard object
-        run jq -e '.dashboard' "${json_file}" > /dev/null 2>&1
-        assert_success "${dashboard}.json missing dashboard object"
-        
-        # Check for title
-        run jq -e '.dashboard.title' "${json_file}" > /dev/null 2>&1
+        # Check for title (structure is at root level, not under .dashboard)
+        run jq -e '.title' "${json_file}" > /dev/null 2>&1
         assert_success "${dashboard}.json missing title"
         
         # Check for schemaVersion
-        run jq -e '.dashboard.schemaVersion' "${json_file}" > /dev/null 2>&1
+        run jq -e '.schemaVersion' "${json_file}" > /dev/null 2>&1
         assert_success "${dashboard}.json missing schemaVersion"
+        
+        # Check for panels
+        run jq -e '.panels' "${json_file}" > /dev/null 2>&1
+        assert_success "${dashboard}.json missing panels"
     done
 }
 
@@ -145,11 +145,11 @@ setup() {
         local json_file="${TEST_DASHBOARD_DIR}/${dashboard}.json"
         
         # Check for tags array
-        run jq -e '.dashboard.tags' "${json_file}" > /dev/null 2>&1
+        run jq -e '.tags' "${json_file}" > /dev/null 2>&1
         assert_success "${dashboard}.json missing tags"
         
         # Check for "osm" tag
-        run jq -e '.dashboard.tags[] | select(. == "osm")' "${json_file}" > /dev/null 2>&1
+        run jq -e '.tags[] | select(. == "osm")' "${json_file}" > /dev/null 2>&1
         assert_success "${dashboard}.json missing 'osm' tag"
     done
 }
@@ -164,7 +164,7 @@ setup() {
         local json_file="${TEST_DASHBOARD_DIR}/${dashboard}.json"
         
         # Check for time object
-        run jq -e '.dashboard.time' "${json_file}" > /dev/null 2>&1
+        run jq -e '.time' "${json_file}" > /dev/null 2>&1
         assert_success "${dashboard}.json missing time configuration"
     done
 }
@@ -179,7 +179,7 @@ setup() {
         local json_file="${TEST_DASHBOARD_DIR}/${dashboard}.json"
         
         # Check for panels array
-        run jq -e '.dashboard.panels | length > 0' "${json_file}" > /dev/null 2>&1
+        run jq -e '.panels | length > 0' "${json_file}" > /dev/null 2>&1
         assert_success "${dashboard}.json missing panels or panels array is empty"
     done
 }

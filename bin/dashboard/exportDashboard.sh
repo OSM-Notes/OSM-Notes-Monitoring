@@ -102,7 +102,20 @@ export_grafana_dashboard() {
     
     log_info "Exporting Grafana dashboards to ${output}"
     
+    # Check if output is a directory or should be treated as directory path
+    # If output ends with /grafana or /html, and parent directory exists and is a directory, treat as directory
+    local output_parent
+    output_parent=$(dirname "${output}")
+    local should_copy_to_dir=false
     if [[ -d "${output}" ]]; then
+        should_copy_to_dir=true
+    elif [[ -d "${output_parent}" ]]; then
+        if [[ "${output}" == */grafana ]] || [[ "${output}" == */html ]]; then
+            should_copy_to_dir=true
+        fi
+    fi
+    
+    if [[ "${should_copy_to_dir}" == "true" ]]; then
         # Copy to directory
         # If output already ends with /grafana, don't add another grafana subdirectory
         if [[ "${output}" == */grafana ]]; then
@@ -186,7 +199,20 @@ export_html_dashboard() {
     
     log_info "Exporting HTML dashboards to ${output}"
     
+    # Check if output is a directory or should be treated as directory path
+    # If output ends with /grafana or /html, and parent directory exists and is a directory, treat as directory
+    local output_parent
+    output_parent=$(dirname "${output}")
+    local should_copy_to_dir=false
     if [[ -d "${output}" ]]; then
+        should_copy_to_dir=true
+    elif [[ -d "${output_parent}" ]]; then
+        if [[ "${output}" == */grafana ]] || [[ "${output}" == */html ]]; then
+            should_copy_to_dir=true
+        fi
+    fi
+    
+    if [[ "${should_copy_to_dir}" == "true" ]]; then
         # Copy to directory
         # If output already ends with /html, don't add another html subdirectory
         if [[ "${output}" == */html ]]; then
@@ -328,11 +354,25 @@ while [[ $# -gt 0 ]]; do
                         DASHBOARD_TYPE="${1}"
                         ;;
                     *)
-                        # If it's not a valid type, treat it as output
+                        # If it's not a valid type and no output file specified, it's an error
+                        # Otherwise, treat it as output file
                         if [[ -z "${OUTPUT_FILE}" ]]; then
-                            OUTPUT_FILE="${1}"
+                            # Check if it looks like a file path (contains / or .) or if it's clearly not a type
+                            if [[ "${1}" =~ / ]] || [[ "${1}" =~ \. ]]; then
+                                OUTPUT_FILE="${1}"
+                            else
+                                # Invalid dashboard type
+                                echo "ERROR: Unknown dashboard type: ${1}" >&2
+                                echo "Valid types are: grafana, html, all" >&2
+                                usage
+                                exit 1
+                            fi
                         else
-                            DASHBOARD_TYPE="${1}"
+                            # Already have output file, so this must be an invalid type
+                            echo "ERROR: Unknown dashboard type: ${1}" >&2
+                            echo "Valid types are: grafana, html, all" >&2
+                            usage
+                            exit 1
                         fi
                         ;;
                 esac

@@ -347,6 +347,12 @@ while [[ $# -gt 0 ]]; do
             COMPONENT="${2}"
             shift 2
             ;;
+        --*)
+            # Unknown option starting with --
+            echo "ERROR: Unknown option: ${1}" >&2
+            usage
+            exit 1
+            ;;
         *)
             # If --component was already set, treat remaining positional args as format/output
             if [[ -z "${COMPONENT}" ]]; then

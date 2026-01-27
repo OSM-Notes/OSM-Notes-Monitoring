@@ -32,14 +32,14 @@ teardown() {
 @test "overview.html exists and is valid HTML" {
     assert_file_exists "${TEST_DASHBOARD_DIR}/overview.html"
     
-    # Check for basic HTML structure
-    run grep -q "<!DOCTYPE html>" "${TEST_DASHBOARD_DIR}/overview.html"
+    # Check for basic HTML structure (case-insensitive)
+    run grep -qi "<!doctype html>" "${TEST_DASHBOARD_DIR}/overview.html"
     assert_success
     
-    run grep -q "<html" "${TEST_DASHBOARD_DIR}/overview.html"
+    run grep -qi "<html" "${TEST_DASHBOARD_DIR}/overview.html"
     assert_success
     
-    run grep -q "</html>" "${TEST_DASHBOARD_DIR}/overview.html"
+    run grep -qi "</html>" "${TEST_DASHBOARD_DIR}/overview.html"
     assert_success
 }
 
@@ -83,11 +83,11 @@ teardown() {
 @test "component_status.html exists and is valid HTML" {
     assert_file_exists "${TEST_DASHBOARD_DIR}/component_status.html"
     
-    # Check for basic HTML structure
-    run grep -q "<!DOCTYPE html>" "${TEST_DASHBOARD_DIR}/component_status.html"
+    # Check for basic HTML structure (case-insensitive)
+    run grep -qi "<!doctype html>" "${TEST_DASHBOARD_DIR}/component_status.html"
     assert_success
     
-    run grep -q "<html" "${TEST_DASHBOARD_DIR}/component_status.html"
+    run grep -qi "<html" "${TEST_DASHBOARD_DIR}/component_status.html"
     assert_success
 }
 
@@ -125,11 +125,11 @@ teardown() {
 @test "health_check.html exists and is valid HTML" {
     assert_file_exists "${TEST_DASHBOARD_DIR}/health_check.html"
     
-    # Check for basic HTML structure
-    run grep -q "<!DOCTYPE html>" "${TEST_DASHBOARD_DIR}/health_check.html"
+    # Check for basic HTML structure (case-insensitive)
+    run grep -qi "<!doctype html>" "${TEST_DASHBOARD_DIR}/health_check.html"
     assert_success
     
-    run grep -q "<html" "${TEST_DASHBOARD_DIR}/health_check.html"
+    run grep -qi "<html" "${TEST_DASHBOARD_DIR}/health_check.html"
     assert_success
 }
 
@@ -166,14 +166,24 @@ teardown() {
 ##
 @test "HTML dashboards have navigation links between pages" {
     # Check overview.html
-    run grep -q "component_status.html" "${TEST_DASHBOARD_DIR}/overview.html" || \
-        grep -q "health_check.html" "${TEST_DASHBOARD_DIR}/overview.html"
-    assert_success
+    if grep -q "component_status.html" "${TEST_DASHBOARD_DIR}/overview.html" || \
+       grep -q "health_check.html" "${TEST_DASHBOARD_DIR}/overview.html"; then
+        # Navigation link found
+        :
+    else
+        echo "No navigation links found in overview.html"
+        return 1
+    fi
     
     # Check component_status.html
-    run grep -q "overview.html" "${TEST_DASHBOARD_DIR}/component_status.html" || \
-        grep -q "health_check.html" "${TEST_DASHBOARD_DIR}/component_status.html"
-    assert_success
+    if grep -q "overview.html" "${TEST_DASHBOARD_DIR}/component_status.html" || \
+       grep -q "health_check.html" "${TEST_DASHBOARD_DIR}/component_status.html"; then
+        # Navigation link found
+        :
+    else
+        echo "No navigation links found in component_status.html"
+        return 1
+    fi
     
     # Check health_check.html
     run grep -q "overview.html" "${TEST_DASHBOARD_DIR}/health_check.html" || \
