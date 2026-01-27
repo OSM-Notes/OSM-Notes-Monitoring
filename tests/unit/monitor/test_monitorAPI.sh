@@ -370,16 +370,11 @@ EOF
     }
     export -f record_metric
     
-    # Temporarily make the script path non-existent
-    local original_project_root="${PROJECT_ROOT}"
-    
     # Run check (script doesn't exist, should handle gracefully)
     run check_rate_limiting || true
     
     # Should handle missing script gracefully
     assert_success || true  # Function should not crash
-    
-    export PROJECT_ROOT="${original_project_root}"
 }
 
 ##
@@ -456,12 +451,8 @@ EOF
     echo "export API_CHECK_TIMEOUT=10" > "${test_monitoring}"
     echo "export RATE_LIMIT_ENABLED=true" > "${test_security}"
     
-    # Temporarily override PROJECT_ROOT paths
-    local original_project_root="${PROJECT_ROOT}"
-    
     # Mock file existence checks
-    # Since we can't easily override PROJECT_ROOT in the sourced script,
-    # we'll test that the function structure is correct
+    # Since PROJECT_ROOT is readonly, we test that the function handles missing scripts gracefully
     
     # Run load_config
     run load_config || true

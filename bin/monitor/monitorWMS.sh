@@ -482,8 +482,13 @@ check_cache_hit_rate() {
      # Search for common GeoWebCache cache miss patterns
      # Pattern 1: "MISS" (standalone, common in GWC logs)
      # Pattern 2: "cache.*miss" or "miss.*cache" (descriptive)
-     count=$(grep -iE "(^.*MISS.*$|cache.*miss|miss.*cache)" "${log_file}" 2> /dev/null | grep -v -iE "(hit|error)" | grep -c . || echo "0")
-     cache_misses=$((cache_misses + count))
+     # shellcheck disable=SC2126
+     # Using grep -c . instead of wc -l to handle empty output correctly
+     count=$(grep -iE "(^.*MISS.*$|cache.*miss|miss.*cache)" "${log_file}" 2> /dev/null | grep -v -iE "(hit|error)" | grep -c . 2>/dev/null || echo "0")
+     # Ensure count is a valid number
+     if [[ "${count}" =~ ^[0-9]+$ ]]; then
+      cache_misses=$((cache_misses + count))
+     fi
     fi
    done
    total_requests=$((cache_hits + cache_misses))

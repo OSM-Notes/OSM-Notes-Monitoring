@@ -129,9 +129,9 @@ format_html() {
 <body>
     <div class="alert">
         <div class="header">[${alert_level^^}] ${component} - ${alert_type}</div>
-        <div>${message}</div>
+        <div>$(echo "${message}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g')</div>
         <div class="metadata">Timestamp: $(date -Iseconds)</div>
-        ${metadata:+<div class="metadata">Metadata: ${metadata}</div>}
+        ${metadata:+<div class="metadata">Metadata: $(echo "${metadata}" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g')</div>}
     </div>
 </body>
 </html>

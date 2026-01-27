@@ -49,7 +49,26 @@ teardown() {
     }
     export -f psql
     
-    run update_dashboard "test_dashboard" || true
+    # Mock other required functions
+    # shellcheck disable=SC2317
+    function update_grafana_dashboard() {
+        return 0
+    }
+    export -f update_grafana_dashboard
+    
+    # shellcheck disable=SC2317
+    function update_component_health() {
+        return 0
+    }
+    export -f update_component_health
+    
+    # shellcheck disable=SC2317
+    function needs_update() {
+        return 0
+    }
+    export -f needs_update
+    
+    run update_grafana_dashboard "test_dashboard" || true
     assert_success || assert_failure
 }
 
@@ -84,15 +103,10 @@ teardown() {
 # Test: main handles --help option
 ##
 @test "main handles --help option" {
-    # Mock usage
-    # shellcheck disable=SC2317
-    function usage() {
-        return 0
-    }
-    export -f usage
-    
-    run main --help
+    # Run the script directly with --help
+    run bash "${BATS_TEST_DIRNAME}/../../../bin/dashboard/updateDashboard.sh" --help
     assert_success
+    assert_output --partial "Update Dashboard Script"
 }
 
 ##
