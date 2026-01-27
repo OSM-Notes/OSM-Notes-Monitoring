@@ -70,6 +70,8 @@ setup() {
         local query=""
         local is_tab_format=false
         local all_args="${*}"
+        local has_t=false
+        local has_a=false
         
         # Extract query from arguments
         # psql can be called as: psql -h host -p port -U user -d db -c "query"
@@ -83,12 +85,25 @@ setup() {
                         break
                     fi
                     ;;
-                -t|-A)
-                    is_tab_format=true
+                -t)
+                    has_t=true
+                    ;;
+                -A)
+                    has_a=true
                     ;;
             esac
             ((i++))
         done
+        
+        # Set is_tab_format only if both -t and -A are present
+        if [[ "${has_t}" == "true" ]] && [[ "${has_a}" == "true" ]]; then
+            is_tab_format=true
+        fi
+        
+        # Also check all_args as fallback for cases where args are parsed differently
+        if [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]]; then
+            is_tab_format=true
+        fi
         
         # If no -c found, treat all args as query (for backward compatibility)
         # This handles cases where psql is called without -c flag
@@ -198,46 +213,57 @@ setup() {
         
         # Handle UPDATE operations (for acknowledge/resolve)
         if [[ "${query}" =~ UPDATE.*alerts ]]; then
+            # Normalize query for matching (handle multiline queries)
+            local query_normalized
+            query_normalized=$(echo "${query}" | tr '\n' ' ' | tr -s ' ')
+            
             # Read current mock status from file
             local current_status
             current_status=$(cat "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}" 2>/dev/null || echo "active")
             
             # Check if it's a valid UUID
-            if [[ "${query}" =~ 00000000-0000-0000-0000-000000000000 ]] || [[ "${query}" =~ invalid-uuid ]]; then
+            if [[ "${query_normalized}" =~ 00000000-0000-0000-0000-000000000000 ]] || [[ "${query_normalized}" =~ invalid-uuid ]]; then
                 # Invalid UUID - return empty (no rows updated)
                 return 0
             fi
-            # Check if updating to acknowledged
-            if [[ "${query}" =~ status.*=.*acknowledged ]]; then
-                # acknowledge_alert only updates if status = 'active'
-                # Check if alert is already acknowledged or resolved
-                if [[ "${current_status}" == "acknowledged" ]] || [[ "${current_status}" == "resolved" ]]; then
-                    # Already acknowledged/resolved - return empty (no rows updated)
-                    return 0
-                fi
-                # Update mock status in file
-                echo "acknowledged" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
-                # Return alert ID (RETURNING id) - check for -t -A format in args or all_args
-                if [[ "${is_tab_format}" == "true" ]] || [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]] || [[ "${*}" =~ -t.*-A ]] || [[ "${*}" =~ -A.*-t ]]; then
-                    echo "00000000-0000-0000-0000-000000000001"
-                fi
-                return 0
-            fi
-            # Check if updating to resolved
-            if [[ "${query}" =~ status.*=.*resolved ]]; then
+            # Check if updating to resolved FIRST (before acknowledged, since resolved query contains "acknowledged" in WHERE clause)
+            # Check both normalized and original query, and ensure it's in SET clause, not WHERE clause
+            if [[ "${query_normalized}" =~ SET.*status.*resolved ]] || [[ "${query}" =~ SET.*status.*[\"']resolved[\"'] ]] || ([[ "${query_normalized}" =~ resolved ]] && [[ "${query_normalized}" =~ SET.*status ]] && ! [[ "${query_normalized}" =~ WHERE.*resolved ]]); then
                 # resolve_alert only updates if status IN ('active', 'acknowledged')
                 # Check if alert is already resolved
                 if [[ "${current_status}" == "resolved" ]]; then
                     # Already resolved - return empty (no rows updated)
-                    if [[ "${is_tab_format}" == "true" ]] || [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]] || [[ "${*}" =~ -t.*-A ]] || [[ "${*}" =~ -A.*-t ]]; then
+                    # If query has RETURNING, return empty string for -t -A format
+                    if [[ "${query}" =~ RETURNING ]] || [[ "${query_normalized}" =~ RETURNING ]]; then
                         echo ""  # Return empty string for -t -A format
                     fi
                     return 0
                 fi
                 # Update mock status in file BEFORE returning result
                 echo "resolved" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
-                # Return alert ID (RETURNING id) - check for -t -A format in args or all_args
-                if [[ "${is_tab_format}" == "true" ]] || [[ "${all_args}" =~ -t.*-A ]] || [[ "${all_args}" =~ -A.*-t ]] || [[ "${*}" =~ -t.*-A ]] || [[ "${*}" =~ -A.*-t ]]; then
+                # Return alert ID if query has RETURNING (which indicates -t -A format is expected)
+                if [[ "${query}" =~ RETURNING ]] || [[ "${query_normalized}" =~ RETURNING ]]; then
+                    echo "00000000-0000-0000-0000-000000000001"
+                fi
+                return 0
+            fi
+            # Check if updating to acknowledged (check both normalized and original query)
+            # Make sure it's in SET clause, not WHERE clause
+            if [[ "${query_normalized}" =~ SET.*status.*acknowledged ]] || [[ "${query}" =~ SET.*status.*[\"']acknowledged[\"'] ]] || ([[ "${query_normalized}" =~ acknowledged ]] && [[ "${query_normalized}" =~ SET.*status ]] && ! [[ "${query_normalized}" =~ WHERE.*acknowledged ]]); then
+                # acknowledge_alert only updates if status = 'active'
+                # Check if alert is already acknowledged or resolved
+                if [[ "${current_status}" == "acknowledged" ]] || [[ "${current_status}" == "resolved" ]]; then
+                    # Already acknowledged/resolved - return empty (no rows updated)
+                    # If query has RETURNING, return empty string for -t -A format
+                    if [[ "${query}" =~ RETURNING ]] || [[ "${query_normalized}" =~ RETURNING ]]; then
+                        echo ""  # Return empty string for -t -A format
+                    fi
+                    return 0
+                fi
+                # Update mock status in file
+                echo "acknowledged" > "${MOCK_STATUS_FILE:-${TEST_LOG_DIR}/.mock_alert_status}"
+                # Return alert ID if query has RETURNING (which indicates -t -A format is expected)
+                if [[ "${query}" =~ RETURNING ]] || [[ "${query_normalized}" =~ RETURNING ]]; then
                     echo "00000000-0000-0000-0000-000000000001"
                 fi
                 return 0
