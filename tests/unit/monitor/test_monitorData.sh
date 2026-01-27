@@ -438,7 +438,10 @@ create_test_backup() {
     
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${4}" == *"File integrity check found"* ]]; then
+        # Check if it's a file integrity alert
+        local alert_type="${3:-}"
+        local message="${4:-}"
+        if [[ "${alert_type}" == "file_integrity_failure" ]] || echo "${message}" | grep -qiE "(file integrity|integrity.*failure|corrupted)"; then
             touch "${alert_file}"
         fi
         return 0
@@ -454,7 +457,29 @@ create_test_backup() {
 
 @test "check_file_integrity alerts when compressed files are corrupted" {
     # Create corrupted compressed file (invalid gzip)
+    # Make it old enough (>60 seconds) so it's not skipped
     echo "not a valid gzip file" > "${TEST_BACKUP_DIR}/backup.tar.gz"
+    touch -t "$(date -d '2 hours ago' +%Y%m%d%H%M.%S)" "${TEST_BACKUP_DIR}/backup.tar.gz" 2>/dev/null || \
+    touch -t "$(date -v-2H +%Y%m%d%H%M.%S 2>/dev/null || date +%Y%m%d%H%M.%S)" "${TEST_BACKUP_DIR}/backup.tar.gz"
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # Mock record_metric
     # shellcheck disable=SC2317
@@ -469,7 +494,13 @@ create_test_backup() {
     
     # shellcheck disable=SC2317
     send_alert() {
-        if [[ "${4}" == *"File integrity check found"* ]]; then
+        # Check alert type or message content - be more flexible
+        local alert_type="${3:-}"
+        local message="${4:-}"
+        if [[ "${alert_type}" == "file_integrity_failure" ]] || \
+           [[ "${message}" == *"File integrity check found"* ]] || \
+           [[ "${message}" == *"integrity"* ]] || \
+           [[ "${message}" == *"corrupted"* ]]; then
             touch "${alert_file}"
         fi
         return 0

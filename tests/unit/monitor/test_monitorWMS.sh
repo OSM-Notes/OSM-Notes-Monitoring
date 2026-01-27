@@ -722,11 +722,15 @@ INFO: Request processed"
 }
 
 @test "check_cache_hit_rate alerts when hit rate is below threshold" {
+    # Set WMS_ENABLED and threshold
+    export WMS_ENABLED="true"
+    export WMS_CACHE_HIT_RATE_THRESHOLD="80"
+    
     # Mock database query to return low cache hit rate
     # shellcheck disable=SC2317
     execute_sql_query() {
-        if [[ "${1}" == *"cache_hits"* ]]; then
-            echo "600|400"  # 60% hit rate (below 80% threshold)
+        if [[ "${1}" == *"cache_hits"* ]] || [[ "${1}" == *"cache_misses"* ]]; then
+            echo "600|400"  # 600 hits, 400 misses = 60% hit rate (below 80% threshold)
         fi
         return 0
     }
@@ -763,9 +767,11 @@ INFO: Request processed"
     
     # shellcheck disable=SC2317
     send_alert() {
-        # Check if it's a cache hit rate alert (4th arg is message)
+        # Check if it's a cache hit rate alert (arguments: component, level, type, message)
+        local alert_type="${3:-}"
         local message="${4:-}"
-        if echo "${message}" | grep -q "cache.*hit.*rate\|hit.*rate.*below\|cache.*below"; then
+        # Check alert type or message content
+        if [[ "${alert_type}" == "cache_hit_rate_low" ]] || echo "${message}" | grep -qiE "(cache.*hit.*rate|hit.*rate.*below|cache.*below.*threshold)"; then
             touch "${alert_file}"
         fi
         return 0

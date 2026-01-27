@@ -647,6 +647,24 @@ bash scripts/generate_coverage_combined.sh
 
 For detailed explanation, see: [Code Coverage Explanation](./docs/Coverage_Explanation.md)
 
+## Testing
+
+### Quick Start
+
+```bash
+# Run all tests (master test runner)
+./tests/run_all_tests.sh
+
+# Run specific test suites
+./tests/run_all_tests.sh --unit-only          # Unit tests only
+./tests/run_all_tests.sh --integration-only  # Integration tests only
+./tests/run_all_tests.sh --e2e-only          # End-to-end tests only
+```
+
+**Master Test Runner**: `tests/run_all_tests.sh` - Executes all test suites (unit, integration, e2e, SQL, scripts, performance)
+
+For detailed testing information, see the test documentation in the `tests/` directory.
+
 ## Configuration
 
 ### Quick Setup

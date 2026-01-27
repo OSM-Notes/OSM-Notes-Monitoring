@@ -749,19 +749,22 @@ INFO: 200 OK"
 
 @test "check_api_download_success_rate alerts when success rate is low" {
     # Create log files with mostly failures
-    # The function looks for patterns: "download|fetch|GET|POST" for total downloads
-    # and "success|completed|200 OK|downloaded" for successful downloads
+    # The function looks for patterns: "__getNewNotesFromApi|getNewNotesFromApi" for total downloads
+    # and "Successfully downloaded notes from API|API.*download.*complete" for successful downloads
     # IMPORTANT: Each log file should have exactly ONE download attempt line
     # to match the expected 30% success rate (3 successful out of 10 total)
+    # The function counts downloads by looking for "__getNewNotesFromApi|getNewNotesFromApi"
+    # and successes by looking for "Successfully downloaded notes from API|API.*download.*complete"
+    # Failed downloads need explicit error patterns so they're not assumed successful
     for i in {1..10}; do
         if [[ $((i % 3)) -eq 0 ]]; then
             # Successful download (3 out of 10 = 30% success rate)
-            # Only ONE line with "download" pattern, and ONE with "success" pattern
-            create_test_log "download${i}.log" "INFO: GET /api/download success completed 200 OK downloaded"
+            # Use pattern that matches what the function looks for
+            create_test_log "download${i}.log" "$(date +'%Y-%m-%d %H:%M:%S') INFO: __getNewNotesFromApi Successfully downloaded notes from API completed"
         else
-            # Failed download (7 out of 10)
-            # Only ONE line with "download" pattern, NO success patterns
-            create_test_log "download${i}.log" "INFO: GET /api/download failed 500 Error"
+            # Failed download (7 out of 10) - include error pattern so it's not assumed successful
+            # The function checks for errors in lines containing API download function names
+            create_test_log "download${i}.log" "$(date +'%Y-%m-%d %H:%M:%S') ERROR: __getNewNotesFromApi API download failed HTTP 500 error exception"
         fi
     done
     
@@ -773,7 +776,10 @@ INFO: 200 OK"
     # shellcheck disable=SC2317
     send_alert() {
         echo "DEBUG: send_alert called with args: $*" >&2
-        if [[ "${4}" == *"Low API download success rate"* ]]; then
+        local alert_type="${3:-}"
+        local message="${4:-}"
+        # Check if it's an API download success rate alert
+        if [[ "${alert_type}" == "api_download_success_rate" ]] || echo "${message}" | grep -qiE "(API.*download.*success.*rate|Low.*API.*download|success.*rate.*below)"; then
             touch "${alert_file}"
             echo "DEBUG: alert_sent file created" >&2
         fi
@@ -849,6 +855,19 @@ INFO: 200 OK"
 
 @test "check_ingestion_data_quality alerts when quality score is low" {
     # Mock notesCheckVerifier script that fails
+    # The function checks for log files in /tmp/notesCheckVerifier_* directories
+    # Create a temporary directory with a log file that indicates failure
+    local verifier_dir
+    verifier_dir="/tmp/notesCheckVerifier_$(date +%Y%m%d)"
+    mkdir -p "${verifier_dir}"
+    local verifier_log="${verifier_dir}/notesCheckVerifier.log"
+    # Create log file with today's date and error message
+    # The function checks for "error|failed|discrepancy" in the log
+    echo "$(date +'%Y-%m-%d %H:%M:%S') ERROR: Data quality issues found discrepancy" > "${verifier_log}"
+    # Ensure file modification time is today
+    touch "${verifier_log}"
+    
+    # Also create the script itself (function checks if it exists)
     local verifier_script="${TEST_INGESTION_DIR}/bin/monitor/notesCheckVerifier.sh"
     mkdir -p "$(dirname "${verifier_script}")"
     echo "#!/bin/bash" > "${verifier_script}"
@@ -869,7 +888,10 @@ INFO: 200 OK"
     # shellcheck disable=SC2317
     send_alert() {
         echo "DEBUG: send_alert called with args: $*" >&2
-        if [[ "${4}" == *"Data quality below threshold"* ]]; then
+        local alert_type="${3:-}"
+        local message="${4:-}"
+        # Check if it's a data quality alert
+        if [[ "${alert_type}" == "data_quality" ]] || echo "${message}" | grep -qiE "(Data quality.*below|quality.*below.*threshold|quality.*score.*below)"; then
             touch "${alert_file}"
             echo "DEBUG: alert_sent file created" >&2
         fi

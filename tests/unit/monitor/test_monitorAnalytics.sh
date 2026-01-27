@@ -19,7 +19,7 @@ setup() {
     export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
     
     # Create test directories
-    mkdir -p "${TEST_ANALYTICS_DIR}/bin"
+    mkdir -p "${TEST_ANALYTICS_DIR}/bin/dwh"
     mkdir -p "${TEST_ANALYTICS_DIR}/logs"
     mkdir -p "${TEST_LOG_DIR}"
     
@@ -137,7 +137,8 @@ create_test_etl_script() {
     local script_name="${1}"
     local executable="${2:-true}"
     
-    local script_path="${TEST_ANALYTICS_DIR}/bin/${script_name}"
+    # Function looks for scripts in bin/dwh directory
+    local script_path="${TEST_ANALYTICS_DIR}/bin/dwh/${script_name}"
     echo "#!/bin/bash" > "${script_path}"
     echo "# Test ETL script ${script_name}" >> "${script_path}"
     
@@ -226,11 +227,11 @@ create_test_log() {
 
 @test "check_etl_job_execution_status alerts when scripts not executable" {
     # Create scripts but make one non-executable
-    # The function looks for specific script names: etl_main.sh, etl_daily.sh, etl_hourly.sh, load_data.sh, transform_data.sh
+    # The function looks for specific script names: ETL.sh, cleanupDWH.sh, copyBaseTables.sh
     # Need at least threshold number of scripts (threshold is 2)
-    create_test_etl_script "etl_main.sh" "true"
-    create_test_etl_script "etl_daily.sh" "false"  # This one is not executable
-    create_test_etl_script "etl_hourly.sh" "true"
+    create_test_etl_script "ETL.sh" "true"
+    create_test_etl_script "cleanupDWH.sh" "false"  # This one is not executable
+    create_test_etl_script "copyBaseTables.sh" "true"
     
     # Use a temp file to track alert status
     local alert_file="${TEST_ANALYTICS_DIR}/.alert_sent"
@@ -246,7 +247,8 @@ create_test_log() {
     send_alert() {
         # Check if message contains executable count warning
         # The actual message is: "ETL scripts executable count (X) is less than scripts found (Y)"
-        if [[ "${4}" == *"executable"* ]] || [[ "${4}" == *"ETL scripts executable count"* ]] || [[ "${4}" == *"less than"* ]] || [[ "${4}" == *"not executable"* ]]; then
+        local message="${4:-}"
+        if echo "${message}" | grep -qiE "(executable.*count|less than|not executable|scripts.*executable)"; then
             touch "${alert_file}"
         fi
         return 0

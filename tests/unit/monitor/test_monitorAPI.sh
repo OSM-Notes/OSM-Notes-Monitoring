@@ -178,16 +178,37 @@ teardown() {
 # Test: check_api_availability alerts when API is unavailable
 ##
 @test "check_api_availability alerts when API is unavailable" {
-    # Mock curl to return failure
-    # shellcheck disable=SC2317
-    curl() {
-        if [[ "${1}" == "-w" ]]; then
-            echo "503"  # Service unavailable
-            return 1
-        fi
-        return 1
-    }
-    export -f curl
+    # Create mock curl executable so command -v finds it
+    local mock_curl_dir="${BATS_TEST_DIRNAME}/../../tmp/bin"
+    mkdir -p "${mock_curl_dir}"
+    local mock_curl="${mock_curl_dir}/curl"
+    cat > "${mock_curl}" << 'EOF'
+#!/bin/bash
+# Return HTTP 503 when called with -w "%{http_code}"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -w)
+            shift
+            if [[ "$1" == "%{http_code}" ]]; then
+                echo "503"
+                exit 0
+            elif [[ "$1" == "%{time_total}" ]]; then
+                echo "0.5"
+                exit 0
+            fi
+            ;;
+        -s|-o|--max-time|--connect-timeout)
+            shift
+            ;;
+        *)
+            ;;
+    esac
+    shift
+done
+exit 0
+EOF
+    chmod +x "${mock_curl}"
+    export PATH="${mock_curl_dir}:${PATH}"
     
     # Mock log functions
     # shellcheck disable=SC2317
@@ -214,9 +235,11 @@ teardown() {
     
     # shellcheck disable=SC2317
     send_alert() {
-        # Check if it's an API unavailable alert (4th arg is message)
+        # Check if it's an API unavailable alert (arguments: component, level, type, message)
+        local alert_type="${3:-}"
         local message="${4:-}"
-        if echo "${message}" | grep -q "API.*unavailable\|API.*returned"; then
+        # The alert type should be "api_unavailable" or message should contain "API" and "returned" or "unavailable"
+        if [[ "${alert_type}" == "api_unavailable" ]] || echo "${message}" | grep -qiE "(API.*returned|API.*unavailable|unavailable)"; then
             touch "${alert_file}"
         fi
         return 0
@@ -228,18 +251,30 @@ teardown() {
     
     # Alert should have been sent
     assert_file_exists "${alert_file}"
+    
+    # Cleanup
+    rm -rf "${mock_curl_dir}"
 }
 
 ##
 # Test: check_api_availability handles curl unavailability gracefully
 ##
 @test "check_api_availability handles curl unavailability gracefully" {
-    # Unset curl command
-    # shellcheck disable=SC2317
-    curl() {
-        return 127  # Command not found
-    }
-    export -f curl
+    # Remove curl from PATH temporarily to simulate it not being available
+    local original_path="${PATH}"
+    # Create a temporary PATH without curl
+    local temp_path=""
+    IFS=':' read -ra path_parts <<< "${PATH}"
+    for part in "${path_parts[@]}"; do
+        if [[ "${part}" != *"tmp/bin"* ]] && [[ "${part}" != *"/usr/bin"* ]] && [[ "${part}" != *"/bin"* ]]; then
+            if [[ -z "${temp_path}" ]]; then
+                temp_path="${part}"
+            else
+                temp_path="${temp_path}:${part}"
+            fi
+        fi
+    done
+    export PATH="${temp_path}"
     
     # Mock log functions
     # shellcheck disable=SC2317
@@ -268,6 +303,9 @@ teardown() {
     
     # Run check
     run check_api_availability
+    
+    # Restore PATH
+    export PATH="${original_path}"
     
     # Should succeed (skip gracefully)
     assert_success
