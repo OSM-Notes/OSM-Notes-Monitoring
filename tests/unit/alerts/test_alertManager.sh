@@ -228,7 +228,7 @@ setup() {
             fi
             # Check if updating to resolved FIRST (before acknowledged, since resolved query contains "acknowledged" in WHERE clause)
             # Check both normalized and original query, and ensure it's in SET clause, not WHERE clause
-            if [[ "${query_normalized}" =~ SET.*status.*resolved ]] || [[ "${query}" =~ SET.*status.*[\"']resolved[\"'] ]] || ([[ "${query_normalized}" =~ resolved ]] && [[ "${query_normalized}" =~ SET.*status ]] && ! [[ "${query_normalized}" =~ WHERE.*resolved ]]); then
+            if [[ "${query_normalized}" =~ SET.*status.*resolved ]] || [[ "${query}" =~ SET.*status.*[\"']resolved[\"'] ]] || { [[ "${query_normalized}" =~ resolved ]] && [[ "${query_normalized}" =~ SET.*status ]] && ! [[ "${query_normalized}" =~ WHERE.*resolved ]]; }; then
                 # resolve_alert only updates if status IN ('active', 'acknowledged')
                 # Check if alert is already resolved
                 if [[ "${current_status}" == "resolved" ]]; then
@@ -249,7 +249,7 @@ setup() {
             fi
             # Check if updating to acknowledged (check both normalized and original query)
             # Make sure it's in SET clause, not WHERE clause
-            if [[ "${query_normalized}" =~ SET.*status.*acknowledged ]] || [[ "${query}" =~ SET.*status.*[\"']acknowledged[\"'] ]] || ([[ "${query_normalized}" =~ acknowledged ]] && [[ "${query_normalized}" =~ SET.*status ]] && ! [[ "${query_normalized}" =~ WHERE.*acknowledged ]]); then
+            if [[ "${query_normalized}" =~ SET.*status.*acknowledged ]] || [[ "${query}" =~ SET.*status.*[\"']acknowledged[\"'] ]] || { [[ "${query_normalized}" =~ acknowledged ]] && [[ "${query_normalized}" =~ SET.*status ]] && ! [[ "${query_normalized}" =~ WHERE.*acknowledged ]]; }; then
                 # acknowledge_alert only updates if status = 'active'
                 # Check if alert is already acknowledged or resolved
                 if [[ "${current_status}" == "acknowledged" ]] || [[ "${current_status}" == "resolved" ]]; then
