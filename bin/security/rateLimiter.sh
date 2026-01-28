@@ -161,7 +161,7 @@ check_rate_limit_sliding_window() {
 
  # Use sliding window: count requests in the last window_seconds
  local query="
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM security_events
         WHERE event_type = 'rate_limit'
           AND metadata->>'identifier' = '${identifier}'
@@ -259,7 +259,7 @@ get_rate_limit_stats() {
  local dbuser="${DBUSER:-postgres}"
 
  local query="
-        SELECT 
+        SELECT
             ip_address,
             metadata->>'identifier' as identifier,
             COUNT(*) as request_count,

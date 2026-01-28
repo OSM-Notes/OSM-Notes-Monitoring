@@ -147,7 +147,7 @@ detect_ddos_attack() {
  local dbuser="${DBUSER:-postgres}"
 
  local query="
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND event_type IN ('rate_limit', 'ddos')
@@ -513,7 +513,7 @@ get_ddos_stats() {
  local dbuser="${DBUSER:-postgres}"
 
  local query="
-        SELECT 
+        SELECT
             COUNT(*) FILTER (WHERE event_type = 'ddos') as ddos_events,
             COUNT(DISTINCT ip_address) FILTER (WHERE event_type = 'ddos') as unique_attacking_ips,
             MAX(timestamp) FILTER (WHERE event_type = 'ddos') as last_attack_time

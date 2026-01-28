@@ -63,17 +63,17 @@ EOF
 ##
 check_ingestion_repo() {
     local repo_path="${1}"
-    
+
     if [[ ! -d "${repo_path}" ]]; then
         print_message "${RED}" "ERROR: Ingestion repository not found: ${repo_path}"
         return 1
     fi
-    
+
     if [[ ! -d "${repo_path}/bin/monitor" ]]; then
         print_message "${YELLOW}" "WARNING: bin/monitor directory not found in ingestion repo"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -82,15 +82,15 @@ check_ingestion_repo() {
 ##
 list_scripts_to_migrate() {
     local ingestion_repo="${1}"
-    
+
     print_message "${BLUE}" "Scripts found in OSM-Notes-Ingestion:"
-    
+
     local scripts=(
         "${ingestion_repo}/bin/monitor/notesCheckVerifier.sh"
         "${ingestion_repo}/bin/monitor/processCheckPlanetNotes.sh"
         "${ingestion_repo}/bin/monitor/analyzeDatabasePerformance.sh"
     )
-    
+
     local found=0
     for script in "${scripts[@]}"; do
         if [[ -f "${script}" ]]; then
@@ -100,10 +100,10 @@ list_scripts_to_migrate() {
             print_message "${YELLOW}" "  ⚠ Not found: ${script}"
         fi
     done
-    
+
     echo
     print_message "${BLUE}" "Total scripts found: ${found}"
-    
+
     return ${found}
 }
 
@@ -112,13 +112,13 @@ list_scripts_to_migrate() {
 ##
 create_backup() {
     local ingestion_repo="${1}"
-    
+
     print_message "${BLUE}" "Creating backup of ingestion repository..."
-    
+
     local backup_dir
     backup_dir="${PROJECT_ROOT}/tmp/migration_backup_$(date +%Y%m%d_%H%M%S)"
     mkdir -p "${backup_dir}"
-    
+
     # Backup monitoring scripts
     if [[ -d "${ingestion_repo}/bin/monitor" ]]; then
         cp -r "${ingestion_repo}/bin/monitor" "${backup_dir}/" 2>/dev/null || true
@@ -135,12 +135,12 @@ create_backup() {
 ##
 update_references() {
     local ingestion_repo="${1}"
-    
+
     print_message "${BLUE}" "Updating script references in OSM-Notes-Ingestion..."
-    
+
     # This would update references to point to OSM-Notes-Monitoring
     # For now, just document what needs to be updated
-    
+
     print_message "${YELLOW}" "Manual steps required:"
     echo "  1. Update script calls to use OSM-Notes-Monitoring scripts"
     echo "  2. Update configuration references if needed"
@@ -156,11 +156,11 @@ generate_migration_report() {
     local ingestion_repo="${1}"
     local report_file
     report_file="${PROJECT_ROOT}/reports/migration_$(date +%Y%m%d_%H%M%S).txt"
-    
+
     print_message "${BLUE}" "Generating migration report..."
-    
+
     mkdir -p "$(dirname "${report_file}")" 2>/dev/null || true
-    
+
     {
         echo "Migration Report from OSM-Notes-Ingestion"
         echo "Generated: $(date)"
@@ -168,22 +168,22 @@ generate_migration_report() {
         echo "Target: ${PROJECT_ROOT}"
         echo "=========================================="
         echo ""
-        
+
         echo "Scripts Status:"
         list_scripts_to_migrate "${ingestion_repo}"
         echo ""
-        
+
         echo "Integration Status:"
         echo "OSM-Notes-Monitoring can call OSM-Notes-Ingestion scripts directly"
         echo "No migration of scripts is required - they are called as-is"
         echo ""
-        
+
         echo "Recommended Changes:"
         echo "See docs/INTEGRATION_CHANGES.md for integration recommendations"
         echo ""
-        
+
     } | tee "${report_file}"
-    
+
     print_message "${GREEN}" "✓ Report saved to: ${report_file}"
 }
 
@@ -195,7 +195,7 @@ main() {
     local update_references_flag=false
     local backup_flag=false
     local ingestion_repo=""
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -226,7 +226,7 @@ main() {
                 ;;
         esac
     done
-    
+
     if [[ -z "${ingestion_repo}" ]]; then
         # Try to get from properties
         if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
@@ -234,52 +234,52 @@ main() {
             source "${PROJECT_ROOT}/etc/properties.sh"
             ingestion_repo="${INGESTION_REPO_PATH:-}"
         fi
-        
+
         if [[ -z "${ingestion_repo}" ]]; then
             print_message "${RED}" "ERROR: Ingestion repository path required"
             usage
             exit 1
         fi
     fi
-    
+
     print_message "${GREEN}" "Migration from OSM-Notes-Ingestion"
     print_message "${BLUE}" "==================================="
     echo
-    
+
     if [[ "${dry_run}" == "true" ]]; then
         print_message "${YELLOW}" "DRY RUN MODE - No changes will be made"
         echo
     fi
-    
+
     # Check ingestion repo
     if ! check_ingestion_repo "${ingestion_repo}"; then
         exit 1
     fi
-    
+
     echo
-    
+
     # List scripts
     if ! list_scripts_to_migrate "${ingestion_repo}"; then
         print_message "${YELLOW}" "No scripts found to migrate"
     fi
-    
+
     echo
-    
+
     # Create backup if requested
     if [[ "${backup_flag}" == "true" && "${dry_run}" != "true" ]]; then
         create_backup "${ingestion_repo}"
         echo
     fi
-    
+
     # Update references if requested
     if [[ "${update_references_flag}" == "true" ]]; then
         update_references "${ingestion_repo}"
         echo
     fi
-    
+
     # Generate report
     generate_migration_report "${ingestion_repo}"
-    
+
     echo
     print_message "${GREEN}" "Migration analysis complete"
     print_message "${BLUE}" "Note: OSM-Notes-Monitoring calls OSM-Notes-Ingestion scripts directly"

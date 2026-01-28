@@ -76,9 +76,9 @@ check_database() {
 ##
 analyze_index_usage() {
     print_message "${BLUE}" "Analyzing index usage..."
-    
+
     local query
-    query="SELECT 
+    query="SELECT
         schemaname,
         tablename,
         indexname,
@@ -88,10 +88,10 @@ analyze_index_usage() {
     WHERE schemaname = 'public'
       AND idx_scan = 0
     ORDER BY pg_relation_size(indexrelid) DESC;"
-    
+
     local unused_indexes
     unused_indexes=$(execute_sql_query "${query}" 2>/dev/null || echo "")
-    
+
     if [[ -n "${unused_indexes}" ]]; then
         print_message "${YELLOW}" "Unused indexes found:"
         echo "${unused_indexes}"
@@ -106,9 +106,9 @@ analyze_index_usage() {
 ##
 analyze_table_bloat() {
     print_message "${BLUE}" "Analyzing table bloat..."
-    
+
     local query
-    query="SELECT 
+    query="SELECT
         schemaname,
         tablename,
         n_live_tup AS live_tuples,
@@ -120,10 +120,10 @@ analyze_table_bloat() {
     WHERE schemaname = 'public'
       AND n_dead_tup > 1000
     ORDER BY n_dead_tup DESC;"
-    
+
     local bloat_info
     bloat_info=$(execute_sql_query "${query}" 2>/dev/null || echo "")
-    
+
     if [[ -n "${bloat_info}" ]]; then
         print_message "${YELLOW}" "Tables with significant bloat (>1000 dead tuples):"
         echo "${bloat_info}"
@@ -138,9 +138,9 @@ analyze_table_bloat() {
 ##
 analyze_sequential_scans() {
     print_message "${BLUE}" "Analyzing sequential scans..."
-    
+
     local query
-    query="SELECT 
+    query="SELECT
         schemaname,
         tablename,
         seq_scan AS sequential_scans,
@@ -151,10 +151,10 @@ analyze_sequential_scans() {
     WHERE schemaname = 'public'
       AND seq_scan > 100
     ORDER BY seq_scan DESC;"
-    
+
     local seq_scans
     seq_scans=$(execute_sql_query "${query}" 2>/dev/null || echo "")
-    
+
     if [[ -n "${seq_scans}" ]]; then
         print_message "${YELLOW}" "Tables with high sequential scan ratio (>100 scans):"
         echo "${seq_scans}"
@@ -169,9 +169,9 @@ analyze_sequential_scans() {
 ##
 analyze_index_sizes() {
     print_message "${BLUE}" "Analyzing index sizes..."
-    
+
     local query
-    query="SELECT 
+    query="SELECT
         schemaname,
         tablename,
         indexname,
@@ -181,10 +181,10 @@ analyze_index_sizes() {
     WHERE schemaname = 'public'
     ORDER BY pg_relation_size(indexrelid) DESC
     LIMIT 10;"
-    
+
     local index_sizes
     index_sizes=$(execute_sql_query "${query}" 2>/dev/null || echo "")
-    
+
     if [[ -n "${index_sizes}" ]]; then
         print_message "${BLUE}" "Top 10 largest indexes:"
         echo "${index_sizes}"
@@ -197,19 +197,19 @@ analyze_index_sizes() {
 ##
 test_query_performance() {
     print_message "${BLUE}" "Testing query performance..."
-    
+
     # Test 1: get_latest_metric_value performance
     print_message "${BLUE}" "  Testing get_latest_metric_value query..."
     local start_time
     start_time=$(date +%s%N)
-    
+
     execute_sql_query "SELECT metric_value FROM metrics WHERE component = 'ingestion' AND metric_name = 'test_metric' AND timestamp > CURRENT_TIMESTAMP - INTERVAL '1 hour' ORDER BY timestamp DESC LIMIT 1;" > /dev/null 2>&1 || true
-    
+
     local end_time
     end_time=$(date +%s%N)
     local duration_ms
     duration_ms=$(( (end_time - start_time) / 1000000 ))
-    
+
     if [[ ${duration_ms} -lt 100 ]]; then
         print_message "${GREEN}" "    ✓ Query completed in ${duration_ms}ms (good)"
     elif [[ ${duration_ms} -lt 500 ]]; then
@@ -217,16 +217,16 @@ test_query_performance() {
     else
         print_message "${RED}" "    ✗ Query completed in ${duration_ms}ms (slow)"
     fi
-    
+
     # Test 2: get_metrics_summary performance
     print_message "${BLUE}" "  Testing get_metrics_summary query..."
     start_time=$(date +%s%N)
-    
+
     execute_sql_query "SELECT metric_name, AVG(metric_value) as avg_value, COUNT(*) as sample_count FROM metrics WHERE component = 'ingestion' AND timestamp > CURRENT_TIMESTAMP - INTERVAL '24 hours' GROUP BY metric_name;" > /dev/null 2>&1 || true
-    
+
     end_time=$(date +%s%N)
     duration_ms=$(( (end_time - start_time) / 1000000 ))
-    
+
     if [[ ${duration_ms} -lt 500 ]]; then
         print_message "${GREEN}" "    ✓ Query completed in ${duration_ms}ms (good)"
     elif [[ ${duration_ms} -lt 2000 ]]; then
@@ -234,16 +234,16 @@ test_query_performance() {
     else
         print_message "${RED}" "    ✗ Query completed in ${duration_ms}ms (slow)"
     fi
-    
+
     # Test 3: Active alerts query performance
     print_message "${BLUE}" "  Testing active alerts query..."
     start_time=$(date +%s%N)
-    
+
     execute_sql_query "SELECT COUNT(*) FROM alerts WHERE status = 'active';" > /dev/null 2>&1 || true
-    
+
     end_time=$(date +%s%N)
     duration_ms=$(( (end_time - start_time) / 1000000 ))
-    
+
     if [[ ${duration_ms} -lt 50 ]]; then
         print_message "${GREEN}" "    ✓ Query completed in ${duration_ms}ms (good)"
     elif [[ ${duration_ms} -lt 200 ]]; then
@@ -259,7 +259,7 @@ test_query_performance() {
 generate_recommendations() {
     print_message "${BLUE}" "Generating optimization recommendations..."
     echo ""
-    
+
     echo "=== Optimization Recommendations ==="
     echo ""
     echo "1. Run ANALYZE regularly:"
@@ -288,13 +288,13 @@ main() {
     print_message "${GREEN}" "Query Performance Analysis"
     print_message "${BLUE}" "=========================="
     echo ""
-    
+
     # Check database connection
     check_database
-    
+
     # Create output directory
     mkdir -p "$(dirname "${OUTPUT_FILE}")"
-    
+
     # Run analysis
     {
         echo "Query Performance Analysis Report"
@@ -302,26 +302,26 @@ main() {
         echo "Database: ${DBNAME}"
         echo "=========================================="
         echo ""
-        
+
         analyze_index_usage
         echo ""
-        
+
         analyze_table_bloat
         echo ""
-        
+
         analyze_sequential_scans
         echo ""
-        
+
         analyze_index_sizes
         echo ""
-        
+
         test_query_performance
         echo ""
-        
+
         generate_recommendations
-        
+
     } | tee "${OUTPUT_FILE}"
-    
+
     print_message "${GREEN}" ""
     print_message "${GREEN}" "Analysis complete!"
     print_message "${BLUE}" "Report saved to: ${OUTPUT_FILE}"

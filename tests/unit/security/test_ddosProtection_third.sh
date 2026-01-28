@@ -90,13 +90,28 @@ teardown() {
 # Test: get_ip_country handles IP geolocation
 ##
 @test "get_ip_country handles IP geolocation" {
+    # shellcheck disable=SC2030,SC2031
+    export DDOS_GEO_FILTERING_ENABLED="true"
+    
     # Mock curl for geolocation API
     # shellcheck disable=SC2317
     function curl() {
-        echo '{"country":"US"}'
+        if [[ "${*}" == *"ip-api.com"* ]]; then
+            echo '{"countryCode":"US"}'
+        else
+            echo '{"country":"US"}'
+        fi
         return 0
     }
     export -f curl
+    
+    # Mock geoiplookup (if available)
+    # shellcheck disable=SC2317
+    function geoiplookup() {
+        echo "GeoIP Country Edition: US"
+        return 0
+    }
+    export -f geoiplookup
     
     run get_ip_country "192.168.1.1"
     assert_success
@@ -106,7 +121,9 @@ teardown() {
 # Test: check_geographic_filter handles allowed countries
 ##
 @test "check_geographic_filter handles allowed countries" {
+    # shellcheck disable=SC2030,SC2031
     export DDOS_GEO_FILTERING_ENABLED="true"
+    # shellcheck disable=SC2030,SC2031
     export DDOS_ALLOWED_COUNTRIES="US,CA"
     
     # Mock get_ip_country
@@ -117,6 +134,19 @@ teardown() {
     }
     export -f get_ip_country
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
     # shellcheck disable=SC2317
     record_metric() {
         return 0
@@ -124,7 +154,8 @@ teardown() {
     export -f record_metric
     
     run check_geographic_filter "192.168.1.1"
-    assert_success
+    # Should return 1 (not blocked) when IP is from allowed country
+    assert_equal 1 "${status}"
 }
 
 ##
@@ -138,6 +169,21 @@ teardown() {
     }
     export -f monitor_connections
     
-    run main --monitor
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
+    # main expects action as first argument, not as option
+    # The --monitor option is parsed before main is called, so we call main with "monitor" as action
+    run main monitor
     assert_success
 }

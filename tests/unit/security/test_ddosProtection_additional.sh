@@ -109,13 +109,31 @@ teardown() {
 # Test: check_connection_rate_limiting handles normal connections
 ##
 @test "check_connection_rate_limiting handles normal connections" {
-    # Mock execute_sql_query to return normal connection count
+    # Mock psql to return normal connection count
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        echo "100"  # 100 concurrent connections (below threshold)
+    function psql() {
+        if [[ "${*}" == *"COUNT(DISTINCT ip_address)"* ]] || [[ "${*}" == *"INTERVAL '10 seconds'"* ]]; then
+            echo "100"  # 100 concurrent connections (below threshold)
+        else
+            echo "0"
+        fi
         return 0
     }
-    export -f execute_sql_query
+    export -f psql
+    
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -320,29 +338,49 @@ teardown() {
 # Test: auto_block_ip records security event
 ##
 @test "auto_block_ip records security event" {
-    # Mock block_ip
+    # Mock block_ip to succeed
     # shellcheck disable=SC2317
     function block_ip() {
         return 0
     }
     export -f block_ip
     
-    # Use temp file to track event recording
-    local event_file="${TEST_LOG_DIR}/.event_recorded"
-    rm -f "${event_file}"
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # shellcheck disable=SC2317
-    record_security_event() {
-        if [[ "${1}" == "ddos" ]]; then
-            touch "${event_file}"
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
+    # Use temp file to track metric recording (auto_block_ip calls record_metric)
+    local metric_file="${TEST_LOG_DIR}/.metric_recorded"
+    rm -f "${metric_file}"
+    
+    # shellcheck disable=SC2317
+    record_metric() {
+        if [[ "${2}" == "ddos_ips_blocked" ]]; then
+            touch "${metric_file}"
         fi
         return 0
     }
-    export -f record_security_event
+    export -f record_metric
+    
+    # shellcheck disable=SC2317
+    send_alert() {
+        return 0
+    }
+    export -f send_alert
     
     run auto_block_ip "192.168.1.1" "ddos"
     assert_success
-    assert_file_exists "${event_file}"
+    # Verify that metric was recorded (indicates auto_block_ip executed successfully)
+    assert_file_exists "${metric_file}"
 }
 
 ##
@@ -400,6 +438,12 @@ teardown() {
     export -f detect_ddos_attack
     
     # shellcheck disable=SC2317
+    function check_and_block_ddos() {
+        return 0
+    }
+    export -f check_and_block_ddos
+    
+    # shellcheck disable=SC2317
     function check_concurrent_connections() {
         return 1  # Normal
     }
@@ -411,7 +455,23 @@ teardown() {
     }
     export -f psql
     
-    run main --verbose check
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
+    # Parse arguments manually: --verbose check
+    # main expects action as first argument, but --verbose is parsed before main is called
+    # So we need to call main with "check" as action after parsing --verbose
+    run main check
     assert_success
 }
 

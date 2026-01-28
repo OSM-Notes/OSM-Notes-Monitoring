@@ -362,15 +362,15 @@ update_component_health() {
 
  local query
  if [[ "${status}" == "healthy" ]]; then
-  query="UPDATE component_health 
-               SET status = '${status}', 
+  query="UPDATE component_health
+               SET status = '${status}',
                    last_check = CURRENT_TIMESTAMP,
                    last_success = CURRENT_TIMESTAMP,
                    error_count = ${error_count}
                WHERE component = '${component}';"
  else
-  query="UPDATE component_health 
-               SET status = '${status}', 
+  query="UPDATE component_health
+               SET status = '${status}',
                    last_check = CURRENT_TIMESTAMP,
                    error_count = ${error_count}
                WHERE component = '${component}';"

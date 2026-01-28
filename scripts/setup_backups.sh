@@ -65,9 +65,9 @@ install_backup_cron() {
     local project_root="${1}"
     local schedule="${2}"
     local retention="${3}"
-    
+
     print_message "${BLUE}" "Installing backup cron job..."
-    
+
     # Source properties to get database name
     local dbname="notes_monitoring"
     if [[ -f "${project_root}/etc/properties.sh" ]]; then
@@ -75,7 +75,7 @@ install_backup_cron() {
         source "${project_root}/etc/properties.sh"
         dbname="${DBNAME:-${dbname}}"
     fi
-    
+
     local backup_script="${project_root}/sql/backups/backup_database.sh"
     local log_dir="/var/log/osm-notes-monitoring"
     if [[ -f "${project_root}/etc/properties.sh" ]]; then
@@ -83,35 +83,35 @@ install_backup_cron() {
         source "${project_root}/etc/properties.sh"
         log_dir="${LOG_DIR:-${log_dir}}"
     fi
-    
+
     # Create log directory
     mkdir -p "${log_dir}" 2>/dev/null || true
-    
+
     # Generate cron job
     # Use /var/backups/osm-notes as default backup directory (matches DATA_BACKUP_DIR)
     local backup_output_dir="/var/backups/osm-notes"
     local cron_job="${schedule} ${backup_script} -d ${dbname} -c -r ${retention} -o ${backup_output_dir} >> ${log_dir}/backup.log 2>&1"
-    
+
     # Get current crontab
     local current_crontab
     current_crontab=$(crontab -l 2>/dev/null || echo "")
-    
+
     # Check if backup cron job already exists
     if echo "${current_crontab}" | grep -q "${backup_script}"; then
         print_message "${GREEN}" "Backup cron job already exists"
         print_message "${BLUE}" "Skipping installation (already configured)"
         return 0
     fi
-    
+
     # Add new cron job
     local new_crontab
     new_crontab="${current_crontab}
 # OSM-Notes-Monitoring Database Backup
 ${cron_job}"
-    
+
     # Install crontab
     echo "${new_crontab}" | crontab -
-    
+
     print_message "${GREEN}" "✓ Backup cron job installed successfully"
     print_message "${BLUE}" "Schedule: ${schedule}"
     print_message "${BLUE}" "Retention: ${retention} days"
@@ -123,25 +123,25 @@ ${cron_job}"
 ##
 remove_backup_cron() {
     print_message "${BLUE}" "Removing backup cron job..."
-    
+
     local backup_script="${PROJECT_ROOT}/sql/backups/backup_database.sh"
-    
+
     # Get current crontab
     local current_crontab
     current_crontab=$(crontab -l 2>/dev/null || echo "")
-    
+
     if [[ -z "${current_crontab}" ]]; then
         print_message "${YELLOW}" "No crontab found"
         return 0
     fi
-    
+
     # Remove backup cron job
     local new_crontab
     new_crontab=$(echo "${current_crontab}" | grep -v "${backup_script}" | grep -v "# OSM-Notes-Monitoring Database Backup")
-    
+
     # Install updated crontab
     echo "${new_crontab}" | crontab -
-    
+
     print_message "${GREEN}" "✓ Backup cron job removed successfully"
 }
 
@@ -150,14 +150,14 @@ remove_backup_cron() {
 ##
 test_backup() {
     print_message "${BLUE}" "Testing backup creation..."
-    
+
     local backup_script="${PROJECT_ROOT}/sql/backups/backup_database.sh"
-    
+
     if [[ ! -f "${backup_script}" ]]; then
         print_message "${RED}" "Backup script not found: ${backup_script}"
         return 1
     fi
-    
+
     # Source properties to get database name
     local dbname="notes_monitoring"
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
@@ -165,7 +165,7 @@ test_backup() {
         source "${PROJECT_ROOT}/etc/properties.sh"
         dbname="${DBNAME:-${dbname}}"
     fi
-    
+
     if "${backup_script}" -d "${dbname}" -c; then
         print_message "${GREEN}" "✓ Backup test successful"
         return 0
@@ -181,23 +181,23 @@ test_backup() {
 list_backup_config() {
     print_message "${BLUE}" "Backup configuration:"
     echo
-    
+
     local backup_script="${PROJECT_ROOT}/sql/backups/backup_database.sh"
-    
+
     # Get current crontab
     local current_crontab
     current_crontab=$(crontab -l 2>/dev/null || echo "")
-    
+
     # Find backup cron job
     local backup_job
     backup_job=$(echo "${current_crontab}" | grep "${backup_script}" || echo "")
-    
+
     if [[ -z "${backup_job}" ]]; then
         print_message "${YELLOW}" "No backup cron job configured"
     else
         echo "Cron job: ${backup_job}"
     fi
-    
+
     # Source properties
     local dbname="notes_monitoring"
     local backup_dir="${PROJECT_ROOT}/sql/backups"
@@ -206,10 +206,10 @@ list_backup_config() {
         source "${PROJECT_ROOT}/etc/properties.sh"
         dbname="${DBNAME:-${dbname}}"
     fi
-    
+
     echo "Database: ${dbname}"
     echo "Backup directory: ${backup_dir}"
-    
+
     # List existing backups
     if [[ -d "${backup_dir}" ]]; then
         local backup_count
@@ -225,7 +225,7 @@ main() {
     local action=""
     local retention=30
     local schedule="0 3 * * *"
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -264,12 +264,12 @@ main() {
                 ;;
         esac
     done
-    
+
     # Default to list if no action specified
     if [[ -z "${action}" ]]; then
         action="list"
     fi
-    
+
     # Execute action
     case "${action}" in
         install)

@@ -308,7 +308,7 @@ update_component_health() {
             SELECT DISTINCT ON (component)
                 component,
                 MAX(timestamp) as latest_timestamp,
-                CASE 
+                CASE
                     WHEN COUNT(*) FILTER (WHERE (metric_name LIKE '%error%' OR metric_name LIKE '%failure%') AND metric_value::numeric > 0) > 0 THEN 'degraded'
                     WHEN COUNT(*) FILTER (WHERE metric_name LIKE '%availability%' AND metric_value::numeric < 1) > 0 THEN 'down'
                     WHEN MAX(timestamp) < CURRENT_TIMESTAMP - INTERVAL '1 hour' THEN 'unknown'
@@ -320,7 +320,7 @@ update_component_health() {
             ORDER BY component, MAX(timestamp) DESC
         )
         INSERT INTO component_health (component, status, last_check, last_success)
-        SELECT 
+        SELECT
             lm.component,
             lm.status,
             CURRENT_TIMESTAMP,
@@ -331,7 +331,7 @@ update_component_health() {
             status = EXCLUDED.status,
             last_check = EXCLUDED.last_check,
             last_success = CASE WHEN EXCLUDED.status = 'healthy' THEN EXCLUDED.last_success ELSE component_health.last_success END,
-            error_count = CASE 
+            error_count = CASE
                 WHEN EXCLUDED.status != 'healthy' THEN component_health.error_count + 1
                 ELSE 0
             END;
@@ -356,37 +356,37 @@ update_component_health() {
 
  # Update daemon health separately (daemon metrics are under 'ingestion' component)
  local daemon_query="
-        UPDATE component_health 
-        SET status = CASE 
+        UPDATE component_health
+        SET status = CASE
             WHEN EXISTS (
-                SELECT 1 FROM metrics 
-                WHERE component = 'ingestion' 
-                AND metric_name LIKE 'daemon%' 
+                SELECT 1 FROM metrics
+                WHERE component = 'ingestion'
+                AND metric_name LIKE 'daemon%'
                 AND timestamp > CURRENT_TIMESTAMP - INTERVAL '5 minutes'
             ) THEN 'healthy'
             WHEN EXISTS (
-                SELECT 1 FROM metrics 
-                WHERE component = 'ingestion' 
-                AND metric_name LIKE 'daemon%' 
+                SELECT 1 FROM metrics
+                WHERE component = 'ingestion'
+                AND metric_name LIKE 'daemon%'
                 AND timestamp > CURRENT_TIMESTAMP - INTERVAL '1 hour'
             ) THEN 'degraded'
             ELSE 'down'
         END,
         last_check = CURRENT_TIMESTAMP,
-        last_success = CASE 
+        last_success = CASE
             WHEN EXISTS (
-                SELECT 1 FROM metrics 
-                WHERE component = 'ingestion' 
-                AND metric_name LIKE 'daemon%' 
+                SELECT 1 FROM metrics
+                WHERE component = 'ingestion'
+                AND metric_name LIKE 'daemon%'
                 AND timestamp > CURRENT_TIMESTAMP - INTERVAL '5 minutes'
             ) THEN CURRENT_TIMESTAMP
             ELSE last_success
         END,
-        error_count = CASE 
+        error_count = CASE
             WHEN EXISTS (
-                SELECT 1 FROM metrics 
-                WHERE component = 'ingestion' 
-                AND metric_name LIKE 'daemon%' 
+                SELECT 1 FROM metrics
+                WHERE component = 'ingestion'
+                AND metric_name LIKE 'daemon%'
                 AND timestamp > CURRENT_TIMESTAMP - INTERVAL '5 minutes'
             ) THEN 0
             ELSE error_count + 1

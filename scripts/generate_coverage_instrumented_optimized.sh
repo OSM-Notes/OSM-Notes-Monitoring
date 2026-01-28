@@ -84,13 +84,13 @@ detect_coverage_tool() {
 run_all_tests_with_bashcov() {
     local output_dir="${BASHCOV_OUTPUT}/all"
     mkdir -p "${output_dir}"
-    
+
     print_message "${BLUE}" "Running all tests with bashcov (this may take a while)..."
-    
+
     # bashcov generates coverage.json in current directory
     # Run from project root so coverage.json is generated there
     cd "${PROJECT_ROOT}" || return 1
-    
+
     # Find all test files and execute them with bats
     # bashcov needs explicit test files, not directories
     # Include integration tests by default (they execute more code and improve coverage)
@@ -99,7 +99,7 @@ run_all_tests_with_bashcov() {
     local test_files=()
     local skip_integration="${SKIP_INTEGRATION_TESTS:-false}"
     local include_slow="${INCLUDE_SLOW_TESTS:-false}"
-    
+
     # List of very slow integration tests (excluded by default to speed up bashcov)
     # These tests have many sleeps or long timeouts that make coverage runs very slow
     local slow_tests=(
@@ -107,17 +107,17 @@ run_all_tests_with_bashcov() {
         "test_rateLimiter_integration.sh"          # 11s estimated, 13 sleeps
         "test_analytics_alert_delivery.sh"         # 11s estimated, 34 sleeps, 30 tests
     )
-    
+
     while IFS= read -r -d '' test_file; do
         local test_basename
         test_basename=$(basename "${test_file}")
-        
+
         # Skip integration tests only if explicitly requested
         if [[ "${skip_integration}" == "true" ]] && [[ "${test_file}" =~ /integration/ ]]; then
             print_message "${YELLOW}" "  Skipping integration test: ${test_basename}"
             continue
         fi
-        
+
         # Skip very slow tests by default (unless INCLUDE_SLOW_TESTS=true)
         if [[ "${include_slow}" == "false" ]]; then
             local is_slow=false
@@ -132,10 +132,10 @@ run_all_tests_with_bashcov() {
                 continue
             fi
         fi
-        
+
         test_files+=("${test_file}")
     done < <(find "${PROJECT_ROOT}/tests" -name "*.sh" -type f -print0 2>/dev/null | sort -z)
-    
+
     if [[ "${skip_integration}" == "false" ]]; then
         local integration_count=0
         local slow_skipped=0
@@ -155,7 +155,7 @@ run_all_tests_with_bashcov() {
             print_message "${BLUE}" "  Including ${integration_count} integration tests (important for coverage)"
         fi
     fi
-    
+
     # Run bashcov on test files
     # Note: bashcov works best when executing bats directly on individual files
     # We'll execute them one by one and bashcov will merge the results
@@ -175,7 +175,7 @@ run_all_tests_with_bashcov() {
             fi
         done
     fi
-    
+
     # Also execute scripts directly with bashcov for better coverage tracking
     # This ensures scripts executed with "bash script.sh" in tests are tracked
     print_message "${BLUE}" "Executing scripts directly with bashcov for better coverage..."
@@ -187,7 +187,7 @@ run_all_tests_with_bashcov() {
         "bin/monitor/monitorAPI.sh"
         "bin/monitor/checkPlanetNotes.sh"
     )
-    
+
     for script in "${monitor_scripts[@]}"; do
         local script_path="${PROJECT_ROOT}/${script}"
         if [[ -f "${script_path}" ]]; then
@@ -199,12 +199,12 @@ run_all_tests_with_bashcov() {
                 "${script_path}" --help >/dev/null 2>&1 || true
         fi
     done
-    
+
     # Move coverage.json to output directory if it exists
     if [[ -f "${PROJECT_ROOT}/coverage.json" ]]; then
         mv "${PROJECT_ROOT}/coverage.json" "${output_dir}/coverage.json" 2>/dev/null || true
     fi
-    
+
     print_message "${GREEN}" "✓ Tests executed with bashcov"
 }
 
@@ -214,7 +214,7 @@ run_all_tests_with_bashcov() {
 get_script_coverage_from_bashcov() {
     local script_path="${1}"
     local resultset_file="${COVERAGE_DIR}/.resultset.json"
-    
+
     # bashcov uses SimpleCov format: .resultset.json
     if [[ -f "${resultset_file}" ]]; then
         local coverage
@@ -227,10 +227,10 @@ try:
     script_path = '${script_path}'
     script_basename = os.path.basename(script_path)
     script_abs_path = os.path.abspath(script_path)
-    
+
     with open('${resultset_file}', 'r') as f:
         data = json.load(f)
-    
+
     # SimpleCov structure: { 'command': { 'coverage': { 'file_path': [coverage_array] } } }
     for cmd_name, cmd_data in data.items():
         if 'coverage' in cmd_data:
@@ -238,8 +238,8 @@ try:
             for file_path, coverage_data in files.items():
                 # Check if this file matches our script
                 file_basename = os.path.basename(file_path)
-                if (script_path in file_path or 
-                    script_abs_path in file_path or 
+                if (script_path in file_path or
+                    script_abs_path in file_path or
                     script_basename == file_basename):
                     # Calculate coverage percentage from array
                     if isinstance(coverage_data, list):
@@ -249,7 +249,7 @@ try:
                             percent = int((covered / total) * 100)
                             print(percent)
                             sys.exit(0)
-    
+
     # If not found, return 0
     print(0)
 except Exception as e:
@@ -268,14 +268,14 @@ count_test_files_for_script() {
     local script_path="${1}"
     local script_name
     script_name=$(basename "${script_path}" .sh)
-    
+
     local test_count=0
     # shellcheck disable=SC2034
     # test_file is used in the loop to count files
     while IFS= read -r -d '' test_file; do
         test_count=$((test_count + 1))
     done < <(find "${PROJECT_ROOT}/tests" -name "*${script_name}*.sh" -type f -print0 2>/dev/null || true)
-    
+
     echo "${test_count}"
 }
 
@@ -284,24 +284,24 @@ count_test_files_for_script() {
 ##
 generate_instrumented_report() {
     local tool="${1}"
-    
+
     print_message "${BLUE}" "Generating instrumented coverage report using ${tool}..."
-    
+
     # Create coverage directories
     mkdir -p "${COVERAGE_DIR}"
     mkdir -p "${BASHCOV_OUTPUT}"
-    
+
     # Run all tests with bashcov
     run_all_tests_with_bashcov
-    
+
     # Find all scripts
     local scripts=()
     while IFS= read -r -d '' script; do
         scripts+=("${script}")
     done < <(find "${PROJECT_ROOT}/bin" -name "*.sh" -type f -print0 | sort -z)
-    
+
     print_message "${BLUE}" "Analyzing coverage for ${#scripts[@]} scripts..."
-    
+
     # Generate report
     {
         echo "OSM Notes Monitoring - Instrumented Test Coverage Report"
@@ -315,34 +315,34 @@ generate_instrumented_report() {
         echo "----------------------------------------"
         printf "%-50s %10s %10s %10s\n" "Script" "Tests" "Coverage" "Status"
         echo "----------------------------------------"
-        
+
         local scripts_with_tests=0
         local scripts_above_threshold=0
         local total_coverage=0
         local coverage_count=0
-        
+
         for script in "${scripts[@]}"; do
             local script_name
             script_name=$(basename "${script}" .sh)
             local test_count
             test_count=$(count_test_files_for_script "${script}")
-            
+
             local coverage=0
             if [[ ${test_count} -gt 0 ]]; then
                 coverage=$(get_script_coverage_from_bashcov "${script}")
-                
+
                 scripts_with_tests=$((scripts_with_tests + 1))
-                
+
                 if [[ "${coverage}" =~ ^[0-9]+$ ]] && [[ ${coverage} -gt 0 ]]; then
                     total_coverage=$((total_coverage + coverage))
                     coverage_count=$((coverage_count + 1))
-                    
+
                     if [[ ${coverage} -ge 80 ]]; then
                         scripts_above_threshold=$((scripts_above_threshold + 1))
                     fi
                 fi
             fi
-            
+
             local status=""
             if [[ "${coverage}" =~ ^[0-9]+$ ]]; then
                 if [[ ${coverage} -ge 80 ]]; then
@@ -357,23 +357,23 @@ generate_instrumented_report() {
                 printf "%-50s %10s %10s %s\n" "${script_name}" "${test_count}" "N/A" "✗"
             fi
         done
-        
+
         echo "----------------------------------------"
         echo ""
         echo "Summary:"
         echo "  Total scripts: ${#scripts[@]}"
         echo "  Scripts with tests: ${scripts_with_tests}"
         echo "  Scripts above 80% coverage: ${scripts_above_threshold}"
-        
+
         # Calculate overall coverage
         local overall_coverage=0
         if [[ ${coverage_count} -gt 0 ]]; then
             overall_coverage=$((total_coverage / coverage_count))
         fi
-        
+
         echo "  Average coverage: ${overall_coverage}%"
         echo ""
-        
+
         if [[ ${overall_coverage} -ge 80 ]]; then
             echo "Status: ✓ Coverage target met!"
         elif [[ ${overall_coverage} -ge 50 ]]; then
@@ -381,14 +381,14 @@ generate_instrumented_report() {
         else
             echo "Status: ✗ Coverage significantly below target"
         fi
-        
+
         echo ""
         echo "Detailed reports available in:"
         echo "  ${BASHCOV_OUTPUT}/all/"
     } > "${COVERAGE_REPORT}"
-    
+
     print_message "${GREEN}" "✓ Instrumented coverage report generated: ${COVERAGE_REPORT}"
-    
+
     # Display summary
     tail -20 "${COVERAGE_REPORT}"
 }
@@ -399,24 +399,24 @@ generate_instrumented_report() {
 main() {
     print_message "${GREEN}" "Instrumented Test Coverage Report Generator (Optimized)"
     echo
-    
+
     # Detect coverage tool
     local tool
     if ! tool=$(detect_coverage_tool); then
         print_message "${RED}" "Failed to detect coverage tool"
         exit 1
     fi
-    
+
     print_message "${BLUE}" "Using coverage tool: ${tool}"
     print_message "${YELLOW}" "Note: This will run all tests once with ${tool} (more memory efficient)"
     echo
-    
+
     # Generate report
     if ! generate_instrumented_report "${tool}"; then
         print_message "${RED}" "Failed to generate instrumented coverage report"
         exit 1
     fi
-    
+
     print_message "${GREEN}" ""
     print_message "${GREEN}" "Coverage report generated successfully!"
     print_message "${YELLOW}" "View reports:"

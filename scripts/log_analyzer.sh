@@ -90,12 +90,12 @@ EOF
 ##
 get_log_files() {
     local log_dir="${1}"
-    
+
     if [[ ! -d "${log_dir}" ]]; then
         print_message "${YELLOW}" "Warning: Log directory does not exist: ${log_dir}"
         return 1
     fi
-    
+
     find "${log_dir}" -name "*.log" -type f 2>/dev/null | sort
 }
 
@@ -105,7 +105,7 @@ get_log_files() {
 count_by_level() {
     local log_file="${1}"
     local level="${2}"
-    
+
     grep -cE "\[${level}\]" "${log_file}" 2>/dev/null || echo "0"
 }
 
@@ -117,33 +117,33 @@ show_stats() {
     local since="${2:-}"
     local until="${3:-}"
     local component="${4:-}"
-    
+
     print_message "${BLUE}" "=== Log Statistics ==="
     echo
-    
+
     local log_files
     mapfile -t log_files < <(get_log_files "${log_dir}")
-    
+
     if [[ ${#log_files[@]} -eq 0 ]]; then
         print_message "${YELLOW}" "No log files found"
         return 1
     fi
-    
+
     local total_lines=0
     local total_debug=0
     local total_info=0
     local total_warning=0
     local total_error=0
-    
+
     for log_file in "${log_files[@]}"; do
         local filename
         filename=$(basename "${log_file}")
-        
+
         # Filter by component if specified
         if [[ -n "${component}" ]] && ! echo "${filename}" | grep -qi "${component}"; then
             continue
         fi
-        
+
         local lines
         lines=$(wc -l < "${log_file}" 2>/dev/null || echo "0")
         local debug
@@ -154,17 +154,17 @@ show_stats() {
         warning=$(count_by_level "${log_file}" "WARNING")
         local error
         error=$(count_by_level "${log_file}" "ERROR")
-        
+
         total_lines=$((total_lines + lines))
         total_debug=$((total_debug + debug))
         total_info=$((total_info + info))
         total_warning=$((total_warning + warning))
         total_error=$((total_error + error))
-        
+
         printf "%-30s: Lines=%6d  DEBUG=%4d  INFO=%5d  WARNING=%4d  ERROR=%4d\n" \
             "${filename}" "${lines}" "${debug}" "${info}" "${warning}" "${error}"
     done
-    
+
     echo
     print_message "${BLUE}" "=== Totals ==="
     printf "Total Lines:   %d\n" "${total_lines}"
@@ -182,26 +182,26 @@ show_errors() {
     local since="${2:-}"
     local until="${3:-}"
     local component="${4:-}"
-    
+
     print_message "${BLUE}" "=== Error Summary ==="
     echo
-    
+
     local log_files
     mapfile -t log_files < <(get_log_files "${log_dir}")
-    
+
     local error_count=0
-    
+
     for log_file in "${log_files[@]}"; do
         local filename
         filename=$(basename "${log_file}")
-        
+
         if [[ -n "${component}" ]] && ! echo "${filename}" | grep -qi "${component}"; then
             continue
         fi
-        
+
         local errors
         mapfile -t errors < <(grep -E "\[ERROR\]" "${log_file}" 2>/dev/null || true)
-        
+
         if [[ ${#errors[@]} -gt 0 ]]; then
             print_message "${YELLOW}" "File: ${filename} (${#errors[@]} errors)"
             for error in "${errors[@]}"; do
@@ -211,7 +211,7 @@ show_errors() {
             error_count=$((error_count + ${#errors[@]}))
         fi
     done
-    
+
     if [[ ${error_count} -eq 0 ]]; then
         print_message "${GREEN}" "No errors found"
     else
@@ -225,13 +225,13 @@ show_errors() {
 show_top_errors() {
     local log_dir="${1}"
     local top_n="${2:-10}"
-    
+
     print_message "${BLUE}" "=== Top ${top_n} Error Messages ==="
     echo
-    
+
     local log_files
     mapfile -t log_files < <(get_log_files "${log_dir}")
-    
+
     # Extract error messages and count occurrences
     grep -hE "\[ERROR\]" "${log_files[@]}" 2>/dev/null | \
         sed 's/.*\[ERROR\][^:]*: //' | \
@@ -246,31 +246,31 @@ show_top_errors() {
 ##
 show_components() {
     local log_dir="${1}"
-    
+
     print_message "${BLUE}" "=== Component Statistics ==="
     echo
-    
+
     local log_files
     mapfile -t log_files < <(get_log_files "${log_dir}")
-    
+
     declare -A component_stats
-    
+
     for log_file in "${log_files[@]}"; do
         local filename
         filename=$(basename "${log_file}" .log)
-        
+
         local error_count
         error_count=$(count_by_level "${log_file}" "ERROR")
         local warning_count
         warning_count=$(count_by_level "${log_file}" "WARNING")
-        
+
         component_stats["${filename}_errors"]=$((component_stats["${filename}_errors"] + error_count))
         component_stats["${filename}_warnings"]=$((component_stats["${filename}_warnings"] + warning_count))
     done
-    
+
     printf "%-30s %10s %10s\n" "Component" "Errors" "Warnings"
     echo "------------------------------------------------------------"
-    
+
     for key in "${!component_stats[@]}"; do
         if [[ "${key}" =~ _errors$ ]]; then
             local component="${key%_errors}"
@@ -290,10 +290,10 @@ show_components() {
 ##
 show_summary() {
     local log_dir="${1}"
-    
+
     print_message "${GREEN}" "=== Log Analysis Summary ==="
     echo
-    
+
     show_stats "${log_dir}"
     echo
     show_components "${log_dir}"
@@ -311,7 +311,7 @@ main() {
     local until=""
     local component=""
     local output=""
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -350,7 +350,7 @@ main() {
                 ;;
         esac
     done
-    
+
     # Execute command
     case "${command}" in
         stats)

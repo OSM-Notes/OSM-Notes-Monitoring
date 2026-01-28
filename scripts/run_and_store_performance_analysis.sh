@@ -105,7 +105,7 @@ parse_args() {
     OUTPUT_DIR="${LOG_DIR}/performance_output"
     INPUT_FILE=""
     VERBOSE=false
-    
+
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --ingestion-repo)
@@ -143,7 +143,7 @@ parse_args() {
                 ;;
         esac
     done
-    
+
     # Validate required parameters
     if [[ -n "${INPUT_FILE}" ]]; then
         # If input file is provided, validate it exists
@@ -168,19 +168,19 @@ parse_args() {
 parse_performance_output() {
     local output_file="${1:?Output file required}"
     local output
-    
+
     if [[ ! -f "${output_file}" ]]; then
         log_warning "Output file not found: ${output_file}"
         return 1
     fi
-    
+
     output=$(cat "${output_file}" 2>/dev/null || echo "")
-    
+
     if [[ -z "${output}" ]]; then
         log_warning "Output file is empty: ${output_file}"
         return 1
     fi
-    
+
     # Extract basic counts
     local pass_count
     pass_count=$(echo "${output}" | grep -cE "PASS|✓" || echo "0")
@@ -188,52 +188,52 @@ parse_performance_output() {
     fail_count=$(echo "${output}" | grep -cE "FAIL|✗" || echo "0")
     local warning_count
     warning_count=$(echo "${output}" | grep -cE "WARNING|⚠" || echo "0")
-    
+
     # Store basic metrics
     record_metric "${COMPONENT}" "performance_check_passes" "${pass_count}" "component=ingestion,check=analyzeDatabasePerformance,source=monthly_cron"
     record_metric "${COMPONENT}" "performance_check_failures" "${fail_count}" "component=ingestion,check=analyzeDatabasePerformance,source=monthly_cron"
     record_metric "${COMPONENT}" "performance_check_warnings" "${warning_count}" "component=ingestion,check=analyzeDatabasePerformance,source=monthly_cron"
-    
+
     log_info "Parsed metrics: passes=${pass_count}, failures=${fail_count}, warnings=${warning_count}"
-    
+
     # Try to extract more detailed metrics from output
     # Look for specific patterns that might indicate performance issues
-    
+
     # Count different types of checks (if output has structured sections)
     local index_checks=0
     local query_checks=0
     local table_checks=0
-    
+
     if echo "${output}" | grep -qi "index"; then
         index_checks=$(echo "${output}" | grep -ciE "index.*(PASS|FAIL|WARNING)" || echo "0")
     fi
-    
+
     if echo "${output}" | grep -qi "query"; then
         query_checks=$(echo "${output}" | grep -ciE "query.*(PASS|FAIL|WARNING)" || echo "0")
     fi
-    
+
     if echo "${output}" | grep -qi "table"; then
         table_checks=$(echo "${output}" | grep -ciE "table.*(PASS|FAIL|WARNING)" || echo "0")
     fi
-    
+
     # Store detailed metrics if found
     if [[ ${index_checks} -gt 0 ]]; then
         record_metric "${COMPONENT}" "performance_check_index_checks" "${index_checks}" "component=ingestion,check=analyzeDatabasePerformance,type=index"
     fi
-    
+
     if [[ ${query_checks} -gt 0 ]]; then
         record_metric "${COMPONENT}" "performance_check_query_checks" "${query_checks}" "component=ingestion,check=analyzeDatabasePerformance,type=query"
     fi
-    
+
     if [[ ${table_checks} -gt 0 ]]; then
         record_metric "${COMPONENT}" "performance_check_table_checks" "${table_checks}" "component=ingestion,check=analyzeDatabasePerformance,type=table"
     fi
-    
+
     # Store output file path in metadata for reference
     local output_file_metric
     output_file_metric=$(echo "${output_file}" | jq -R . 2>/dev/null || echo "\"${output_file}\"")
     record_metric "${COMPONENT}" "performance_check_output_file" "1" "component=ingestion,check=analyzeDatabasePerformance,output_file=${output_file_metric}"
-    
+
     return 0
 }
 
@@ -242,41 +242,41 @@ parse_performance_output() {
 ##
 main() {
     log_info "Starting monthly performance analysis and metrics storage"
-    
+
     # Parse arguments
     parse_args "$@"
-    
+
     # Set monitoring database
     export DBNAME="${MONITORING_DBNAME}"
-    
+
     # Set verbose logging if requested
     if [[ "${VERBOSE:-false}" == "true" ]]; then
         export LOG_LEVEL="DEBUG"
         log_info "Verbose mode enabled"
     fi
-    
+
     # Check database connection
     if ! check_database_connection; then
         log_error "Cannot connect to monitoring database: ${DBNAME}"
         exit 1
     fi
-    
+
     local output_file
     local exit_code=0
     local duration=0
-    
+
     # If input file is provided, parse it instead of running the script
     if [[ -n "${INPUT_FILE}" ]]; then
         log_info "Parsing existing output file: ${INPUT_FILE}"
         output_file="${INPUT_FILE}"
-        
+
         # Try to determine exit code from file (check for error patterns)
         if grep -qiE "ERROR|FAIL|exit code|timed out" "${INPUT_FILE}" 2>/dev/null; then
             exit_code=1
         else
             exit_code=0
         fi
-        
+
         # Try to extract duration from file if available
         local duration_match
         duration_match=$(grep -iE "duration|took.*seconds?" "${INPUT_FILE}" 2>/dev/null | head -1 || echo "")
@@ -284,17 +284,17 @@ main() {
             # Try to extract number of seconds
             duration=$(echo "${duration_match}" | grep -oE "[0-9]+" | head -1 || echo "0")
         fi
-        
+
         log_info "Using existing output file, exit_code=${exit_code}, duration=${duration}s"
     else
         # Path to analyzeDatabasePerformance.sh
         local perf_script="${INGESTION_REPO_PATH}/bin/monitor/analyzeDatabasePerformance.sh"
-        
+
         if [[ ! -f "${perf_script}" ]]; then
             log_error "analyzeDatabasePerformance.sh not found: ${perf_script}"
             exit 1
         fi
-        
+
         if [[ ! -x "${perf_script}" ]]; then
             log_info "Making script executable: ${perf_script}"
             chmod +x "${perf_script}" || {
@@ -302,33 +302,33 @@ main() {
                 exit 1
             }
         fi
-        
+
         # Create output directory
         mkdir -p "${OUTPUT_DIR}"
-        
+
         # Set up output file
         output_file="${OUTPUT_DIR}/analyzeDatabasePerformance_$(date +%Y%m%d_%H%M%S).txt"
-        
+
         # Export database connection variables for the script
         export DBHOST="${INGESTION_DBHOST:-${DBHOST:-localhost}}"
         export DBPORT="${INGESTION_DBPORT:-${DBPORT:-5432}}"
         export DBUSER="${INGESTION_DBUSER:-${DBUSER:-postgres}}"
         export DBNAME="${INGESTION_DBNAME}"
-        
+
         log_info "Running analyzeDatabasePerformance.sh from ${perf_script}"
         log_info "Output will be saved to: ${output_file}"
         log_info "Metrics will be stored in monitoring database: ${MONITORING_DBNAME}"
-        
+
         # Record start time
         local start_time
         start_time=$(date +%s)
-        
+
         # Execute the performance analysis script
         local output
-        
+
         # Set timeout (default: 1 hour for monthly execution)
         local timeout_seconds="${PERFORMANCE_ANALYSIS_TIMEOUT:-3600}"
-        
+
         if command -v timeout >/dev/null 2>&1; then
             if ! output=$(cd "${INGESTION_REPO_PATH}" && timeout "${timeout_seconds}" bash "${perf_script}" --db "${INGESTION_DBNAME}" 2>&1 | tee "${output_file}"); then
                 exit_code=$?
@@ -343,13 +343,13 @@ main() {
                 exit_code=$?
             fi
         fi
-        
+
         # Calculate duration
         local end_time
         end_time=$(date +%s)
         duration=$((end_time - start_time))
     fi
-    
+
     # Store execution status and duration
     if [[ ${exit_code} -eq 0 ]]; then
         record_metric "${COMPONENT}" "performance_check_status" "1" "component=ingestion,check=analyzeDatabasePerformance,source=monthly_cron"
@@ -358,9 +358,9 @@ main() {
         record_metric "${COMPONENT}" "performance_check_status" "0" "component=ingestion,check=analyzeDatabasePerformance,source=monthly_cron,exit_code=${exit_code}"
         log_error "Performance analysis failed with exit code ${exit_code} (duration: ${duration}s)"
     fi
-    
+
     record_metric "${COMPONENT}" "performance_check_duration" "${duration}" "component=ingestion,check=analyzeDatabasePerformance,source=monthly_cron"
-    
+
     # Parse output and store detailed metrics
     if [[ ${exit_code} -eq 0 ]]; then
         log_info "Parsing output and storing detailed metrics"
@@ -372,13 +372,13 @@ main() {
     else
         log_warning "Skipping metric parsing due to script failure"
     fi
-    
+
     # Clean up old output files (keep last 12 months)
     log_info "Cleaning up old output files (keeping last 12 months)"
     find "${OUTPUT_DIR}" -name "analyzeDatabasePerformance_*.txt" -type f -mtime +365 -delete 2>/dev/null || true
-    
+
     log_info "Performance analysis and metrics storage completed"
-    
+
     return ${exit_code}
 }
 

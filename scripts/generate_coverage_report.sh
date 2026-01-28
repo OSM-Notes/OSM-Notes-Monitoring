@@ -56,20 +56,20 @@ count_test_files() {
     local script_path="${1}"
     local script_name
     script_name=$(basename "${script_path}" .sh)
-    
+
     # Search for test files
     local test_count=0
-    
+
     # Check unit tests
     if find "${PROJECT_ROOT}/tests/unit" -name "test_${script_name}.sh" -o -name "*${script_name}*.sh" 2>/dev/null | grep -q .; then
         test_count=$(find "${PROJECT_ROOT}/tests/unit" -name "*${script_name}*.sh" 2>/dev/null | wc -l | tr -d ' ')
     fi
-    
+
     # Check integration tests
     if find "${PROJECT_ROOT}/tests/integration" -name "*${script_name}*.sh" 2>/dev/null | grep -q .; then
         test_count=$((test_count + $(find "${PROJECT_ROOT}/tests/integration" -name "*${script_name}*.sh" 2>/dev/null | wc -l | tr -d ' ')))
     fi
-    
+
     echo "${test_count}"
 }
 
@@ -82,7 +82,7 @@ calculate_coverage() {
     script_lines=$(count_lines "${script_path}")
     local test_count
     test_count=$(count_test_files "${script_path}")
-    
+
     # Simple heuristic: if script has tests, assume some coverage
     # This is a simplified approach - real coverage would require code instrumentation
     if [[ ${test_count} -gt 0 ]]; then
@@ -90,11 +90,11 @@ calculate_coverage() {
         local base_coverage=50
         local additional=$((test_count * 10))
         local coverage=$((base_coverage + additional))
-        
+
         if [[ ${coverage} -gt 90 ]]; then
             coverage=90
         fi
-        
+
         echo "${coverage}"
     else
         echo "0"
@@ -114,7 +114,7 @@ analyze_script() {
     test_count=$(count_test_files "${script_path}")
     local coverage
     coverage=$(calculate_coverage "${script_path}")
-    
+
     echo "${script_name}|${script_lines}|${test_count}|${coverage}"
 }
 
@@ -123,16 +123,16 @@ analyze_script() {
 ##
 generate_report() {
     print_message "${BLUE}" "Generating test coverage report..."
-    
+
     # Create coverage directory
     mkdir -p "${COVERAGE_DIR}"
-    
+
     # Find all scripts
     local scripts=()
     while IFS= read -r -d '' script; do
         scripts+=("${script}")
     done < <(find "${PROJECT_ROOT}/bin" -name "*.sh" -type f -print0 | sort -z)
-    
+
     # Generate report
     {
         echo "OSM Notes Monitoring - Test Coverage Report"
@@ -145,12 +145,12 @@ generate_report() {
         echo "----------------------------------------"
         printf "%-50s %10s %10s %10s\n" "Script" "Lines" "Tests" "Coverage"
         echo "----------------------------------------"
-        
+
         local total_lines=0
         local total_tests=0
         local scripts_with_tests=0
         local scripts_above_threshold=0
-        
+
         for script in "${scripts[@]}"; do
             local script_name
             script_name=$(basename "${script}")
@@ -160,18 +160,18 @@ generate_report() {
             test_count=$(count_test_files "${script}")
             local coverage
             coverage=$(calculate_coverage "${script}")
-            
+
             total_lines=$((total_lines + script_lines))
             total_tests=$((total_tests + test_count))
-            
+
             if [[ ${test_count} -gt 0 ]]; then
                 scripts_with_tests=$((scripts_with_tests + 1))
             fi
-            
+
             if [[ ${coverage} -ge 80 ]]; then
                 scripts_above_threshold=$((scripts_above_threshold + 1))
             fi
-            
+
             local status=""
             if [[ ${coverage} -ge 80 ]]; then
                 status="✓"
@@ -180,10 +180,10 @@ generate_report() {
             else
                 status="✗"
             fi
-            
+
             printf "%-50s %10s %10s %9s%% %s\n" "${script_name}" "${script_lines}" "${test_count}" "${coverage}" "${status}"
         done
-        
+
         echo "----------------------------------------"
         echo ""
         echo "Summary:"
@@ -193,12 +193,12 @@ generate_report() {
         echo "  Total lines of code: ${total_lines}"
         echo "  Total test files: ${total_tests}"
         echo ""
-        
+
         # Calculate overall coverage estimate (average of all scripts with tests)
         local total_coverage=0
         local coverage_count=0
         local overall_coverage=0
-        
+
         for script in "${scripts[@]}"; do
             local test_count
             test_count=$(count_test_files "${script}")
@@ -209,14 +209,14 @@ generate_report() {
                 coverage_count=$((coverage_count + 1))
             fi
         done
-        
+
         if [[ ${coverage_count} -gt 0 ]]; then
             overall_coverage=$((total_coverage / coverage_count))
         fi
-        
+
         echo "Average Coverage Estimate: ${overall_coverage}%"
         echo ""
-        
+
         if [[ ${overall_coverage} -ge 80 ]]; then
             echo "Status: ✓ Coverage target met!"
         elif [[ ${overall_coverage} -ge 50 ]]; then
@@ -224,14 +224,14 @@ generate_report() {
         else
             echo "Status: ✗ Coverage significantly below target"
         fi
-        
+
         echo ""
         echo "Note: This is an estimated coverage based on test file presence."
         echo "For accurate coverage, use code instrumentation tool bashcov."
     } > "${COVERAGE_REPORT}"
-    
+
     print_message "${GREEN}" "✓ Coverage report generated: ${COVERAGE_REPORT}"
-    
+
     # Display summary
     tail -20 "${COVERAGE_REPORT}"
 }
@@ -241,7 +241,7 @@ generate_report() {
 ##
 generate_html_report() {
     print_message "${BLUE}" "Generating HTML coverage report..."
-    
+
     {
         cat <<EOF
 <!DOCTYPE html>
@@ -264,12 +264,12 @@ generate_html_report() {
 <body>
     <h1>OSM Notes Monitoring - Test Coverage Report</h1>
     <p>Generated: $(date '+%Y-%m-%d %H:%M:%S')</p>
-    
+
     <div class="summary">
         <h2>Summary</h2>
         <pre>$(tail -15 "${COVERAGE_REPORT}")</pre>
     </div>
-    
+
     <h2>Detailed Coverage</h2>
     <table>
         <tr>
@@ -280,7 +280,7 @@ generate_html_report() {
             <th>Status</th>
         </tr>
 EOF
-        
+
         # Add script rows
         while IFS= read -r -d '' script; do
             local script_name
@@ -291,7 +291,7 @@ EOF
             test_count=$(count_test_files "${script}")
             local coverage
             coverage=$(calculate_coverage "${script}")
-            
+
             local status_class="fail"
             local status_text="✗"
             if [[ ${coverage} -ge 80 ]]; then
@@ -303,7 +303,7 @@ EOF
             else
                 status_text="✗ Fail"
             fi
-            
+
             echo "        <tr>"
             echo "            <td>${script_name}</td>"
             echo "            <td>${script_lines}</td>"
@@ -312,14 +312,14 @@ EOF
             echo "            <td class=\"${status_class}\">${status_text}</td>"
             echo "        </tr>"
         done < <(find "${PROJECT_ROOT}/bin" -name "*.sh" -type f -print0 | sort -z)
-        
+
         cat <<EOF
     </table>
 </body>
 </html>
 EOF
     } > "${COVERAGE_HTML}"
-    
+
     print_message "${GREEN}" "✓ HTML report generated: ${COVERAGE_HTML}"
 }
 
@@ -329,12 +329,12 @@ EOF
 main() {
     print_message "${GREEN}" "Test Coverage Report Generator"
     echo
-    
+
     if ! generate_report; then
         print_message "${RED}" "Failed to generate coverage report"
         exit 1
     fi
-    
+
     echo
     if generate_html_report; then
         print_message "${GREEN}" ""

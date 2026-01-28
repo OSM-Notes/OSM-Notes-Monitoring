@@ -45,9 +45,9 @@ run_test() {
     local test_name="${1}"
     shift
     local test_command="$*"
-    
+
     print_message "${BLUE}" "Testing: ${test_name}"
-    
+
     if eval "${test_command}" > /dev/null 2>&1; then
         print_message "${GREEN}" "  ✓ PASSED"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -64,24 +64,24 @@ run_test() {
 ##
 test_missing_required_vars() {
     print_message "${BLUE}" "\n=== Testing Missing Required Variables ==="
-    
+
     # Test missing DBNAME
     unset DBNAME DBHOST DBPORT DBUSER
     run_test "validate_main_config fails without DBNAME" \
         "! validate_main_config"
-    
+
     # Test missing DBHOST
     export DBNAME="test"
     unset DBHOST DBPORT DBUSER
     run_test "validate_main_config fails without DBHOST" \
         "! validate_main_config"
-    
+
     # Test missing DBPORT
     export DBHOST="localhost"
     unset DBPORT DBUSER
     run_test "validate_main_config fails without DBPORT" \
         "! validate_main_config"
-    
+
     # Test missing DBUSER
     export DBPORT="5432"
     unset DBUSER
@@ -94,22 +94,22 @@ test_missing_required_vars() {
 ##
 test_invalid_data_types() {
     print_message "${BLUE}" "\n=== Testing Invalid Data Types ==="
-    
+
     # Test invalid DBPORT
     export DBNAME="test" DBHOST="localhost" DBPORT="invalid" DBUSER="postgres"
     run_test "validate_main_config rejects non-numeric DBPORT" \
         "! validate_main_config"
-    
+
     # Test invalid rate limit
     export RATE_LIMIT_PER_IP_PER_MINUTE="invalid"
     run_test "validate_security_config rejects non-numeric rate limit" \
         "! validate_security_config"
-    
+
     # Test invalid boolean
     export INGESTION_ENABLED="maybe"
     run_test "validate_monitoring_config rejects invalid boolean" \
         "! validate_monitoring_config"
-    
+
     # Test invalid email
     export SEND_ALERT_EMAIL="true"
     export ADMIN_EMAIL="invalid-email"
@@ -122,12 +122,12 @@ test_invalid_data_types() {
 ##
 test_invalid_ranges() {
     print_message "${BLUE}" "\n=== Testing Invalid Ranges ==="
-    
+
     # Test zero rate limit
     export RATE_LIMIT_PER_IP_PER_MINUTE="0"
     run_test "validate_security_config rejects zero rate limit" \
         "! validate_security_config"
-    
+
     # Test zero retention days
     export METRICS_RETENTION_DAYS="0"
     run_test "validate_monitoring_config rejects zero retention days" \
@@ -139,22 +139,22 @@ test_invalid_ranges() {
 ##
 test_valid_configs() {
     print_message "${BLUE}" "\n=== Testing Valid Configurations ==="
-    
+
     # Valid main config
     export DBNAME="test_db" DBHOST="localhost" DBPORT="5432" DBUSER="postgres"
     run_test "validate_main_config accepts valid config" \
         "validate_main_config || true"
-    
+
     # Valid alert config
     export ADMIN_EMAIL="admin@example.com" SEND_ALERT_EMAIL="true"
     run_test "validate_alert_config accepts valid email" \
         "validate_alert_config || true"
-    
+
     # Valid security config
     export RATE_LIMIT_PER_IP_PER_MINUTE="60" RATE_LIMIT_PER_IP_PER_HOUR="1000"
     run_test "validate_security_config accepts valid rate limits" \
         "validate_security_config || true"
-    
+
     # Valid monitoring config
     export INGESTION_ENABLED="true" INGESTION_CHECK_TIMEOUT="300"
     export METRICS_RETENTION_DAYS="90"
@@ -167,13 +167,13 @@ test_valid_configs() {
 ##
 test_conditional_validations() {
     print_message "${BLUE}" "\n=== Testing Conditional Validations ==="
-    
+
     # Test Slack webhook required when enabled
     export SLACK_ENABLED="true"
     unset SLACK_WEBHOOK_URL
     run_test "validate_alert_config requires webhook when Slack enabled" \
         "! validate_alert_config"
-    
+
     # Test email not required when disabled
     export SEND_ALERT_EMAIL="false"
     unset ADMIN_EMAIL
@@ -188,7 +188,7 @@ print_summary() {
     echo
     print_message "${BLUE}" "=== Test Summary ==="
     print_message "${GREEN}" "Tests passed: ${TESTS_PASSED}"
-    
+
     if [[ ${TESTS_FAILED} -gt 0 ]]; then
         print_message "${RED}" "Tests failed: ${TESTS_FAILED}"
         echo
@@ -207,14 +207,14 @@ print_summary() {
 main() {
     print_message "${GREEN}" "Comprehensive Configuration Validation Tests"
     echo
-    
+
     # Run test suites
     test_missing_required_vars
     test_invalid_data_types
     test_invalid_ranges
     test_valid_configs
     test_conditional_validations
-    
+
     # Summary
     if print_summary; then
         exit 0

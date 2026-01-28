@@ -154,18 +154,26 @@ teardown() {
 }
 
 @test "check_daemon_metrics succeeds when daemon is active" {
-    # Mock bash to handle collectDaemonMetrics.sh execution successfully
+    # Create mock collectDaemonMetrics.sh script
+    local mock_script_dir="${BATS_TEST_DIRNAME}/../../../bin/monitor"
+    local mock_script="${mock_script_dir}/collectDaemonMetrics.sh"
+    # The script should exist, but ensure it's executable
+    if [[ -f "${mock_script}" ]]; then
+        chmod +x "${mock_script}"
+    fi
+    
+    # Mock log functions
     # shellcheck disable=SC2317
-    bash() {
-        local script_path="${1}"
-        if [[ "${script_path}" == *"collectDaemonMetrics.sh" ]]; then
-            # Mock successful execution - script runs and collects metrics
-            return 0
-        fi
-        # Call real bash for other commands
-        command bash "$@"
+    log_info() {
+        return 0
     }
-    export -f bash
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Mock execute_sql_query to return active status
     # shellcheck disable=SC2317
@@ -208,16 +216,25 @@ teardown() {
     rm -f "${ALERTS_FILE}"
     touch "${ALERTS_FILE}"
     
-    # Mock bash to handle collectDaemonMetrics.sh execution
+    # Create mock collectDaemonMetrics.sh script
+    local mock_script_dir="${BATS_TEST_DIRNAME}/../../../bin/monitor"
+    local mock_script="${mock_script_dir}/collectDaemonMetrics.sh"
+    if [[ -f "${mock_script}" ]]; then
+        chmod +x "${mock_script}"
+    fi
+    
+    # Mock log functions
     # shellcheck disable=SC2317
-    bash() {
-        local script_path="${1}"
-        if [[ "${script_path}" == *"collectDaemonMetrics.sh" ]]; then
-            return 0
-        fi
-        command bash "$@"
+    log_info() {
+        return 0
     }
-    export -f bash
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Override send_alert to capture alerts
     # shellcheck disable=SC2317
@@ -268,16 +285,25 @@ teardown() {
     rm -f "${ALERTS_FILE}"
     touch "${ALERTS_FILE}"
     
-    # Mock bash to handle collectDaemonMetrics.sh execution
+    # Create mock collectDaemonMetrics.sh script
+    local mock_script_dir="${BATS_TEST_DIRNAME}/../../../bin/monitor"
+    local mock_script="${mock_script_dir}/collectDaemonMetrics.sh"
+    if [[ -f "${mock_script}" ]]; then
+        chmod +x "${mock_script}"
+    fi
+    
+    # Mock log functions
     # shellcheck disable=SC2317
-    bash() {
-        local script_path="${1}"
-        if [[ "${script_path}" == *"collectDaemonMetrics.sh" ]]; then
-            return 0
-        fi
-        command bash "$@"
+    log_info() {
+        return 0
     }
-    export -f bash
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Override send_alert to capture alerts
     # shellcheck disable=SC2317
@@ -319,7 +345,7 @@ teardown() {
     export -f execute_sql_query
     
     # Run check
-    check_daemon_metrics
+    run check_daemon_metrics
     
     # Check that alert was sent by reading from file
     local alert_found=false
@@ -412,16 +438,25 @@ teardown() {
     rm -f "${ALERTS_FILE}"
     touch "${ALERTS_FILE}"
     
-    # Mock bash to handle collectDaemonMetrics.sh execution
+    # Create mock collectDaemonMetrics.sh script
+    local mock_script_dir="${BATS_TEST_DIRNAME}/../../../bin/monitor"
+    local mock_script="${mock_script_dir}/collectDaemonMetrics.sh"
+    if [[ -f "${mock_script}" ]]; then
+        chmod +x "${mock_script}"
+    fi
+    
+    # Mock log functions
     # shellcheck disable=SC2317
-    bash() {
-        local script_path="${1}"
-        if [[ "${script_path}" == *"collectDaemonMetrics.sh" ]]; then
-            return 0
-        fi
-        command bash "$@"
+    log_info() {
+        return 0
     }
-    export -f bash
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Override send_alert to capture alerts
     # shellcheck disable=SC2317

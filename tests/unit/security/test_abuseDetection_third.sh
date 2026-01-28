@@ -54,13 +54,38 @@ teardown() {
 # Test: analyze_patterns handles complex patterns
 ##
 @test "analyze_patterns handles complex patterns" {
-    # Mock execute_sql_query
+    # Mock psql to return test data
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        echo "100|192.168.1.1|/api/endpoint|GET"
+    function psql() {
+        # Return count for rapid requests query
+        if [[ "${*}" == *"INTERVAL '10 seconds'"* ]]; then
+            echo "5"  # 5 rapid requests (below threshold)
+        # Return error rate query result
+        elif [[ "${*}" == *"error_count"* ]] || [[ "${*}" == *"FILTER"* ]]; then
+            echo "10|100"  # 10 errors out of 100 requests = 10% (below threshold)
+        # Return excessive requests query
+        elif [[ "${*}" == *"INTERVAL '${ABUSE_PATTERN_ANALYSIS_WINDOW} seconds'"* ]] || [[ "${*}" == *"3600 seconds"* ]]; then
+            echo "500"  # 500 requests (below threshold)
+        else
+            echo "0"
+        fi
         return 0
     }
-    export -f execute_sql_query
+    export -f psql
+    
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -82,13 +107,35 @@ teardown() {
 # Test: detect_anomalies handles statistical analysis
 ##
 @test "detect_anomalies handles statistical analysis" {
-    # Mock execute_sql_query
+    # Mock psql to return test data
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        echo "100|50|10"  # requests, errors, patterns
+    function psql() {
+        # Return baseline query result (average requests per hour)
+        if [[ "${*}" == *"AVG(hourly_count)"* ]] || [[ "${*}" == *"INTERVAL '7 days'"* ]]; then
+            echo "50"  # Baseline: 50 requests per hour
+        # Return current hour query result
+        elif [[ "${*}" == *"INTERVAL '1 hour'"* ]] && [[ "${*}" != *"7 days"* ]]; then
+            echo "55"  # Current: 55 requests (close to baseline, no anomaly)
+        else
+            echo "0"
+        fi
         return 0
     }
-    export -f execute_sql_query
+    export -f psql
+    
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -110,13 +157,35 @@ teardown() {
 # Test: analyze_behavior handles user behavior tracking
 ##
 @test "analyze_behavior handles user behavior tracking" {
-    # Mock execute_sql_query
+    # Mock psql to return test data
     # shellcheck disable=SC2317
-    function execute_sql_query() {
-        echo "192.168.1.1|100|50|10|5"  # IP, requests, errors, patterns, sessions
+    function psql() {
+        # Return endpoint diversity query result
+        if [[ "${*}" == *"INTERVAL '5 minutes'"* ]] && [[ "${*}" == *"COUNT(DISTINCT endpoint)"* ]]; then
+            echo "3"  # 3 different endpoints (normal)
+        # Return user agent diversity query result
+        elif [[ "${*}" == *"INTERVAL '1 hour'"* ]] && [[ "${*}" == *"COUNT(DISTINCT user_agent)"* ]]; then
+            echo "1"  # 1 user agent (normal)
+        else
+            echo "0"
+        fi
         return 0
     }
-    export -f execute_sql_query
+    export -f psql
+    
+    # Mock is_ip_whitelisted
+    # shellcheck disable=SC2317
+    function is_ip_whitelisted() {
+        return 1  # Not whitelisted
+    }
+    export -f is_ip_whitelisted
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # shellcheck disable=SC2317
     record_metric() {

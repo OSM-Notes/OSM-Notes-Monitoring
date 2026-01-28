@@ -69,10 +69,10 @@ command_exists() {
 ##
 validate_environment() {
     print_message "${BLUE}" "Validating production environment..."
-    
+
     local errors=0
     local warnings=0
-    
+
     # Check required commands
     local required_commands=(
         "bash"
@@ -80,7 +80,7 @@ validate_environment() {
         "curl"
         "gzip"
     )
-    
+
     for cmd in "${required_commands[@]}"; do
         if ! command_exists "${cmd}"; then
             print_message "${RED}" "  ✗ Missing required command: ${cmd}"
@@ -89,7 +89,7 @@ validate_environment() {
             print_message "${GREEN}" "  ✓ Found: ${cmd}"
         fi
     done
-    
+
     # Check PostgreSQL version (should be 12+)
     if command_exists psql; then
         local pg_version
@@ -101,7 +101,7 @@ validate_environment() {
             print_message "${GREEN}" "  ✓ PostgreSQL version ${pg_version}"
         fi
     fi
-    
+
     # Check disk space (should have at least 1GB free)
     local available_space
     available_space=$(df -BG "${PROJECT_ROOT}" | tail -1 | awk '{print $4}' | sed 's/G//')
@@ -111,7 +111,7 @@ validate_environment() {
     else
         print_message "${GREEN}" "  ✓ Disk space: ${available_space}GB available"
     fi
-    
+
     # Check write permissions
     if [[ ! -w "${PROJECT_ROOT}" ]]; then
         print_message "${RED}" "  ✗ No write permission on project directory"
@@ -119,13 +119,13 @@ validate_environment() {
     else
         print_message "${GREEN}" "  ✓ Write permissions OK"
     fi
-    
+
     # Check if running as root (not recommended)
     if [[ "${EUID}" -eq 0 ]]; then
         print_message "${YELLOW}" "  ⚠ Running as root - consider using a dedicated user"
         ((warnings++))
     fi
-    
+
     echo
     if [[ ${errors} -gt 0 ]]; then
         print_message "${RED}" "Environment validation failed with ${errors} error(s)"
@@ -144,16 +144,16 @@ validate_environment() {
 ##
 setup_production_database() {
     print_message "${BLUE}" "Setting up production database..."
-    
+
     # Source properties to get database name
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
         # shellcheck source=/dev/null
         source "${PROJECT_ROOT}/etc/properties.sh"
     fi
-    
+
     local dbname="${DBNAME:-notes_monitoring}"
     local init_sql="${PROJECT_ROOT}/sql/init.sql"
-    
+
     # Check if database exists
     if psql -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "${dbname}"; then
         print_message "${YELLOW}" "  Database ${dbname} already exists"
@@ -165,12 +165,12 @@ setup_production_database() {
                 return 0
             fi
         fi
-        
+
         # Backup existing database
         print_message "${YELLOW}" "  Creating backup before reinitialization..."
         "${PROJECT_ROOT}/sql/backups/backup_database.sh" -d "${dbname}" -c || true
     fi
-    
+
     # Create database if it doesn't exist
     if ! psql -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "${dbname}"; then
         if createdb "${dbname}" 2>/dev/null; then
@@ -180,7 +180,7 @@ setup_production_database() {
             return 1
         fi
     fi
-    
+
     # Initialize schema
     if [[ -f "${init_sql}" ]]; then
         print_message "${BLUE}" "  Initializing database schema..."
@@ -190,7 +190,7 @@ setup_production_database() {
             print_message "${RED}" "  ✗ Failed to initialize schema"
             return 1
         fi
-        
+
         # Apply query optimizations
         local optimize_sql="${PROJECT_ROOT}/sql/optimize_queries.sql"
         if [[ -f "${optimize_sql}" ]]; then
@@ -205,7 +205,7 @@ setup_production_database() {
         print_message "${RED}" "  ✗ SQL init file not found: ${init_sql}"
         return 1
     fi
-    
+
     # Run migrations
     print_message "${BLUE}" "  Running database migrations..."
     if "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" -d "${dbname}" > /dev/null 2>&1; then
@@ -220,25 +220,25 @@ setup_production_database() {
 ##
 setup_production_config() {
     print_message "${BLUE}" "Setting up production configuration..."
-    
+
     local config_files=(
         "etc/properties.sh"
         "config/monitoring.conf"
         "config/alerts.conf"
         "config/security.conf"
     )
-    
+
     for config_file in "${config_files[@]}"; do
         local example_file="${config_file}.example"
         local full_path="${PROJECT_ROOT}/${config_file}"
         local example_path="${PROJECT_ROOT}/${example_file}"
-        
+
         if [[ ! -f "${full_path}" ]]; then
             if [[ -f "${example_path}" ]]; then
                 cp "${example_path}" "${full_path}"
                 print_message "${YELLOW}" "  Created ${config_file} from example"
                 print_message "${YELLOW}" "  ⚠ IMPORTANT: Edit ${config_file} with production values"
-                
+
                 # Set secure permissions
                 chmod 640 "${full_path}"
             else
@@ -252,7 +252,7 @@ setup_production_config() {
             fi
         fi
     done
-    
+
     # Verify configuration
     print_message "${BLUE}" "  Validating configuration..."
     if [[ -f "${PROJECT_ROOT}/scripts/test_config_validation.sh" ]]; then
@@ -269,13 +269,13 @@ setup_production_config() {
 ##
 setup_production_directories() {
     print_message "${BLUE}" "Setting up production directories..."
-    
+
     # Source properties to get directory paths
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
         # shellcheck source=/dev/null
         source "${PROJECT_ROOT}/etc/properties.sh"
     fi
-    
+
     local directories=(
         "${LOG_DIR:-/var/log/osm-notes-monitoring}"
         "${TMP_DIR:-/var/tmp/osm-notes-monitoring}"
@@ -284,7 +284,7 @@ setup_production_directories() {
         "${PROJECT_ROOT}/metrics"
         "${PROJECT_ROOT}/reports"
     )
-    
+
     for dir in "${directories[@]}"; do
         if [[ ! -d "${dir}" ]]; then
             if mkdir -p "${dir}" 2>/dev/null; then
@@ -295,7 +295,7 @@ setup_production_directories() {
         else
             print_message "${GREEN}" "  ✓ Directory exists: ${dir}"
         fi
-        
+
         # Set appropriate permissions
         if [[ -w "${dir}" ]]; then
             chmod 755 "${dir}" 2>/dev/null || true
@@ -308,26 +308,26 @@ setup_production_directories() {
 ##
 setup_security_hardening() {
     print_message "${BLUE}" "Setting up security hardening..."
-    
+
     local issues=0
-    
+
     # Set secure file permissions
     print_message "${BLUE}" "  Setting file permissions..."
-    
+
     # Scripts should be executable
     find "${PROJECT_ROOT}/bin" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
-    
+
     # Config files should not be world-readable
     find "${PROJECT_ROOT}/etc" -type f -name "*.sh" ! -name "*.example" -exec chmod 640 {} \; 2>/dev/null || true
     find "${PROJECT_ROOT}/config" -type f ! -name "*.example" -exec chmod 640 {} \; 2>/dev/null || true
-    
+
     # Log files should have restricted permissions
     if [[ -d "${PROJECT_ROOT}/logs" ]]; then
         find "${PROJECT_ROOT}/logs" -type f -exec chmod 640 {} \; 2>/dev/null || true
     fi
-    
+
     print_message "${GREEN}" "  ✓ File permissions set"
-    
+
     # Run security audit
     print_message "${BLUE}" "  Running security audit..."
     if [[ -f "${PROJECT_ROOT}/scripts/security_audit.sh" ]]; then
@@ -338,7 +338,7 @@ setup_security_hardening() {
             ((issues++))
         fi
     fi
-    
+
     # Check for hardcoded credentials
     print_message "${BLUE}" "  Checking for hardcoded credentials..."
     if grep -r "password.*=.*['\"].*[^example|test|dummy]" "${PROJECT_ROOT}/bin" "${PROJECT_ROOT}/config" --exclude="*.example" 2>/dev/null | grep -v "example\|test\|dummy" > /dev/null; then
@@ -347,7 +347,7 @@ setup_security_hardening() {
     else
         print_message "${GREEN}" "  ✓ No obvious hardcoded credentials"
     fi
-    
+
     if [[ ${issues} -eq 0 ]]; then
         print_message "${GREEN}" "  ✓ Security hardening completed"
         return 0
@@ -367,7 +367,7 @@ main() {
     local skip_config=false
     local skip_security=false
     FORCE=false
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -402,11 +402,11 @@ main() {
                 ;;
         esac
     done
-    
+
     print_message "${GREEN}" "OSM-Notes-Monitoring Production Setup"
     print_message "${BLUE}" "========================================"
     echo
-    
+
     # Validate environment
     if [[ "${skip_checks}" != "true" ]]; then
         if ! validate_environment; then
@@ -415,29 +415,29 @@ main() {
         fi
         echo
     fi
-    
+
     # Setup directories
     setup_production_directories
     echo
-    
+
     # Setup configuration
     if [[ "${skip_config}" != "true" ]]; then
         setup_production_config
         echo
     fi
-    
+
     # Setup database
     if [[ "${skip_database}" != "true" ]]; then
         setup_production_database
         echo
     fi
-    
+
     # Security hardening
     if [[ "${skip_security}" != "true" ]]; then
         setup_security_hardening
         echo
     fi
-    
+
     print_message "${GREEN}" "Production setup complete!"
     echo
     print_message "${YELLOW}" "Next steps:"

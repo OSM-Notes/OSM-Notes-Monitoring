@@ -62,7 +62,7 @@ install_logrotate() {
     local source_file="${PROJECT_ROOT}/config/logrotate.conf"
     local example_file="${PROJECT_ROOT}/config/logrotate.conf.example"
     local target_file="/etc/logrotate.d/osm-notes-monitoring"
-    
+
     # Use .conf if exists, otherwise use .example
     if [[ ! -f "${source_file}" ]]; then
         if [[ -f "${example_file}" ]]; then
@@ -74,15 +74,15 @@ install_logrotate() {
             exit 1
         fi
     fi
-    
+
     print_message "${BLUE}" "Installing logrotate configuration..."
     print_message "${BLUE}" "  Source: ${source_file}"
     print_message "${BLUE}" "  Target: ${target_file}"
-    
+
     # Copy configuration
     cp "${source_file}" "${target_file}"
     chmod 0644 "${target_file}"
-    
+
     print_message "${GREEN}" "✓ Logrotate configuration installed"
 }
 
@@ -91,22 +91,22 @@ install_logrotate() {
 ##
 fix_log_permissions() {
     local log_dir="/var/log/osm-notes-monitoring"
-    
+
     if [[ ! -d "${log_dir}" ]]; then
         print_message "${YELLOW}" "Log directory does not exist: ${log_dir}"
         return 0
     fi
-    
+
     print_message "${BLUE}" "Fixing permissions for log files in ${log_dir}..."
-    
+
     # Fix ownership and permissions for all log files
     chown -R notes:maptimebogota "${log_dir}"
     chmod 755 "${log_dir}"
-    
+
     # Fix permissions for log files (readable by owner and group)
     find "${log_dir}" -type f -name "*.log" -exec chmod 0640 {} \;
     find "${log_dir}" -type f -name "*.log-*" -exec chmod 0640 {} \;
-    
+
     print_message "${GREEN}" "✓ Log file permissions fixed"
 }
 
@@ -115,7 +115,7 @@ fix_log_permissions() {
 ##
 test_logrotate() {
     print_message "${BLUE}" "Testing logrotate configuration..."
-    
+
     if logrotate -d /etc/logrotate.d/osm-notes-monitoring > /dev/null 2>&1; then
         print_message "${GREEN}" "✓ Configuration syntax is valid"
     else
@@ -153,7 +153,7 @@ main() {
     local test_only=false
     local dry_run=false
     local fix_perms=false
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -180,10 +180,10 @@ main() {
                 ;;
         esac
     done
-    
+
     print_message "${GREEN}" "OSM-Notes-Monitoring Logrotate Setup"
     echo
-    
+
     if [[ "${fix_perms}" == true ]]; then
         # Only fix permissions
         check_root
@@ -192,9 +192,9 @@ main() {
         print_message "${GREEN}" "Permissions fixed!"
         exit 0
     fi
-    
+
     check_logrotate
-    
+
     if [[ "${test_only}" == true ]]; then
         # Test without installing
         if [[ -f "${PROJECT_ROOT}/config/logrotate.conf" ]]; then
@@ -225,7 +225,7 @@ main() {
         fix_log_permissions
         install_logrotate
         test_logrotate
-        
+
         echo
         print_message "${GREEN}" "Setup complete!"
         print_message "${BLUE}" "Logrotate will run daily via cron"

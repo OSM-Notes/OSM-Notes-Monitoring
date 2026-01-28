@@ -71,21 +71,21 @@ generate_main_config() {
     local force="${1:-false}"
     local interactive="${2:-false}"
     local output_dir="${3:-}"
-    
+
     local template="${PROJECT_ROOT}/etc/properties.sh.example"
     local target="${output_dir:-${PROJECT_ROOT}/etc}/properties.sh"
-    
+
     if [[ ! -f "${template}" ]]; then
         print_message "${RED}" "Template not found: ${template}"
         return 1
     fi
-    
+
     if [[ -f "${target}" && "${force}" != "true" ]]; then
         print_message "${YELLOW}" "Configuration file already exists: ${target}"
         print_message "${YELLOW}" "Use -f/--force to overwrite"
         return 1
     fi
-    
+
     if [[ "${interactive}" == "true" ]]; then
         generate_interactive_main_config "${target}" "${template}"
     else
@@ -93,7 +93,7 @@ generate_main_config() {
         print_message "${GREEN}" "Generated: ${target}"
         print_message "${YELLOW}" "Please edit ${target} with your configuration"
     fi
-    
+
     return 0
 }
 
@@ -104,28 +104,28 @@ generate_monitoring_config() {
     local force="${1:-false}"
     local interactive="${2:-false}"
     local output_dir="${3:-}"
-    
+
     local template="${PROJECT_ROOT}/config/monitoring.conf.example"
     local target="${output_dir:-${PROJECT_ROOT}/config}/monitoring.conf"
-    
+
     if [[ ! -f "${template}" ]]; then
         print_message "${RED}" "Template not found: ${template}"
         return 1
     fi
-    
+
     if [[ -f "${target}" && "${force}" != "true" ]]; then
         print_message "${YELLOW}" "Configuration file already exists: ${target}"
         print_message "${YELLOW}" "Use -f/--force to overwrite"
         return 1
     fi
-    
+
     cp "${template}" "${target}"
     print_message "${GREEN}" "Generated: ${target}"
-    
+
     if [[ "${interactive}" != "true" ]]; then
         print_message "${YELLOW}" "Please edit ${target} with your configuration"
     fi
-    
+
     return 0
 }
 
@@ -136,21 +136,21 @@ generate_alert_config() {
     local force="${1:-false}"
     local interactive="${2:-false}"
     local output_dir="${3:-}"
-    
+
     local template="${PROJECT_ROOT}/config/alerts.conf.example"
     local target="${output_dir:-${PROJECT_ROOT}/config}/alerts.conf"
-    
+
     if [[ ! -f "${template}" ]]; then
         print_message "${RED}" "Template not found: ${template}"
         return 1
     fi
-    
+
     if [[ -f "${target}" && "${force}" != "true" ]]; then
         print_message "${YELLOW}" "Configuration file already exists: ${target}"
         print_message "${YELLOW}" "Use -f/--force to overwrite"
         return 1
     fi
-    
+
     if [[ "${interactive}" == "true" ]]; then
         generate_interactive_alert_config "${target}" "${template}"
     else
@@ -158,7 +158,7 @@ generate_alert_config() {
         print_message "${GREEN}" "Generated: ${target}"
         print_message "${YELLOW}" "Please edit ${target} with your configuration"
     fi
-    
+
     return 0
 }
 
@@ -169,28 +169,28 @@ generate_security_config() {
     local force="${1:-false}"
     local interactive="${2:-false}"
     local output_dir="${3:-}"
-    
+
     local template="${PROJECT_ROOT}/config/security.conf.example"
     local target="${output_dir:-${PROJECT_ROOT}/config}/security.conf"
-    
+
     if [[ ! -f "${template}" ]]; then
         print_message "${RED}" "Template not found: ${template}"
         return 1
     fi
-    
+
     if [[ -f "${target}" && "${force}" != "true" ]]; then
         print_message "${YELLOW}" "Configuration file already exists: ${target}"
         print_message "${YELLOW}" "Use -f/--force to overwrite"
         return 1
     fi
-    
+
     cp "${template}" "${target}"
     print_message "${GREEN}" "Generated: ${target}"
-    
+
     if [[ "${interactive}" != "true" ]]; then
         print_message "${YELLOW}" "Please edit ${target} with your configuration"
     fi
-    
+
     return 0
 }
 
@@ -200,28 +200,28 @@ generate_security_config() {
 generate_interactive_main_config() {
     local target="${1}"
     local template="${2}"
-    
+
     print_message "${BLUE}" "Generating main configuration interactively..."
     echo
-    
+
     # Read values
     read -r -p "Database name [osm_notes_monitoring]: " dbname
     dbname="${dbname:-osm_notes_monitoring}"
-    
+
     read -r -p "Database host [localhost]: " dbhost
     dbhost="${dbhost:-localhost}"
-    
+
     read -r -p "Database port [5432]: " dbport
     dbport="${dbport:-5432}"
-    
+
     read -r -p "Database user [postgres]: " dbuser
     dbuser="${dbuser:-postgres}"
-    
+
     read -r -p "Admin email: " admin_email
-    
+
     read -r -p "Send alert emails? [true/false, default: true]: " send_email
     send_email="${send_email:-true}"
-    
+
     # Generate config file
     cat > "${target}" << EOF
 # Properties for OSM-Notes-Monitoring
@@ -259,7 +259,7 @@ ANALYTICS_REPO_PATH="/path/to/OSM-Notes-Analytics"
 WMS_REPO_PATH="/path/to/OSM-Notes-WMS"
 DATA_REPO_PATH="/path/to/OSM-Notes-Data"
 EOF
-    
+
     print_message "${GREEN}" "Generated: ${target}"
 }
 
@@ -269,27 +269,27 @@ EOF
 generate_interactive_alert_config() {
     local target="${1}"
     local template="${2}"
-    
+
     print_message "${BLUE}" "Generating alert configuration interactively..."
     echo
-    
+
     read -r -p "Admin email: " admin_email
-    
+
     read -r -p "Send alert emails? [true/false, default: true]: " send_email
     send_email="${send_email:-true}"
-    
+
     read -r -p "Enable Slack? [true/false, default: false]: " slack_enabled
     slack_enabled="${slack_enabled:-false}"
-    
+
     local slack_webhook=""
     local slack_channel="#monitoring"
-    
+
     if [[ "${slack_enabled}" == "true" ]]; then
         read -r -p "Slack webhook URL: " slack_webhook
         read -r -p "Slack channel [${slack_channel}]: " slack_channel_input
         slack_channel="${slack_channel_input:-${slack_channel}}"
     fi
-    
+
     # Generate config file
     cat > "${target}" << EOF
 # Alerting Configuration
@@ -314,7 +314,7 @@ INFO_ALERT_RECIPIENTS=""  # Optional, leave empty to disable
 ALERT_DEDUPLICATION_ENABLED="true"
 ALERT_DEDUPLICATION_WINDOW_MINUTES=60
 EOF
-    
+
     print_message "${GREEN}" "Generated: ${target}"
 }
 
@@ -325,17 +325,17 @@ generate_all_configs() {
     local force="${1:-false}"
     local interactive="${2:-false}"
     local output_dir="${3:-}"
-    
+
     print_message "${BLUE}" "Generating all configuration files..."
     echo
-    
+
     local errors=0
-    
+
     generate_main_config "${force}" "${interactive}" "${output_dir}" || errors=$((errors + 1))
     generate_monitoring_config "${force}" "${interactive}" "${output_dir}" || errors=$((errors + 1))
     generate_alert_config "${force}" "${interactive}" "${output_dir}" || errors=$((errors + 1))
     generate_security_config "${force}" "${interactive}" "${output_dir}" || errors=$((errors + 1))
-    
+
     echo
     if [[ ${errors} -eq 0 ]]; then
         print_message "${GREEN}" "✓ All configuration files generated successfully"
@@ -354,7 +354,7 @@ main() {
     local interactive=false
     local output_dir=""
     local config_type="all"
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -394,12 +394,12 @@ main() {
                 ;;
         esac
     done
-    
+
     # Ensure output directory exists
     if [[ -n "${output_dir}" ]]; then
         mkdir -p "${output_dir}/etc" "${output_dir}/config" 2>/dev/null || true
     fi
-    
+
     # Generate requested config(s)
     case "${config_type}" in
         main)

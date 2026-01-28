@@ -66,9 +66,9 @@ EOF
 ##
 check_prerequisites() {
     print_message "${BLUE}" "Checking prerequisites..."
-    
+
     local missing=()
-    
+
     # Check required commands
     local required_commands=("bash" "psql" "curl")
     for cmd in "${required_commands[@]}"; do
@@ -76,12 +76,12 @@ check_prerequisites() {
             missing+=("${cmd}")
         fi
     done
-    
+
     if [[ ${#missing[@]} -gt 0 ]]; then
         print_message "${RED}" "  ✗ Missing required commands: ${missing[*]}"
         return 1
     fi
-    
+
     print_message "${GREEN}" "  ✓ All prerequisites met"
     return 0
 }
@@ -91,7 +91,7 @@ check_prerequisites() {
 ##
 test_database_setup() {
     print_message "${BLUE}" "Testing database setup..."
-    
+
     # Create test database
     if createdb "${TEST_DBNAME}" 2>/dev/null; then
         print_message "${GREEN}" "  ✓ Test database created: ${TEST_DBNAME}"
@@ -111,7 +111,7 @@ test_database_setup() {
             return 1
         fi
     fi
-    
+
     # Initialize schema
     if [[ -f "${PROJECT_ROOT}/sql/init.sql" ]]; then
         if psql -d "${TEST_DBNAME}" -f "${PROJECT_ROOT}/sql/init.sql" > /dev/null 2>&1; then
@@ -121,7 +121,7 @@ test_database_setup() {
             return 1
         fi
     fi
-    
+
     # Test migrations
     if [[ -f "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" ]]; then
         if "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" -d "${TEST_DBNAME}" > /dev/null 2>&1; then
@@ -130,7 +130,7 @@ test_database_setup() {
             print_message "${YELLOW}" "  ⚠ Some migrations may have failed (non-critical)"
         fi
     fi
-    
+
     return 0
 }
 
@@ -139,7 +139,7 @@ test_database_setup() {
 ##
 test_configuration() {
     print_message "${BLUE}" "Testing configuration..."
-    
+
     # Check if config files exist
     local config_files=(
         "etc/properties.sh.example"
@@ -147,7 +147,7 @@ test_configuration() {
         "config/alerts.conf.example"
         "config/security.conf.example"
     )
-    
+
     for config_file in "${config_files[@]}"; do
         if [[ -f "${PROJECT_ROOT}/${config_file}" ]]; then
             print_message "${GREEN}" "  ✓ ${config_file} exists"
@@ -155,12 +155,12 @@ test_configuration() {
             print_message "${RED}" "  ✗ ${config_file} missing"
         fi
     done
-    
+
     # Test config generation
     if [[ -f "${PROJECT_ROOT}/scripts/generate_config.sh" ]]; then
         print_message "${GREEN}" "  ✓ Config generation script exists"
     fi
-    
+
     # Test config validation
     if [[ -f "${PROJECT_ROOT}/scripts/test_config_validation.sh" ]]; then
         print_message "${GREEN}" "  ✓ Config validation script exists"
@@ -172,7 +172,7 @@ test_configuration() {
 ##
 test_scripts() {
     print_message "${BLUE}" "Testing scripts..."
-    
+
     local scripts=(
         "scripts/production_setup.sh"
         "scripts/production_migration.sh"
@@ -182,10 +182,10 @@ test_scripts() {
         "scripts/setup_cron.sh"
         "scripts/setup_backups.sh"
     )
-    
+
     local passed=0
     local failed=0
-    
+
     for script in "${scripts[@]}"; do
         local full_path="${PROJECT_ROOT}/${script}"
         if [[ -f "${full_path}" && -x "${full_path}" ]]; then
@@ -202,7 +202,7 @@ test_scripts() {
             ((failed++))
         fi
     done
-    
+
     echo
     print_message "${BLUE}" "  Scripts tested: $((passed + failed))"
     print_message "${GREEN}" "  Passed: ${passed}"
@@ -210,7 +210,7 @@ test_scripts() {
         print_message "${RED}" "  Failed: ${failed}"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -219,13 +219,13 @@ test_scripts() {
 ##
 test_monitoring_scripts() {
     print_message "${BLUE}" "Testing monitoring scripts..."
-    
+
     local scripts=(
         "bin/monitor/monitorIngestion.sh"
         "bin/monitor/monitorAnalytics.sh"
         "bin/monitor/monitorInfrastructure.sh"
     )
-    
+
     for script in "${scripts[@]}"; do
         local full_path="${PROJECT_ROOT}/${script}"
         if [[ -f "${full_path}" && -x "${full_path}" ]]; then
@@ -246,16 +246,16 @@ test_monitoring_scripts() {
 ##
 test_backup_restore() {
     print_message "${BLUE}" "Testing backup/restore..."
-    
+
     if [[ ! -f "${PROJECT_ROOT}/sql/backups/backup_database.sh" ]]; then
         print_message "${YELLOW}" "  ⚠ Backup script not found"
         return 0
     fi
-    
+
     # Create backup
     if "${PROJECT_ROOT}/sql/backups/backup_database.sh" -d "${TEST_DBNAME}" -c > /dev/null 2>&1; then
         print_message "${GREEN}" "  ✓ Backup created successfully"
-        
+
         # List backups
         local backup_count
         backup_count=$("${PROJECT_ROOT}/sql/backups/backup_database.sh" -d "${TEST_DBNAME}" -l 2>/dev/null | grep -c "${TEST_DBNAME}" || echo "0")
@@ -272,7 +272,7 @@ test_backup_restore() {
 ##
 cleanup_test_database() {
     print_message "${BLUE}" "Cleaning up test database..."
-    
+
     if psql -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "${TEST_DBNAME}"; then
         read -p "Drop test database ${TEST_DBNAME}? (y/N): " -n 1 -r
         echo
@@ -291,16 +291,16 @@ cleanup_test_database() {
 ##
 quick_validation() {
     print_message "${BLUE}" "Running quick validation..."
-    
+
     check_prerequisites
     echo
-    
+
     test_configuration
     echo
-    
+
     test_scripts
     echo
-    
+
     print_message "${GREEN}" "Quick validation completed"
 }
 
@@ -311,27 +311,27 @@ full_test_suite() {
     print_message "${GREEN}" "Running Full Test Suite"
     print_message "${BLUE}" "========================"
     echo
-    
+
     if ! check_prerequisites; then
         exit 1
     fi
     echo
-    
+
     test_configuration
     echo
-    
+
     test_scripts
     echo
-    
+
     test_monitoring_scripts
     echo
-    
+
     test_database_setup
     echo
-    
+
     test_backup_restore
     echo
-    
+
     print_message "${GREEN}" "Full test suite completed"
 }
 
@@ -341,7 +341,7 @@ full_test_suite() {
 main() {
     local test_mode="full"
     local cleanup=false
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -380,7 +380,7 @@ main() {
                 ;;
         esac
     done
-    
+
     case "${test_mode}" in
         full)
             full_test_suite
@@ -400,7 +400,7 @@ main() {
             test_configuration
             ;;
     esac
-    
+
     if [[ "${cleanup}" == "true" ]]; then
         echo
         cleanup_test_database

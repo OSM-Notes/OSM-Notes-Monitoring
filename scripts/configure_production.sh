@@ -65,26 +65,26 @@ configure_main_properties() {
     print_message "${BLUE}" "Configuring Main Properties (etc/properties.sh)"
     print_message "${BLUE}" "================================================"
     echo
-    
+
     local config_file="${PROJECT_ROOT}/etc/properties.sh"
     local example_file="${PROJECT_ROOT}/etc/properties.sh.example"
-    
+
     # Copy from example if doesn't exist
     if [[ ! -f "${config_file}" && -f "${example_file}" ]]; then
         cp "${example_file}" "${config_file}"
         print_message "${YELLOW}" "Created ${config_file} from example"
     fi
-    
+
     if [[ ! -f "${config_file}" ]]; then
         print_message "${RED}" "Configuration file not found: ${config_file}"
         return 1
     fi
-    
+
     print_message "${YELLOW}" "Current configuration:"
     echo
     grep -E "^[A-Z_]+=" "${config_file}" | head -20
     echo
-    
+
     read -p "Edit configuration file? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -93,7 +93,7 @@ configure_main_properties() {
     else
         print_message "${BLUE}" "Skipped"
     fi
-    
+
     echo
     print_message "${BLUE}" "Key settings to configure:"
     echo "  - DBNAME: Monitoring database name (default: notes_monitoring)"
@@ -114,26 +114,26 @@ configure_monitoring() {
     print_message "${BLUE}" "Configuring Monitoring Thresholds (config/monitoring.conf)"
     print_message "${BLUE}" "========================================================"
     echo
-    
+
     local config_file="${PROJECT_ROOT}/config/monitoring.conf"
     local example_file="${PROJECT_ROOT}/config/monitoring.conf.example"
-    
+
     # Copy from example if doesn't exist
     if [[ ! -f "${config_file}" && -f "${example_file}" ]]; then
         cp "${example_file}" "${config_file}"
         print_message "${YELLOW}" "Created ${config_file} from example"
     fi
-    
+
     if [[ ! -f "${config_file}" ]]; then
         print_message "${RED}" "Configuration file not found: ${config_file}"
         return 1
     fi
-    
+
     print_message "${YELLOW}" "Current thresholds:"
     echo
     grep -E "THRESHOLD|INTERVAL" "${config_file}" | head -15
     echo
-    
+
     read -p "Edit monitoring configuration? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -142,7 +142,7 @@ configure_monitoring() {
     else
         print_message "${BLUE}" "Skipped"
     fi
-    
+
     echo
     print_message "${BLUE}" "Key thresholds to review:"
     echo "  - Ingestion thresholds (data freshness, error rates)"
@@ -159,26 +159,26 @@ configure_alerts() {
     print_message "${BLUE}" "Configuring Alerts (config/alerts.conf)"
     print_message "${BLUE}" "======================================="
     echo
-    
+
     local config_file="${PROJECT_ROOT}/config/alerts.conf"
     local example_file="${PROJECT_ROOT}/config/alerts.conf.example"
-    
+
     # Copy from example if doesn't exist
     if [[ ! -f "${config_file}" && -f "${example_file}" ]]; then
         cp "${example_file}" "${config_file}"
         print_message "${YELLOW}" "Created ${config_file} from example"
     fi
-    
+
     if [[ ! -f "${config_file}" ]]; then
         print_message "${RED}" "Configuration file not found: ${config_file}"
         return 1
     fi
-    
+
     print_message "${YELLOW}" "Current alert configuration:"
     echo
     grep -E "EMAIL|SLACK|SEND" "${config_file}" | head -10
     echo
-    
+
     read -p "Edit alert configuration? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -187,7 +187,7 @@ configure_alerts() {
     else
         print_message "${BLUE}" "Skipped"
     fi
-    
+
     echo
     print_message "${BLUE}" "Key settings to configure:"
     echo "  - ADMIN_EMAIL: Email address for alerts"
@@ -204,26 +204,26 @@ configure_security() {
     print_message "${BLUE}" "Configuring Security (config/security.conf)"
     print_message "${BLUE}" "==========================================="
     echo
-    
+
     local config_file="${PROJECT_ROOT}/config/security.conf"
     local example_file="${PROJECT_ROOT}/config/security.conf.example"
-    
+
     # Copy from example if doesn't exist
     if [[ ! -f "${config_file}" && -f "${example_file}" ]]; then
         cp "${example_file}" "${config_file}"
         print_message "${YELLOW}" "Created ${config_file} from example"
     fi
-    
+
     if [[ ! -f "${config_file}" ]]; then
         print_message "${RED}" "Configuration file not found: ${config_file}"
         return 1
     fi
-    
+
     print_message "${YELLOW}" "Current security configuration:"
     echo
     grep -E "RATE_LIMIT|DDoS|BLOCK" "${config_file}" | head -10
     echo
-    
+
     read -p "Edit security configuration? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -232,7 +232,7 @@ configure_security() {
     else
         print_message "${BLUE}" "Skipped"
     fi
-    
+
     echo
     print_message "${BLUE}" "Key settings to configure:"
     echo "  - RATE_LIMIT_PER_IP_PER_MINUTE: Rate limiting per IP"
@@ -248,30 +248,30 @@ review_configuration() {
     print_message "${BLUE}" "Reviewing Current Configuration"
     print_message "${BLUE}" "==============================="
     echo
-    
+
     local config_files=(
         "etc/properties.sh"
         "config/monitoring.conf"
         "config/alerts.conf"
         "config/security.conf"
     )
-    
+
     for config_file in "${config_files[@]}"; do
         local full_path="${PROJECT_ROOT}/${config_file}"
-        
+
         echo
         print_message "${YELLOW}" "=== ${config_file} ==="
-        
+
         if [[ -f "${full_path}" ]]; then
             # Check for default values
             local defaults_found=0
-            
+
             if grep -q "example.com\|changeme\|password\|/path/to" "${full_path}" 2>/dev/null; then
                 print_message "${RED}" "⚠ Default values found:"
                 grep -E "example.com|changeme|password|/path/to" "${full_path}" | head -5
                 defaults_found=1
             fi
-            
+
             # Show key settings
             print_message "${BLUE}" "Key settings:"
             case "${config_file}" in
@@ -288,7 +288,7 @@ review_configuration() {
                     grep -E "RATE_LIMIT|DDoS" "${full_path}" 2>/dev/null | head -10
                     ;;
             esac
-            
+
             if [[ ${defaults_found} -eq 0 ]]; then
                 print_message "${GREEN}" "✓ No obvious default values"
             fi
@@ -296,7 +296,7 @@ review_configuration() {
             print_message "${RED}" "✗ File not found (using defaults)"
         fi
     done
-    
+
     echo
     print_message "${BLUE}" "Validation:"
     if [[ -f "${PROJECT_ROOT}/scripts/test_config_validation.sh" ]]; then
@@ -309,7 +309,7 @@ review_configuration() {
 ##
 validate_configuration() {
     print_message "${BLUE}" "Validating configuration..."
-    
+
     if [[ -f "${PROJECT_ROOT}/scripts/test_config_validation.sh" ]]; then
         if "${PROJECT_ROOT}/scripts/test_config_validation.sh" > /dev/null 2>&1; then
             print_message "${GREEN}" "✓ Configuration validation passed"
@@ -330,7 +330,7 @@ validate_configuration() {
 ##
 main() {
     local config_mode="all"
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -369,11 +369,11 @@ main() {
                 ;;
         esac
     done
-    
+
     print_message "${GREEN}" "Production Configuration Setup"
     print_message "${BLUE}" "==============================="
     echo
-    
+
     case "${config_mode}" in
         main)
             configure_main_properties
@@ -410,7 +410,7 @@ main() {
             validate_configuration
             ;;
     esac
-    
+
     echo
     print_message "${GREEN}" "Configuration complete!"
     print_message "${BLUE}" "Next steps:"

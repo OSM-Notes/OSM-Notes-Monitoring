@@ -107,6 +107,12 @@ teardown() {
     export -f check_server_resources
     
     # shellcheck disable=SC2317
+    check_advanced_system_metrics() {
+        return 0
+    }
+    export -f check_advanced_system_metrics
+    
+    # shellcheck disable=SC2317
     check_network_connectivity() {
         return 0
     }
@@ -123,6 +129,19 @@ teardown() {
         return 0
     }
     export -f check_service_dependencies
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Run main with no arguments
     run main
@@ -145,6 +164,12 @@ teardown() {
     }
     export -f check_server_resources
     
+    # shellcheck disable=SC2317
+    check_advanced_system_metrics() {
+        return 0
+    }
+    export -f check_advanced_system_metrics
+    
     # Mock other checks to ensure they're not called
     # shellcheck disable=SC2317
     check_network_connectivity() {
@@ -163,6 +188,19 @@ teardown() {
         return 0
     }
     export -f check_service_dependencies
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # Run main with specific check
     run main "server_resources"
@@ -216,12 +254,21 @@ teardown() {
     # shellcheck disable=SC2317
     check_server_resources() { return 0; }
     # shellcheck disable=SC2317
+    check_advanced_system_metrics() { return 0; }
+    # shellcheck disable=SC2317
     check_network_connectivity() { return 0; }
     # shellcheck disable=SC2317
     check_database_server_health() { return 0; }
     # shellcheck disable=SC2317
     check_service_dependencies() { return 0; }
-    export -f check_server_resources check_network_connectivity check_database_server_health check_service_dependencies
+    export -f check_server_resources check_advanced_system_metrics check_network_connectivity check_database_server_health check_service_dependencies
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() { return 0; }
+    # shellcheck disable=SC2317
+    log_warning() { return 0; }
+    export -f log_info log_warning
     
     # Run main
     run main
@@ -274,12 +321,21 @@ teardown() {
     # shellcheck disable=SC2317
     check_server_resources() { return 0; }
     # shellcheck disable=SC2317
+    check_advanced_system_metrics() { return 0; }
+    # shellcheck disable=SC2317
     check_network_connectivity() { return 0; }
     # shellcheck disable=SC2317
     check_database_server_health() { return 0; }
     # shellcheck disable=SC2317
     check_service_dependencies() { return 0; }
-    export -f check_server_resources check_network_connectivity check_database_server_health check_service_dependencies
+    export -f check_server_resources check_advanced_system_metrics check_network_connectivity check_database_server_health check_service_dependencies
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() { return 0; }
+    # shellcheck disable=SC2317
+    log_warning() { return 0; }
+    export -f log_info log_warning
     
     # Test each check type
     run main "server_resources"

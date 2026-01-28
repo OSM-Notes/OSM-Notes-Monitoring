@@ -44,9 +44,9 @@ command_exists() {
 ##
 check_prerequisites() {
     print_message "${BLUE}" "Checking prerequisites..."
-    
+
     local missing=()
-    
+
     # Check required commands
     local required_commands=(
         "bash"
@@ -55,18 +55,18 @@ check_prerequisites() {
         "shellcheck"
         "bats"
     )
-    
+
     for cmd in "${required_commands[@]}"; do
         if ! command_exists "${cmd}"; then
             missing+=("${cmd}")
         fi
     done
-    
+
     if [[ ${#missing[@]} -gt 0 ]]; then
         print_message "${RED}" "Missing required commands: ${missing[*]}"
         return 1
     fi
-    
+
     print_message "${GREEN}" "✓ All prerequisites met"
     return 0
 }
@@ -76,19 +76,19 @@ check_prerequisites() {
 ##
 setup_config() {
     print_message "${BLUE}" "Setting up configuration files..."
-    
+
     local config_files=(
         "etc/properties.sh"
         "config/monitoring.conf"
         "config/alerts.conf"
         "config/security.conf"
     )
-    
+
     for config_file in "${config_files[@]}"; do
         local example_file="${config_file}.example"
         local full_path="${PROJECT_ROOT}/${config_file}"
         local example_path="${PROJECT_ROOT}/${example_file}"
-        
+
         if [[ ! -f "${full_path}" && -f "${example_path}" ]]; then
             cp "${example_path}" "${full_path}"
             print_message "${YELLOW}" "  Created ${config_file} from example"
@@ -106,10 +106,10 @@ setup_config() {
 ##
 setup_test_database() {
     print_message "${BLUE}" "Setting up test database..."
-    
+
     local test_db="osm_notes_monitoring_test"
     local init_sql="${PROJECT_ROOT}/sql/init.sql"
-    
+
     # Check if database exists
     if psql -lqt | cut -d \| -f 1 | grep -qw "${test_db}"; then
         print_message "${YELLOW}" "  Test database ${test_db} already exists"
@@ -121,7 +121,7 @@ setup_test_database() {
         fi
         dropdb "${test_db}" || true
     fi
-    
+
     # Create database
     if createdb "${test_db}"; then
         print_message "${GREEN}" "  ✓ Created test database: ${test_db}"
@@ -129,7 +129,7 @@ setup_test_database() {
         print_message "${RED}" "  ✗ Failed to create test database"
         return 1
     fi
-    
+
     # Initialize schema
     if [[ -f "${init_sql}" ]]; then
         if psql -d "${test_db}" -f "${init_sql}" > /dev/null 2>&1; then
@@ -148,15 +148,15 @@ setup_test_database() {
 ##
 setup_git_hooks() {
     print_message "${BLUE}" "Setting up Git hooks..."
-    
+
     local hooks_dir="${PROJECT_ROOT}/.git/hooks"
     local pre_commit_hook="${hooks_dir}/pre-commit"
-    
+
     if [[ ! -d "${hooks_dir}" ]]; then
         print_message "${RED}" "  ✗ .git/hooks directory not found (not a git repository?)"
         return 1
     fi
-    
+
     # Create pre-commit hook
     cat > "${pre_commit_hook}" << 'EOF'
 #!/usr/bin/env bash
@@ -189,7 +189,7 @@ fi
 
 exit 0
 EOF
-    
+
     chmod +x "${pre_commit_hook}"
     print_message "${GREEN}" "  ✓ Created pre-commit hook"
 }
@@ -200,29 +200,29 @@ EOF
 main() {
     print_message "${GREEN}" "OSM-Notes-Monitoring Development Setup"
     echo
-    
+
     if ! check_prerequisites; then
         exit 1
     fi
-    
+
     echo
     setup_config
     echo
-    
+
     read -p "Setup test database? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         setup_test_database
         echo
     fi
-    
+
     read -p "Setup Git hooks? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         setup_git_hooks
         echo
     fi
-    
+
     print_message "${GREEN}" "Setup complete!"
     print_message "${YELLOW}" "Next steps:"
     echo "  1. Edit configuration files in etc/ and config/"

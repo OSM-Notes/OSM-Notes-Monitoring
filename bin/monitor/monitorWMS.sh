@@ -58,7 +58,7 @@ Options:
     -q, --quiet         Suppress non-error output
     -c, --config FILE   Use specific configuration file
     --check CHECK       Run specific check only
-                        Available checks: availability, health, response_time, 
+                        Available checks: availability, health, response_time,
                                         error_rate, tile_performance, cache_hit_rate
 
 Examples:
@@ -333,7 +333,7 @@ check_error_rate() {
   # If no log directory, check recent metrics
   if check_database_connection 2> /dev/null; then
    local query="
-                SELECT 
+                SELECT
                     SUM(CASE WHEN metric_name = 'error_count' THEN metric_value::numeric ELSE 0 END) as errors,
                     SUM(CASE WHEN metric_name = 'request_count' THEN metric_value::numeric ELSE 0 END) as requests
                 FROM metrics
@@ -497,7 +497,7 @@ check_cache_hit_rate() {
   # If no log directory, check recent metrics
   if check_database_connection 2> /dev/null; then
    local query="
-                SELECT 
+                SELECT
                     SUM(CASE WHEN metric_name = 'cache_hits' THEN metric_value::numeric ELSE 0 END) as hits,
                     SUM(CASE WHEN metric_name = 'cache_misses' THEN metric_value::numeric ELSE 0 END) as misses
                 FROM metrics

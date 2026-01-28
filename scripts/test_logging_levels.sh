@@ -89,12 +89,12 @@ run_test() {
     local test_name="${1}"
     shift
     local test_command="$*"
-    
+
     print_message "${BLUE}" "Testing: ${test_name}"
-    
+
     # Reset log file
     rm -f "${TEST_LOG_FILE}"
-    
+
     if eval "${test_command}" > /dev/null 2>&1; then
         print_message "${GREEN}" "  ✓ PASSED"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -111,20 +111,20 @@ run_test() {
 ##
 test_debug_level() {
     print_message "${BLUE}" "\n=== Testing DEBUG Level ==="
-    
+
     export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
     setup_test
-    
+
     # All levels should log
     run_test "DEBUG level logs DEBUG messages" \
         "log_debug 'Debug test' && log_contains 'DEBUG' && log_contains 'Debug test'"
-    
+
     run_test "DEBUG level logs INFO messages" \
         "log_info 'Info test' && log_contains 'INFO' && log_contains 'Info test'"
-    
+
     run_test "DEBUG level logs WARNING messages" \
         "log_warning 'Warning test' && log_contains 'WARNING' && log_contains 'Warning test'"
-    
+
     run_test "DEBUG level logs ERROR messages" \
         "log_error 'Error test' && log_contains 'ERROR' && log_contains 'Error test'"
 }
@@ -134,20 +134,20 @@ test_debug_level() {
 ##
 test_info_level() {
     print_message "${BLUE}" "\n=== Testing INFO Level ==="
-    
+
     export LOG_LEVEL="${LOG_LEVEL_INFO}"
     setup_test
-    
+
     # DEBUG should not log, others should
     run_test "INFO level does not log DEBUG messages" \
         "log_debug 'Debug test' && (log_not_contains 'DEBUG' || true)"
-    
+
     run_test "INFO level logs INFO messages" \
         "log_info 'Info test' && log_contains 'INFO' && log_contains 'Info test'"
-    
+
     run_test "INFO level logs WARNING messages" \
         "log_warning 'Warning test' && log_contains 'WARNING' && log_contains 'Warning test'"
-    
+
     run_test "INFO level logs ERROR messages" \
         "log_error 'Error test' && log_contains 'ERROR' && log_contains 'Error test'"
 }
@@ -157,20 +157,20 @@ test_info_level() {
 ##
 test_warning_level() {
     print_message "${BLUE}" "\n=== Testing WARNING Level ==="
-    
+
     export LOG_LEVEL="${LOG_LEVEL_WARNING}"
     setup_test
-    
+
     # DEBUG and INFO should not log, WARNING and ERROR should
     run_test "WARNING level does not log DEBUG messages" \
         "log_debug 'Debug test' && (log_not_contains 'DEBUG' || true)"
-    
+
     run_test "WARNING level does not log INFO messages" \
         "log_info 'Info test' && (log_not_contains 'INFO' || true)"
-    
+
     run_test "WARNING level logs WARNING messages" \
         "log_warning 'Warning test' && log_contains 'WARNING' && log_contains 'Warning test'"
-    
+
     run_test "WARNING level logs ERROR messages" \
         "log_error 'Error test' && log_contains 'ERROR' && log_contains 'Error test'"
 }
@@ -180,20 +180,20 @@ test_warning_level() {
 ##
 test_error_level() {
     print_message "${BLUE}" "\n=== Testing ERROR Level ==="
-    
+
     export LOG_LEVEL="${LOG_LEVEL_ERROR}"
     setup_test
-    
+
     # Only ERROR should log
     run_test "ERROR level does not log DEBUG messages" \
         "log_debug 'Debug test' && (log_not_contains 'DEBUG' || true)"
-    
+
     run_test "ERROR level does not log INFO messages" \
         "log_info 'Info test' && (log_not_contains 'INFO' || true)"
-    
+
     run_test "ERROR level does not log WARNING messages" \
         "log_warning 'Warning test' && (log_not_contains 'WARNING' || true)"
-    
+
     run_test "ERROR level logs ERROR messages" \
         "log_error 'Error test' && log_contains 'ERROR' && log_contains 'Error test'"
 }
@@ -203,12 +203,12 @@ test_error_level() {
 ##
 test_log_format() {
     print_message "${BLUE}" "\n=== Testing Log Format ==="
-    
+
     export LOG_LEVEL="${LOG_LEVEL_INFO}"
     setup_test
-    
+
     log_info "Format test"
-    
+
     # Check timestamp format (YYYY-MM-DD HH:MM:SS without brackets)
     if log_contains '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}'; then
         print_message "${GREEN}" "  ✓ Timestamp format correct"
@@ -217,7 +217,7 @@ test_log_format() {
         print_message "${RED}" "  ✗ Timestamp format incorrect"
         TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
-    
+
     # Check log level format [LEVEL]
     if log_contains '\[INFO\]'; then
         print_message "${GREEN}" "  ✓ Log level format correct"
@@ -233,13 +233,13 @@ test_log_format() {
 ##
 test_component_name() {
     print_message "${BLUE}" "\n=== Testing Component Name ==="
-    
+
     export LOG_LEVEL="${LOG_LEVEL_INFO}"
     export SCRIPT_NAME="TEST_COMPONENT"
     setup_test
-    
+
     log_info "Component test"
-    
+
     if log_contains "TEST_COMPONENT"; then
         print_message "${GREEN}" "  ✓ Component name included in log"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -256,7 +256,7 @@ print_summary() {
     echo
     print_message "${BLUE}" "=== Test Summary ==="
     print_message "${GREEN}" "Tests passed: ${TESTS_PASSED}"
-    
+
     if [[ ${TESTS_FAILED} -gt 0 ]]; then
         print_message "${RED}" "Tests failed: ${TESTS_FAILED}"
         echo
@@ -275,11 +275,11 @@ print_summary() {
 main() {
     print_message "${GREEN}" "Logging Levels Test Suite"
     echo
-    
+
     # Setup
     trap cleanup EXIT
     mkdir -p "${TEST_LOG_DIR}"
-    
+
     # Run test suites
     test_debug_level
     test_info_level
@@ -287,7 +287,7 @@ main() {
     test_error_level
     test_log_format
     test_component_name
-    
+
     # Summary
     if print_summary; then
         exit 0

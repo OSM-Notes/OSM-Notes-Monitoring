@@ -148,13 +148,13 @@ export DBNAME=osm_notes_monitoring_test
 # Check if PostgreSQL is running
 if command -v pg_isready > /dev/null 2>&1 && pg_isready -h localhost -p 5432 -U postgres > /dev/null 2>&1; then
     print_message "${GREEN}" "✓ PostgreSQL is running"
-    
+
     # Setup test database
     print_message "${BLUE}" "Setting up test database..."
     if [[ -f sql/init.sql ]]; then
         psql -d osm_notes_monitoring_test -f sql/init.sql 2>/dev/null || true
     fi
-    
+
     # Run unit tests
     print_message "${BLUE}" "Running unit tests..."
     if [[ -f tests/run_unit_tests.sh ]]; then
@@ -167,7 +167,7 @@ if command -v pg_isready > /dev/null 2>&1 && pg_isready -h localhost -p 5432 -U 
     else
         print_message "${YELLOW}" "⚠ Unit test script not found"
     fi
-    
+
     # Run integration tests
     print_message "${BLUE}" "Running integration tests..."
     if [[ -f tests/run_integration_tests.sh ]]; then

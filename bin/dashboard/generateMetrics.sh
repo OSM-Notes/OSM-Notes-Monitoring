@@ -103,7 +103,7 @@ generate_component_metrics() {
  local component_lower
  component_lower=$(echo "${component}" | tr '[:upper:]' '[:lower:]')
 
- local query="SELECT 
+ local query="SELECT
                    metric_name,
                    metric_value,
                    metadata,
@@ -215,7 +215,7 @@ generate_dashboard_metrics() {
  component_lower=$(echo "${component}" | tr '[:upper:]' '[:lower:]')
 
  # Aggregate metrics by name for dashboard
- local dashboard_query="SELECT 
+ local dashboard_query="SELECT
                             metric_name,
                             COUNT(*) as count,
                             AVG(metric_value::numeric) as avg_value,

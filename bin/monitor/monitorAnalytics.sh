@@ -548,14 +548,14 @@ check_data_warehouse_freshness() {
  # Query to check last update time in data warehouse
  # This checks common DWH tables for their last update timestamp
  local freshness_query="
-        SELECT 
+        SELECT
             COALESCE(
                 MAX(EXTRACT(EPOCH FROM (NOW() - updated_at))),
                 MAX(EXTRACT(EPOCH FROM (NOW() - created_at))),
                 MAX(EXTRACT(EPOCH FROM (NOW() - last_updated))),
                 MAX(EXTRACT(EPOCH FROM (NOW() - timestamp)))
             ) as freshness_seconds,
-            COUNT(*) FILTER (WHERE 
+            COUNT(*) FILTER (WHERE
                 updated_at > NOW() - INTERVAL '1 hour' OR
                 created_at > NOW() - INTERVAL '1 hour' OR
                 last_updated > NOW() - INTERVAL '1 hour' OR
@@ -617,7 +617,7 @@ check_data_warehouse_freshness() {
 
   # Try to get table modification times from PostgreSQL
   local table_freshness_query="
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 EXTRACT(EPOCH FROM (NOW() - last_vacuum)) as freshness_seconds
@@ -948,14 +948,14 @@ check_data_mart_update_status() {
  # Query to check data mart update status
  # This checks common data mart tables for their last update timestamp and status
  local mart_status_query="
-        SELECT 
+        SELECT
             'data_mart' as mart_name,
             COALESCE(
                 MAX(EXTRACT(EPOCH FROM (NOW() - updated_at))),
                 MAX(EXTRACT(EPOCH FROM (NOW() - last_updated))),
                 MAX(EXTRACT(EPOCH FROM (NOW() - timestamp)))
             ) as last_update_age_seconds,
-            COUNT(*) FILTER (WHERE 
+            COUNT(*) FILTER (WHERE
                 updated_at > NOW() - INTERVAL '1 hour' OR
                 last_updated > NOW() - INTERVAL '1 hour' OR
                 timestamp > NOW() - INTERVAL '1 hour'
@@ -1154,8 +1154,8 @@ check_query_performance() {
 
  # Check if pg_stat_statements extension is available (PostgreSQL-specific)
  local pg_stat_check_query="
-        SELECT COUNT(*) 
-        FROM pg_extension 
+        SELECT COUNT(*)
+        FROM pg_extension
         WHERE extname = 'pg_stat_statements';
     "
 
@@ -1167,7 +1167,7 @@ check_query_performance() {
   local slow_query_threshold="${ANALYTICS_SLOW_QUERY_THRESHOLD:-1000}"
   # shellcheck disable=SC2016
   local slow_queries_query="
-            SELECT 
+            SELECT
                 COUNT(*) as slow_query_count,
                 SUM(mean_exec_time) as total_time_ms,
                 MAX(mean_exec_time) as max_time_ms,
@@ -1231,7 +1231,7 @@ check_query_performance() {
 
   # Get top slow queries for detailed analysis
   local top_slow_queries_query="
-            SELECT 
+            SELECT
                 LEFT(query, 100) as query_preview,
                 mean_exec_time as avg_time_ms,
                 calls as call_count,
@@ -1304,7 +1304,7 @@ check_query_performance() {
 
  # Check index usage (PostgreSQL-specific)
  local index_usage_query="
-        SELECT 
+        SELECT
             schemaname,
             tablename,
             indexname,
@@ -1380,7 +1380,7 @@ check_storage_growth() {
 
  # Get database size (PostgreSQL-specific)
  local db_size_query="
-        SELECT 
+        SELECT
             pg_database.datname,
             pg_size_pretty(pg_database_size(pg_database.datname)) AS size,
             pg_database_size(pg_database.datname) AS size_bytes
@@ -1419,7 +1419,7 @@ check_storage_growth() {
 
  # Get table sizes (PostgreSQL-specific)
  local table_sizes_query="
-        SELECT 
+        SELECT
             schemaname,
             tablename,
             pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,

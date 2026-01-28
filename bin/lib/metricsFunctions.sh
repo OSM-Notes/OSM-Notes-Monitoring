@@ -46,7 +46,7 @@ get_metrics_summary() {
  local dbuser="${DBUSER:-postgres}"
 
  local query
- query="SELECT 
+ query="SELECT
                metric_name,
                AVG(metric_value) as avg_value,
                MIN(metric_value) as min_value,
@@ -377,7 +377,7 @@ aggregate_metrics() {
   esac
 
   local query
-  query="SELECT 
+  query="SELECT
                    ${time_group} as period,
                    AVG(metric_value) as avg_value,
                    MIN(metric_value) as min_value,

@@ -45,7 +45,7 @@ collect_table_sizes() {
  log_info "${COMPONENT}: Collecting table sizes"
 
  local query="
-        SELECT 
+        SELECT
             tablename,
             pg_total_relation_size('public.'||tablename) AS total_size_bytes,
             pg_relation_size('public.'||tablename) AS table_size_bytes,
@@ -91,7 +91,7 @@ collect_table_bloat() {
  log_info "${COMPONENT}: Collecting table bloat metrics"
 
  local query="
-        SELECT 
+        SELECT
             tablename,
             n_live_tup AS live_tuples,
             n_dead_tup AS dead_tuples,
@@ -148,12 +148,12 @@ collect_index_usage() {
  log_info "${COMPONENT}: Collecting index usage metrics"
 
  local query="
-        SELECT 
+        SELECT
             t.tablename,
             COALESCE(SUM(i.idx_scan), 0) AS total_index_scans,
             t.seq_scan AS sequential_scans,
-            CASE 
-                WHEN t.seq_scan + COALESCE(SUM(i.idx_scan), 0) > 0 
+            CASE
+                WHEN t.seq_scan + COALESCE(SUM(i.idx_scan), 0) > 0
                 THEN ROUND(COALESCE(SUM(i.idx_scan), 0) * 100.0 / (t.seq_scan + COALESCE(SUM(i.idx_scan), 0)), 2)
                 ELSE 0
             END AS index_scan_ratio_percent
@@ -211,7 +211,7 @@ collect_unused_indexes() {
  log_info "${COMPONENT}: Collecting unused indexes metrics"
 
  local query="
-        SELECT 
+        SELECT
             COUNT(*) AS unused_index_count,
             SUM(pg_relation_size(indexrelid)) AS unused_index_size_bytes
         FROM pg_stat_user_indexes
@@ -263,7 +263,7 @@ collect_slow_queries() {
  fi
 
  local query="
-        SELECT 
+        SELECT
             COUNT(*) AS slow_query_count
         FROM pg_stat_statements
         WHERE mean_exec_time > 1000
@@ -288,7 +288,7 @@ collect_cache_hit_ratio() {
  log_info "${COMPONENT}: Collecting cache hit ratio"
 
  local query="
-        SELECT 
+        SELECT
             ROUND(blks_hit * 100.0 / NULLIF(blks_hit + blks_read, 0), 2) AS cache_hit_ratio_percent
         FROM pg_stat_database
         WHERE datname = current_database();
@@ -313,7 +313,7 @@ collect_connection_stats() {
 
  # Active connections by application
  local app_query="
-        SELECT 
+        SELECT
             application_name,
             COUNT(*) AS connection_count
         FROM pg_stat_activity
@@ -339,7 +339,7 @@ collect_connection_stats() {
 
  # Overall connection statistics
  local conn_query="
-        SELECT 
+        SELECT
             COUNT(*) AS total_connections,
             COUNT(*) FILTER (WHERE state = 'active') AS active_connections,
             COUNT(*) FILTER (WHERE state = 'idle') AS idle_connections,
@@ -375,7 +375,7 @@ collect_connection_stats() {
 
  # Connection usage percentage
  local usage_query="
-        SELECT 
+        SELECT
             COUNT(*) AS current_connections,
             current_setting('max_connections')::integer AS max_connections,
             ROUND(COUNT(*) * 100.0 / current_setting('max_connections')::integer, 2) AS connection_usage_percent
@@ -413,7 +413,7 @@ collect_lock_stats() {
 
  # Active locks summary
  local lock_query="
-        SELECT 
+        SELECT
             COUNT(*) AS total_locks,
             COUNT(*) FILTER (WHERE granted = true) AS granted_locks,
             COUNT(*) FILTER (WHERE granted = false) AS waiting_locks
@@ -441,7 +441,7 @@ collect_lock_stats() {
 
  # Deadlocks count
  local deadlock_query="
-        SELECT 
+        SELECT
             deadlocks AS deadlocks_count
         FROM pg_stat_database
         WHERE datname = current_database();

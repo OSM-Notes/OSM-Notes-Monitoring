@@ -43,7 +43,7 @@ print_message() {
 test_result() {
     local status="${1}"
     local message="${2}"
-    
+
     case "${status}" in
         PASS)
             print_message "${GREEN}" "  ✓ ${message}"
@@ -65,13 +65,13 @@ test_result() {
 ##
 validate_database() {
     print_message "${BLUE}" "Validating database connection..."
-    
+
     # Source properties
     local dbname="notes_monitoring"
     local dbhost="localhost"
     local dbport="5432"
     local dbuser="postgres"
-    
+
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
         # shellcheck source=/dev/null
         source "${PROJECT_ROOT}/etc/properties.sh"
@@ -80,12 +80,12 @@ validate_database() {
         dbport="${DBPORT:-${dbport}}"
         dbuser="${DBUSER:-${dbuser}}"
     fi
-    
+
     # Build psql connection string
     # For localhost, use socket (peer auth) if user matches, otherwise use TCP
     local psql_cmd="psql"
     local current_user="${USER:-$(whoami)}"
-    
+
     # If DBUSER matches current user, use peer authentication (socket)
     # Otherwise, use TCP with password authentication
     if [[ "${dbuser}" == "${current_user}" ]]; then
@@ -106,10 +106,10 @@ validate_database() {
             psql_cmd="${psql_cmd} -p ${dbport}"
         fi
     fi
-    
+
     if ${psql_cmd} -d "${dbname}" -c "SELECT 1;" > /dev/null 2>&1; then
         test_result "PASS" "Database connection successful (${dbuser}@${dbhost}:${dbport}/${dbname})"
-        
+
         # Check schema
         local table_count
         table_count=$(${psql_cmd} -d "${dbname}" -t -A -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null || echo "0")
@@ -132,19 +132,19 @@ validate_database() {
 ##
 validate_configuration() {
     print_message "${BLUE}" "Validating configuration files..."
-    
+
     local config_files=(
         "etc/properties.sh"
         "config/monitoring.conf"
         "config/alerts.conf"
         "config/security.conf"
     )
-    
+
     for config_file in "${config_files[@]}"; do
         local full_path="${PROJECT_ROOT}/${config_file}"
         if [[ -f "${full_path}" ]]; then
             test_result "PASS" "Configuration file exists: ${config_file}"
-            
+
             # Check for default values
             if grep -q "example.com\|changeme\|password" "${full_path}" 2>/dev/null; then
                 test_result "WARN" "Default values found in ${config_file}"
@@ -153,7 +153,7 @@ validate_configuration() {
             test_result "FAIL" "Configuration file missing: ${config_file}"
         fi
     done
-    
+
     # Run config validation script if available
     if [[ -f "${PROJECT_ROOT}/scripts/test_config_validation.sh" ]]; then
         if "${PROJECT_ROOT}/scripts/test_config_validation.sh" > /dev/null 2>&1; then
@@ -169,7 +169,7 @@ validate_configuration() {
 ##
 validate_monitoring_scripts() {
     print_message "${BLUE}" "Validating monitoring scripts..."
-    
+
     local scripts=(
         "bin/monitor/monitorIngestion.sh"
         "bin/monitor/monitorAnalytics.sh"
@@ -178,7 +178,7 @@ validate_monitoring_scripts() {
         "bin/monitor/monitorData.sh"
         "bin/monitor/monitorInfrastructure.sh"
     )
-    
+
     for script in "${scripts[@]}"; do
         local full_path="${PROJECT_ROOT}/${script}"
         if [[ -f "${full_path}" && -x "${full_path}" ]]; then
@@ -194,14 +194,14 @@ validate_monitoring_scripts() {
 ##
 validate_alert_delivery() {
     print_message "${BLUE}" "Validating alert delivery..."
-    
+
     # Check alert scripts
     if [[ -f "${PROJECT_ROOT}/bin/alerts/sendAlert.sh" ]]; then
         test_result "PASS" "Alert sending script exists"
     else
         test_result "FAIL" "Alert sending script missing"
     fi
-    
+
     # Check alert configuration
     if [[ -f "${PROJECT_ROOT}/config/alerts.conf" ]]; then
         # Source to check if email is configured
@@ -216,7 +216,7 @@ validate_alert_delivery() {
         else
             test_result "WARN" "Email alerts not configured"
         fi
-        
+
         if [[ -n "${SLACK_WEBHOOK_URL:-}" ]]; then
             test_result "PASS" "Slack webhook configured"
         else
@@ -230,14 +230,14 @@ validate_alert_delivery() {
 ##
 validate_dashboards() {
     print_message "${BLUE}" "Validating dashboards..."
-    
+
     # Check HTML dashboards
     local html_dashboards=(
         "dashboards/html/overview.html"
         "dashboards/html/component_status.html"
         "dashboards/html/health_check.html"
     )
-    
+
     for dashboard in "${html_dashboards[@]}"; do
         local full_path="${PROJECT_ROOT}/${dashboard}"
         if [[ -f "${full_path}" ]]; then
@@ -246,7 +246,7 @@ validate_dashboards() {
             test_result "WARN" "HTML dashboard missing: ${dashboard}"
         fi
     done
-    
+
     # Check Grafana dashboards
     if [[ -d "${PROJECT_ROOT}/dashboards/grafana" ]]; then
         local grafana_count
@@ -264,7 +264,7 @@ validate_dashboards() {
 ##
 validate_system_health() {
     print_message "${BLUE}" "Validating system health..."
-    
+
     # Check disk space
     local available_space
     available_space=$(df -BG "${PROJECT_ROOT}" | tail -1 | awk '{print $4}' | sed 's/G//')
@@ -273,7 +273,7 @@ validate_system_health() {
     else
         test_result "PASS" "Disk space OK: ${available_space}GB available"
     fi
-    
+
     # Check log directory
     local log_dir="/var/log/osm-notes-monitoring"
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
@@ -281,13 +281,13 @@ validate_system_health() {
         source "${PROJECT_ROOT}/etc/properties.sh"
         log_dir="${LOG_DIR:-${log_dir}}"
     fi
-    
+
     if [[ -d "${log_dir}" && -w "${log_dir}" ]]; then
         test_result "PASS" "Log directory exists and is writable: ${log_dir}"
     else
         test_result "WARN" "Log directory missing or not writable: ${log_dir}"
     fi
-    
+
     # Check required commands
     local required_commands=("bash" "psql" "curl")
     for cmd in "${required_commands[@]}"; do
@@ -304,10 +304,10 @@ validate_system_health() {
 ##
 validate_cron_jobs() {
     print_message "${BLUE}" "Validating cron jobs..."
-    
+
     local crontab_content
     crontab_content=$(crontab -l 2>/dev/null || echo "")
-    
+
     if echo "${crontab_content}" | grep -q "OSM-Notes-Monitoring"; then
         local job_count
         job_count=$(echo "${crontab_content}" | grep -c "OSM-Notes-Monitoring" || echo "0")
@@ -329,7 +329,7 @@ generate_summary() {
     print_message "${YELLOW}" "Warnings: ${TESTS_WARNINGS}"
     print_message "${RED}" "Failed: ${TESTS_FAILED}"
     echo
-    
+
     if [[ ${TESTS_FAILED} -eq 0 ]]; then
         if [[ ${TESTS_WARNINGS} -eq 0 ]]; then
             print_message "${GREEN}" "✓ All validations passed!"
@@ -351,28 +351,28 @@ main() {
     print_message "${GREEN}" "Production Validation for OSM-Notes-Monitoring"
     print_message "${BLUE}" "================================================"
     echo
-    
+
     validate_database || true
     echo
-    
+
     validate_configuration || true
     echo
-    
+
     validate_monitoring_scripts || true
     echo
-    
+
     validate_alert_delivery || true
     echo
-    
+
     validate_dashboards || true
     echo
-    
+
     validate_system_health || true
     echo
-    
+
     validate_cron_jobs || true
     echo
-    
+
     generate_summary
 }
 

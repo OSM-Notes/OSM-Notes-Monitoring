@@ -235,6 +235,13 @@ teardown() {
 # Test: check_database_query_performance handles very fast query
 ##
 @test "check_database_query_performance handles very fast query" {
+    # Mock check_database_connection
+    # shellcheck disable=SC2317
+    function check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
     # Mock execute_sql_query to return fast query time
     # shellcheck disable=SC2317
     function execute_sql_query() {
@@ -242,6 +249,19 @@ teardown() {
         return 0
     }
     export -f execute_sql_query
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -263,13 +283,27 @@ teardown() {
 # Test: check_database_connections handles maximum connections
 ##
 @test "check_database_connections handles maximum connections" {
+    # Mock check_database_connection
+    # shellcheck disable=SC2317
+    function check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
     # Mock execute_sql_query to return high connection count
     # shellcheck disable=SC2317
     function execute_sql_query() {
-        echo "100|200"  # current=100, max=200
+        echo "100|50|50"  # total=100, active=50, idle=50
         return 0
     }
     export -f execute_sql_query
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -291,6 +325,13 @@ teardown() {
 # Test: check_database_table_sizes handles empty tables
 ##
 @test "check_database_table_sizes handles empty tables" {
+    # Mock check_database_connection
+    # shellcheck disable=SC2317
+    function check_database_connection() {
+        return 0
+    }
+    export -f check_database_connection
+    
     # Mock execute_sql_query to return empty table sizes
     # shellcheck disable=SC2317
     function execute_sql_query() {
@@ -298,6 +339,13 @@ teardown() {
         return 0
     }
     export -f execute_sql_query
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
     
     # shellcheck disable=SC2317
     record_metric() {
@@ -414,6 +462,19 @@ teardown() {
 # Test: main handles --check option with specific check
 ##
 @test "main handles --check option with specific check" {
+    # Mock load_all_configs and validate_all_configs
+    # shellcheck disable=SC2317
+    function load_all_configs() {
+        return 0
+    }
+    export -f load_all_configs
+    
+    # shellcheck disable=SC2317
+    function validate_all_configs() {
+        return 0
+    }
+    export -f validate_all_configs
+    
     # Mock check functions
     # shellcheck disable=SC2317
     function check_error_rate() {
@@ -421,6 +482,27 @@ teardown() {
     }
     export -f check_error_rate
     
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_error() {
+        return 0
+    }
+    export -f log_error
+    
+    # Mock init_alerting
+    # shellcheck disable=SC2317
+    init_alerting() {
+        return 0
+    }
+    export -f init_alerting
+    
+    # main parses --check "error_rate" internally
     run main --check "error_rate"
     assert_success
 }

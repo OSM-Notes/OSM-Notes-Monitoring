@@ -164,24 +164,54 @@ teardown() {
 }
 
 @test "check_structured_log_metrics succeeds when all metrics are healthy" {
+    # Reset alerts file for this test
     ALERTS_FILE="${TEST_LOG_DIR}/alerts_called.txt"
-    : > "${ALERTS_FILE}"
+    rm -f "${ALERTS_FILE}"
+    touch "${ALERTS_FILE}"
     
+    # Ensure log file exists
+    touch "${DAEMON_LOG_FILE}"
+    
+    # Mock log functions
+    # shellcheck disable=SC2317
+    log_info() {
+        return 0
+    }
+    export -f log_info
+    
+    # shellcheck disable=SC2317
+    log_warning() {
+        return 0
+    }
+    export -f log_warning
+    
+    # shellcheck disable=SC2317
+    log_debug() {
+        return 0
+    }
+    export -f log_debug
+    
+    # Override send_alert to capture alerts
+    # shellcheck disable=SC2317
     send_alert() {
         echo "$*" >> "${ALERTS_FILE}"
         return 0
     }
     export -f send_alert
     
+    # Override get_metric_value to return healthy values
+    # shellcheck disable=SC2317
     get_metric_value() {
+        local _component="${1}"
         local metric_name="${2}"
+        local _metadata="${3:-}"
         
         if [[ "${metric_name}" == "daemon_cycles_failed_count" ]]; then
             echo "0"
         elif [[ "${metric_name}" == "log_slowest_stage_duration_seconds" ]]; then
-            echo "15"
+            echo "15"  # Below threshold of 30
         elif [[ "${metric_name}" == "log_cycles_frequency_per_hour" ]]; then
-            echo "60"
+            echo "60"  # Normal frequency
         else
             echo "0"
         fi
@@ -189,7 +219,17 @@ teardown() {
     }
     export -f get_metric_value
     
+    # Override parse_structured_logs to succeed
+    # shellcheck disable=SC2317
     parse_structured_logs() {
+        local log_file="${1}"
+        local _time_window="${2}"
+        
+        if [[ ! -f "${log_file}" ]]; then
+            return 1
+        fi
+        
+        # Simulate successful parsing
         return 0
     }
     export -f parse_structured_logs
@@ -201,7 +241,7 @@ teardown() {
     # Should not have sent any alerts
     local alerts_count=0
     if [[ -f "${ALERTS_FILE}" ]]; then
-        alerts_count=$(wc -l < "${ALERTS_FILE}" | tr -d ' ')
+        alerts_count=$(wc -l < "${ALERTS_FILE}" 2>/dev/null | tr -d ' ' || echo "0")
     fi
     assert [[ "${alerts_count}" -eq 0 ]]
 }

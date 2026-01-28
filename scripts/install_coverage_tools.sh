@@ -37,21 +37,21 @@ command_exists() {
 ##
 install_bashcov() {
     print_message "${BLUE}" "Installing bashcov..."
-    
+
     # Check if Ruby is installed
     if ! command_exists ruby; then
         print_message "${YELLOW}" "Ruby is required for bashcov"
         print_message "${YELLOW}" "Install with: sudo apt-get install ruby ruby-dev"
         return 1
     fi
-    
+
     # Check if gem is available
     if ! command_exists gem; then
         print_message "${YELLOW}" "RubyGems is required for bashcov"
         print_message "${YELLOW}" "Install with: sudo apt-get install ruby-dev"
         return 1
     fi
-    
+
     print_message "${BLUE}" "Installing bashcov via gem..."
     if gem install bashcov; then
         print_message "${GREEN}" "✓ bashcov installed successfully"
@@ -81,7 +81,7 @@ check_installed() {
 main() {
     print_message "${GREEN}" "Code Coverage Tool Installer (bashcov)"
     echo
-    
+
     # Check if already installed
     if check_installed; then
         print_message "${BLUE}" ""
@@ -89,10 +89,10 @@ main() {
         print_message "${YELLOW}" "You can use: bash scripts/generate_coverage_instrumented_optimized.sh"
         exit 0
     fi
-    
+
     echo
     print_message "${BLUE}" "Installing bashcov..."
-    
+
     if install_bashcov; then
         print_message "${GREEN}" ""
         print_message "${GREEN}" "✓ bashcov installed successfully!"

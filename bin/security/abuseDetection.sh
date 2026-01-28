@@ -128,7 +128,7 @@ analyze_patterns() {
 
  # Analyze rapid requests pattern
  local rapid_query="
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND timestamp > CURRENT_TIMESTAMP - INTERVAL '10 seconds';
@@ -158,7 +158,7 @@ analyze_patterns() {
 
  # Analyze error rate pattern
  local error_query="
-        SELECT 
+        SELECT
             COUNT(*) FILTER (WHERE metadata->>'status_code' ~ '^[45]') as error_count,
             COUNT(*) as total_count
         FROM security_events
@@ -198,7 +198,7 @@ analyze_patterns() {
 
  # Analyze excessive requests pattern
  local excessive_query="
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND timestamp > CURRENT_TIMESTAMP - INTERVAL '1 hour';
@@ -329,7 +329,7 @@ detect_anomalies() {
 
  # Get current hour requests
  local current_query="
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND timestamp > DATE_TRUNC('hour', CURRENT_TIMESTAMP);
@@ -398,7 +398,7 @@ analyze_behavior() {
 
  # Analyze endpoint diversity (suspicious if hitting many different endpoints rapidly)
  local endpoint_query="
-        SELECT COUNT(DISTINCT endpoint) 
+        SELECT COUNT(DISTINCT endpoint)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND timestamp > CURRENT_TIMESTAMP - INTERVAL '5 minutes';
@@ -428,7 +428,7 @@ analyze_behavior() {
 
  # Analyze user agent patterns (suspicious if many different user agents)
  local ua_query="
-        SELECT COUNT(DISTINCT user_agent) 
+        SELECT COUNT(DISTINCT user_agent)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND timestamp > CURRENT_TIMESTAMP - INTERVAL '1 hour';
@@ -519,7 +519,7 @@ automatic_response() {
  local dbuser="${DBUSER:-postgres}"
 
  local violation_query="
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM security_events
         WHERE ip_address = '${ip}'::inet
           AND event_type = 'abuse'
@@ -682,7 +682,7 @@ get_abuse_stats() {
  local dbuser="${DBUSER:-postgres}"
 
  local query="
-        SELECT 
+        SELECT
             COUNT(*) FILTER (WHERE event_type = 'abuse') as abuse_events,
             COUNT(DISTINCT ip_address) FILTER (WHERE event_type = 'abuse') as unique_abusive_ips,
             MAX(timestamp) FILTER (WHERE event_type = 'abuse') as last_abuse_time
@@ -711,7 +711,7 @@ get_abuse_stats() {
  echo ""
  echo "Top abusive IPs:"
  query="
-        SELECT 
+        SELECT
             ip_address,
             COUNT(*) as abuse_count,
             MAX(timestamp) as last_abuse
@@ -751,7 +751,7 @@ show_patterns() {
  local dbuser="${DBUSER:-postgres}"
 
  local query="
-        SELECT 
+        SELECT
             ip_address,
             metadata->>'patterns' as patterns,
             MAX(timestamp) as detected_at

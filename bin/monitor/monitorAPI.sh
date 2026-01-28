@@ -57,7 +57,7 @@ Options:
     -q, --quiet         Suppress non-error output
     -c, --config FILE   Use specific configuration file
     --check CHECK       Run specific check only
-                        Available checks: availability, rate_limiting, 
+                        Available checks: availability, rate_limiting,
                                         ddos_protection, abuse_detection
 
 Examples:

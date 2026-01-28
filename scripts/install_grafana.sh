@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Install and configure Grafana for OSM-Notes-Monitoring
-# 
+#
 # This script installs Grafana and configures it to connect to the
 # PostgreSQL database (notes_monitoring) and provisions dashboards.
 #
@@ -164,33 +164,33 @@ fi
 # Only attempt installation if Grafana is not installed
 if [[ "${GRAFANA_INSTALLED}" == "false" ]]; then
     print_message "${BLUE}" "Installing Grafana..."
-    
+
     if [[ "${OS}" == "ubuntu" ]] || [[ "${OS}" == "debian" ]]; then
         # Ubuntu/Debian installation
         print_message "${BLUE}" "Installing Grafana for Ubuntu/Debian..."
-        
+
         # Add Grafana repository
         if [[ ! -f /etc/apt/sources.list.d/grafana.list ]]; then
             apt-get update
             apt-get install -y software-properties-common apt-transport-https
-            
+
             # Add Grafana GPG key
             mkdir -p /usr/share/keyrings
             wget -q -O /usr/share/keyrings/grafana.key https://apt.grafana.com/gpg.key
-            
+
             # Add repository
             echo "deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com stable main" | tee /etc/apt/sources.list.d/grafana.list
-            
+
             apt-get update
         fi
-        
+
         # Install Grafana
         apt-get install -y grafana
-        
+
     elif [[ "${OS}" == "centos" ]] || [[ "${OS}" == "rhel" ]] || [[ "${OS}" == "fedora" ]]; then
         # CentOS/RHEL/Fedora installation
         print_message "${BLUE}" "Installing Grafana for CentOS/RHEL/Fedora..."
-        
+
         if [[ ! -f /etc/yum.repos.d/grafana.repo ]]; then
             cat <<EOF > /etc/yum.repos.d/grafana.repo
 [grafana]
@@ -204,15 +204,15 @@ sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 EOF
         fi
-        
+
         yum install -y grafana
-        
+
     else
         print_message "${RED}" "Error: Unsupported OS: ${OS}"
         print_message "${YELLOW}" "Please install Grafana manually and run this script again"
         exit 1
     fi
-    
+
     print_message "${GREEN}" "✓ Grafana installed successfully"
     echo ""
 fi
@@ -220,7 +220,7 @@ fi
 # Configure Grafana port if different from default
 if [[ "${GRAFANA_PORT}" != "3000" ]]; then
     print_message "${BLUE}" "Configuring Grafana port to ${GRAFANA_PORT}..."
-    
+
     GRAFANA_INI="/etc/grafana/grafana.ini"
     if [[ -f "${GRAFANA_INI}" ]]; then
         # Update port in grafana.ini
@@ -246,7 +246,7 @@ GRAFANA_INI="/etc/grafana/grafana.ini"
 if [[ -f "${GRAFANA_INI}" ]]; then
     # Escape special characters in password for sed
     ADMIN_PASSWORD_ESCAPED=$(printf '%s\n' "${ADMIN_PASSWORD}" | sed "s/[[\\.*^\$()+?{|]/\\\\&/g")
-    
+
     # Set admin password in grafana.ini
     if grep -q "^admin_password" "${GRAFANA_INI}"; then
         # Use a different delimiter (#) to avoid issues with special characters

@@ -66,12 +66,12 @@ EOF
 run_production_setup() {
     print_message "${BLUE}" "Step 1: Production Environment Setup"
     print_message "${BLUE}" "====================================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/production_setup.sh" ]]; then
         print_message "${RED}" "Production setup script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/scripts/production_setup.sh"; then
         print_message "${GREEN}" "✓ Production setup completed"
         return 0
@@ -87,12 +87,12 @@ run_production_setup() {
 run_database_migration() {
     print_message "${BLUE}" "Step 2: Database Migration"
     print_message "${BLUE}" "=========================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/production_migration.sh" ]]; then
         print_message "${RED}" "Migration script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/scripts/production_migration.sh" -b; then
         print_message "${GREEN}" "✓ Database migration completed"
         return 0
@@ -108,12 +108,12 @@ run_database_migration() {
 run_security_hardening() {
     print_message "${BLUE}" "Step 3: Security Hardening"
     print_message "${BLUE}" "==========================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/security_hardening.sh" ]]; then
         print_message "${RED}" "Security hardening script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/scripts/security_hardening.sh" --apply; then
         print_message "${GREEN}" "✓ Security hardening completed"
         return 0
@@ -129,12 +129,12 @@ run_security_hardening() {
 setup_cron_jobs() {
     print_message "${BLUE}" "Step 4: Cron Jobs Setup"
     print_message "${BLUE}" "======================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/setup_cron.sh" ]]; then
         print_message "${RED}" "Cron setup script not found"
         return 1
     fi
-    
+
     # Install cron jobs for notes user (service user)
     if sudo "${PROJECT_ROOT}/scripts/setup_cron.sh" --install --user notes; then
         print_message "${GREEN}" "✓ Cron jobs configured for notes user"
@@ -151,12 +151,12 @@ setup_cron_jobs() {
 setup_backups() {
     print_message "${BLUE}" "Step 5: Backup Configuration"
     print_message "${BLUE}" "============================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/setup_backups.sh" ]]; then
         print_message "${RED}" "Backup setup script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/scripts/setup_backups.sh" --install; then
         print_message "${GREEN}" "✓ Backup configuration completed"
         return 0
@@ -172,12 +172,12 @@ setup_backups() {
 setup_log_rotation() {
     print_message "${BLUE}" "Step 6: Log Rotation Setup"
     print_message "${BLUE}" "==========================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/setup_logrotate.sh" ]]; then
         print_message "${RED}" "Log rotation setup script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/scripts/setup_logrotate.sh"; then
         print_message "${GREEN}" "✓ Log rotation configured"
         return 0
@@ -193,12 +193,12 @@ setup_log_rotation() {
 run_validation() {
     print_message "${BLUE}" "Step 7: Production Validation"
     print_message "${BLUE}" "=============================="
-    
+
     if [[ ! -f "${PROJECT_ROOT}/scripts/validate_production.sh" ]]; then
         print_message "${RED}" "Validation script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/scripts/validate_production.sh"; then
         print_message "${GREEN}" "✓ Production validation passed"
         return 0
@@ -220,7 +220,7 @@ main() {
     local skip_logrotate=false
     local skip_validation=false
     local validate_only=false
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -267,19 +267,19 @@ main() {
                 ;;
         esac
     done
-    
+
     print_message "${GREEN}" "OSM-Notes-Monitoring Production Deployment"
     print_message "${BLUE}" "==========================================="
     echo
-    
+
     # Validation only mode
     if [[ "${validate_only}" == "true" ]]; then
         run_validation
         exit $?
     fi
-    
+
     local failed_steps=0
-    
+
     # Step 1: Production setup
     if [[ "${skip_setup}" != "true" ]]; then
         if ! run_production_setup; then
@@ -287,7 +287,7 @@ main() {
         fi
         echo
     fi
-    
+
     # Step 2: Database migration
     if [[ "${skip_migration}" != "true" ]]; then
         if ! run_database_migration; then
@@ -295,14 +295,14 @@ main() {
         fi
         echo
     fi
-    
+
     # Step 3: Security hardening
     if [[ "${skip_security}" != "true" ]]; then
         # Security hardening warnings don't stop deployment
         run_security_hardening || true
         echo
     fi
-    
+
     # Step 4: Cron jobs
     if [[ "${skip_cron}" != "true" ]]; then
         if ! setup_cron_jobs; then
@@ -310,7 +310,7 @@ main() {
         fi
         echo
     fi
-    
+
     # Step 5: Backups
     if [[ "${skip_backups}" != "true" ]]; then
         if ! setup_backups; then
@@ -318,7 +318,7 @@ main() {
         fi
         echo
     fi
-    
+
     # Step 6: Log rotation
     if [[ "${skip_logrotate}" != "true" ]]; then
         if ! setup_log_rotation; then
@@ -326,7 +326,7 @@ main() {
         fi
         echo
     fi
-    
+
     # Step 7: Validation
     if [[ "${skip_validation}" != "true" ]]; then
         if ! run_validation; then
@@ -334,12 +334,12 @@ main() {
         fi
         echo
     fi
-    
+
     # Summary
     echo
     print_message "${BLUE}" "Deployment Summary"
     print_message "${BLUE}" "=================="
-    
+
     if [[ ${failed_steps} -eq 0 ]]; then
         print_message "${GREEN}" "✓ Deployment completed successfully!"
         print_message "${BLUE}" ""

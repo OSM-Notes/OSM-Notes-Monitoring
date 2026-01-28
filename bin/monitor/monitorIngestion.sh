@@ -687,7 +687,7 @@ check_database_connections() {
  # Query to check active connections
  # This is PostgreSQL-specific
  local connections_query="
-        SELECT 
+        SELECT
             count(*) as total_connections,
             count(*) FILTER (WHERE state = 'active') as active_connections,
             count(*) FILTER (WHERE state = 'idle') as idle_connections
@@ -719,7 +719,7 @@ check_database_table_sizes() {
 
  # Query to get table sizes (PostgreSQL-specific)
  local size_query="
-        SELECT 
+        SELECT
             schemaname,
             tablename,
             pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,
@@ -783,10 +783,10 @@ check_advanced_database_metrics() {
 
  # Check cache hit ratio threshold
  local cache_hit_query
- cache_hit_query="SELECT metric_value FROM metrics 
-                     WHERE component = 'ingestion' 
-                       AND metric_name = 'db_cache_hit_ratio' 
-                     ORDER BY timestamp DESC 
+ cache_hit_query="SELECT metric_value FROM metrics
+                     WHERE component = 'ingestion'
+                       AND metric_name = 'db_cache_hit_ratio'
+                     ORDER BY timestamp DESC
                      LIMIT 1;"
 
  local cache_hit_ratio
@@ -807,10 +807,10 @@ check_advanced_database_metrics() {
 
  # Check for slow queries
  local slow_queries_query
- slow_queries_query="SELECT metric_value FROM metrics 
-                        WHERE component = 'ingestion' 
-                          AND metric_name = 'db_slow_queries_count' 
-                        ORDER BY timestamp DESC 
+ slow_queries_query="SELECT metric_value FROM metrics
+                        WHERE component = 'ingestion'
+                          AND metric_name = 'db_slow_queries_count'
+                        ORDER BY timestamp DESC
                         LIMIT 1;"
 
  local slow_queries_count
@@ -825,10 +825,10 @@ check_advanced_database_metrics() {
 
  # Check connection usage
  local conn_usage_query
- conn_usage_query="SELECT metric_value FROM metrics 
-                      WHERE component = 'ingestion' 
-                        AND metric_name = 'db_connection_usage_percent' 
-                      ORDER BY timestamp DESC 
+ conn_usage_query="SELECT metric_value FROM metrics
+                      WHERE component = 'ingestion'
+                        AND metric_name = 'db_connection_usage_percent'
+                      ORDER BY timestamp DESC
                       LIMIT 1;"
 
  local conn_usage
@@ -848,10 +848,10 @@ check_advanced_database_metrics() {
 
  # Check for deadlocks
  local deadlocks_query
- deadlocks_query="SELECT metric_value FROM metrics 
-                      WHERE component = 'ingestion' 
-                        AND metric_name = 'db_deadlocks_count' 
-                      ORDER BY timestamp DESC 
+ deadlocks_query="SELECT metric_value FROM metrics
+                      WHERE component = 'ingestion'
+                        AND metric_name = 'db_deadlocks_count'
+                      ORDER BY timestamp DESC
                       LIMIT 1;"
 
  local deadlocks_count
@@ -1256,7 +1256,7 @@ check_data_completeness() {
  # Query to check for missing or null data
  # This is a placeholder - actual queries depend on database schema
  local completeness_query="
-        SELECT 
+        SELECT
             COUNT(*) as total_notes,
             COUNT(*) FILTER (WHERE id IS NULL) as null_ids,
             COUNT(*) FILTER (WHERE created_at IS NULL) as null_dates
@@ -1291,7 +1291,7 @@ check_data_freshness() {
  # Query to check last update time
  # This is a placeholder - actual queries depend on database schema
  local freshness_query="
-        SELECT 
+        SELECT
             EXTRACT(EPOCH FROM (NOW() - MAX(updated_at))) as freshness_seconds,
             COUNT(*) FILTER (WHERE updated_at > NOW() - INTERVAL '1 hour') as recent_updates
         FROM notes
@@ -1476,7 +1476,7 @@ check_processing_latency() {
 
  # Try to get latency from processing_log table if it exists
  local latency_query="
-        SELECT 
+        SELECT
             EXTRACT(EPOCH FROM (NOW() - MAX(execution_time))) AS latency_seconds
         FROM processing_log
         WHERE status = 'success'
@@ -1549,7 +1549,7 @@ check_processing_frequency() {
 
  # Try to get frequency from processing_log table
  local frequency_query="
-        SELECT 
+        SELECT
             AVG(EXTRACT(EPOCH FROM (execution_time - LAG(execution_time) OVER (ORDER BY execution_time)))) / 3600.0 AS avg_frequency_hours
         FROM processing_log
         WHERE status = 'success'
@@ -1688,9 +1688,9 @@ check_api_download_status() {
   if check_database_connection 2> /dev/null; then
    # Check if there are recent daemon cycle metrics (indicates daemon is processing)
    local recent_cycle_query
-   recent_cycle_query="SELECT COUNT(*) FROM metrics 
-                               WHERE component = 'ingestion' 
-                                 AND metric_name = 'daemon_cycle_number' 
+   recent_cycle_query="SELECT COUNT(*) FROM metrics
+                               WHERE component = 'ingestion'
+                                 AND metric_name = 'daemon_cycle_number'
                                  AND timestamp > NOW() - INTERVAL '1 hour';"
    local recent_cycles
    recent_cycles=$(execute_sql_query "${recent_cycle_query}" 2> /dev/null | tr -d '[:space:]' || echo "0")
@@ -1932,11 +1932,11 @@ check_boundary_metrics() {
 
  # Check collected metrics and send alerts
  local countries_update_age_query
- countries_update_age_query="SELECT metric_value FROM metrics 
-                                WHERE component = 'ingestion' 
-                                  AND metric_name = 'boundary_update_frequency_hours' 
+ countries_update_age_query="SELECT metric_value FROM metrics
+                                WHERE component = 'ingestion'
+                                  AND metric_name = 'boundary_update_frequency_hours'
                                   AND metadata LIKE '%type=countries%'
-                                ORDER BY timestamp DESC 
+                                ORDER BY timestamp DESC
                                 LIMIT 1;"
 
  local countries_update_age
@@ -1952,20 +1952,20 @@ check_boundary_metrics() {
 
  # Check percentage of notes without country
  local notes_without_country_query
- notes_without_country_query="SELECT metric_value FROM metrics 
-                                 WHERE component = 'ingestion' 
-                                   AND metric_name = 'boundary_notes_without_country_count' 
-                                 ORDER BY timestamp DESC 
+ notes_without_country_query="SELECT metric_value FROM metrics
+                                 WHERE component = 'ingestion'
+                                   AND metric_name = 'boundary_notes_without_country_count'
+                                 ORDER BY timestamp DESC
                                  LIMIT 1;"
 
  local notes_without_country
  notes_without_country=$(execute_sql_query "${notes_without_country_query}" 2> /dev/null | tr -d '[:space:]' || echo "")
 
  local notes_with_country_query
- notes_with_country_query="SELECT metric_value FROM metrics 
-                              WHERE component = 'ingestion' 
-                                AND metric_name = 'boundary_notes_with_country_count' 
-                              ORDER BY timestamp DESC 
+ notes_with_country_query="SELECT metric_value FROM metrics
+                              WHERE component = 'ingestion'
+                                AND metric_name = 'boundary_notes_with_country_count'
+                              ORDER BY timestamp DESC
                               LIMIT 1;"
 
  local notes_with_country
@@ -1988,10 +1988,10 @@ check_boundary_metrics() {
 
  # Check for notes with wrong country assignments
  local wrong_country_query
- wrong_country_query="SELECT metric_value FROM metrics 
-                        WHERE component = 'ingestion' 
-                          AND metric_name = 'boundary_notes_wrong_country_count' 
-                        ORDER BY timestamp DESC 
+ wrong_country_query="SELECT metric_value FROM metrics
+                        WHERE component = 'ingestion'
+                          AND metric_name = 'boundary_notes_wrong_country_count'
+                        ORDER BY timestamp DESC
                         LIMIT 1;"
 
  local wrong_country_count
@@ -2105,9 +2105,9 @@ check_structured_log_metrics() {
 
  # Check last cycle timestamp from metrics
  local last_cycle_timestamp_query
- last_cycle_timestamp_query="SELECT MAX(timestamp) FROM metrics 
-                                WHERE component = 'ingestion' 
-                                  AND metric_name = 'daemon_cycle_number' 
+ last_cycle_timestamp_query="SELECT MAX(timestamp) FROM metrics
+                                WHERE component = 'ingestion'
+                                  AND metric_name = 'daemon_cycle_number'
                                   AND timestamp > NOW() - INTERVAL '1 hour';"
  local last_cycle_timestamp
  last_cycle_timestamp=$(execute_sql_query "${last_cycle_timestamp_query}" 2> /dev/null | tr -d '[:space:]' || echo "")
@@ -2528,10 +2528,10 @@ check_daemon_metrics() {
  # Check daemon status from metrics (if available)
  # Get latest daemon_status metric
  local daemon_status_query
- daemon_status_query="SELECT metric_value FROM metrics 
-                         WHERE component = 'ingestion' 
-                           AND metric_name = 'daemon_status' 
-                         ORDER BY timestamp DESC 
+ daemon_status_query="SELECT metric_value FROM metrics
+                         WHERE component = 'ingestion'
+                           AND metric_name = 'daemon_status'
+                         ORDER BY timestamp DESC
                          LIMIT 1;"
 
  local daemon_status
@@ -2547,10 +2547,10 @@ check_daemon_metrics() {
 
  # Check cycle duration threshold
  local cycle_duration_query
- cycle_duration_query="SELECT metric_value FROM metrics 
-                          WHERE component = 'ingestion' 
-                            AND metric_name = 'daemon_cycle_duration_seconds' 
-                          ORDER BY timestamp DESC 
+ cycle_duration_query="SELECT metric_value FROM metrics
+                          WHERE component = 'ingestion'
+                            AND metric_name = 'daemon_cycle_duration_seconds'
+                          ORDER BY timestamp DESC
                           LIMIT 1;"
 
  local cycle_duration
@@ -2566,10 +2566,10 @@ check_daemon_metrics() {
 
  # Check cycle success rate
  local success_rate_query
- success_rate_query="SELECT metric_value FROM metrics 
-                        WHERE component = 'ingestion' 
-                          AND metric_name = 'daemon_cycle_success_rate_percent' 
-                        ORDER BY timestamp DESC 
+ success_rate_query="SELECT metric_value FROM metrics
+                        WHERE component = 'ingestion'
+                          AND metric_name = 'daemon_cycle_success_rate_percent'
+                        ORDER BY timestamp DESC
                         LIMIT 1;"
 
  local success_rate
@@ -2585,9 +2585,9 @@ check_daemon_metrics() {
 
  # Check if no processing in last 5 minutes
  local last_cycle_query
- last_cycle_query="SELECT MAX(timestamp) FROM metrics 
-                      WHERE component = 'ingestion' 
-                        AND metric_name = 'daemon_cycle_number' 
+ last_cycle_query="SELECT MAX(timestamp) FROM metrics
+                      WHERE component = 'ingestion'
+                        AND metric_name = 'daemon_cycle_number'
                         AND timestamp > NOW() - INTERVAL '5 minutes';"
 
  local last_cycle_time

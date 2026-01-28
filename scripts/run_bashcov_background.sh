@@ -57,21 +57,21 @@ start_bashcov() {
         print_message "${YELLOW}" "bashcov is already running (PID: $(cat "${PID_FILE}"))"
         return 1
     fi
-    
+
     print_message "${BLUE}" "Starting bashcov in background..."
-    
+
     # Create directories
     mkdir -p "${COVERAGE_DIR}"
     mkdir -p "${BASHCOV_OUTPUT}/all"
-    
+
     # Run bashcov in background
     # Redirect stdin to /dev/null to prevent password prompts from psql
     nohup bash "${SCRIPT_DIR}/generate_coverage_instrumented_optimized.sh" </dev/null > "${LOG_FILE}" 2>&1 &
     local pid=$!
-    
+
     # Save PID
     echo "${pid}" > "${PID_FILE}"
-    
+
     print_message "${GREEN}" "✓ bashcov started in background (PID: ${pid})"
     print_message "${BLUE}" "Log file: ${LOG_FILE}"
     print_message "${BLUE}" "PID file: ${PID_FILE}"
@@ -87,17 +87,17 @@ monitor_bashcov() {
         print_message "${YELLOW}" "bashcov is not running"
         return 1
     fi
-    
+
     local pid
     pid=$(cat "${PID_FILE}")
-    
+
     print_message "${BLUE}" "Monitoring bashcov (PID: ${pid})..."
     echo ""
-    
+
     # Count test files
     local total_tests
     total_tests=$(find "${PROJECT_ROOT}/tests" -name "*.sh" -type f 2>/dev/null | wc -l)
-    
+
     while is_bashcov_running; do
         # Count processed tests from log
         local processed=0
@@ -105,19 +105,19 @@ monitor_bashcov() {
             # Extract the actual number from the last "Processed X/Y test files" line
             local last_progress_line
             last_progress_line=$(grep -E "Processed[[:space:]]+[0-9]+/[0-9]+[[:space:]]+test files" "${LOG_FILE}" 2>/dev/null | tail -1 || echo "")
-            
+
             if [[ -n "${last_progress_line}" ]]; then
                 # Extract the first number (processed count) from "Processed X/Y test files"
                 local processed_count
                 processed_count=$(echo "${last_progress_line}" | sed -n 's/.*Processed[[:space:]]*\([0-9]*\)\/[0-9]*.*/\1/p' || echo "")
-                
+
                 # Clean result: remove whitespace and ensure it's a number
                 processed_count=$(echo "${processed_count}" | tr -d '[:space:]')
                 if [[ -n "${processed_count}" ]] && [[ "${processed_count}" =~ ^[0-9]+$ ]]; then
                     processed="${processed_count}"
                 fi
             fi
-            
+
             # Fallback: count matching lines if extraction failed
             if [[ "${processed}" -eq 0 ]]; then
                 local grep_result
@@ -128,7 +128,7 @@ monitor_bashcov() {
                 fi
             fi
         fi
-        
+
         # Check resultset file size
         local resultset_size="0"
         if [[ -f "${COVERAGE_DIR}/.resultset.json" ]]; then
@@ -140,7 +140,7 @@ monitor_bashcov() {
                 resultset_size="${du_result}"
             fi
         fi
-        
+
         # Get current test being executed
         local current_test=""
         local bashcov_pid
@@ -154,20 +154,20 @@ monitor_bashcov() {
                 current_test=$(echo "${test_line}" | sed 's/.*bats //' | sed 's/ .*//' | xargs basename 2>/dev/null || echo "")
             fi
         fi
-        
+
         # Show progress with current test
         if [[ -n "${current_test}" ]]; then
             printf "\r%sProgress: %s/%s tests | Current: %s | Results: %s%s" "${BLUE}" "${processed}" "${total_tests}" "${current_test}" "${resultset_size}" "${NC}"
         else
             printf "\r%sProgress: %s/%s tests | Results: %s%s" "${BLUE}" "${processed}" "${total_tests}" "${resultset_size}" "${NC}"
         fi
-        
+
         sleep 2
     done
-    
+
     echo ""
     echo ""
-    
+
     if [[ -f "${COVERAGE_DIR}/coverage_report_instrumented.txt" ]]; then
         print_message "${GREEN}" "✓ bashcov completed!"
         print_message "${BLUE}" "Report: ${COVERAGE_DIR}/coverage_report_instrumented.txt"
@@ -185,21 +185,21 @@ stop_bashcov() {
         print_message "${YELLOW}" "bashcov is not running"
         return 1
     fi
-    
+
     local pid
     pid=$(cat "${PID_FILE}")
-    
+
     print_message "${BLUE}" "Stopping bashcov (PID: ${pid})..."
     kill "${pid}" 2>/dev/null || true
-    
+
     # Wait a bit
     sleep 2
-    
+
     if ps -p "${pid}" >/dev/null 2>&1; then
         print_message "${YELLOW}" "Process still running, force killing..."
         kill -9 "${pid}" 2>/dev/null || true
     fi
-    
+
     rm -f "${PID_FILE}"
     print_message "${GREEN}" "✓ bashcov stopped"
 }
@@ -212,7 +212,7 @@ show_status() {
         local pid
         pid=$(cat "${PID_FILE}")
         print_message "${GREEN}" "bashcov is running (PID: ${pid})"
-        
+
         # Show log tail
         if [[ -f "${LOG_FILE}" ]]; then
             echo ""
@@ -221,7 +221,7 @@ show_status() {
         fi
     else
         print_message "${YELLOW}" "bashcov is not running"
-        
+
         if [[ -f "${LOG_FILE}" ]]; then
             echo ""
             print_message "${BLUE}" "Last 20 lines of log:"

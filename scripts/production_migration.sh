@@ -65,14 +65,14 @@ EOF
 ##
 create_backup() {
     local dbname="${1}"
-    
+
     print_message "${BLUE}" "Creating backup before migration..."
-    
+
     if [[ ! -f "${PROJECT_ROOT}/sql/backups/backup_database.sh" ]]; then
         print_message "${RED}" "Backup script not found"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/sql/backups/backup_database.sh" -d "${dbname}" -c; then
         print_message "${GREEN}" "✓ Backup created successfully"
         return 0
@@ -88,19 +88,19 @@ create_backup() {
 rollback_from_backup() {
     local backup_file="${1}"
     local dbname="${2}"
-    
+
     print_message "${BLUE}" "Rolling back from backup: ${backup_file}"
-    
+
     if [[ ! -f "${backup_file}" ]]; then
         print_message "${RED}" "Backup file not found: ${backup_file}"
         return 1
     fi
-    
+
     if [[ ! -f "${PROJECT_ROOT}/sql/backups/restore_database.sh" ]]; then
         print_message "${RED}" "Restore script not found"
         return 1
     fi
-    
+
     print_message "${YELLOW}" "WARNING: This will overwrite the database!"
     read -p "Continue? (y/N): " -n 1 -r
     echo
@@ -108,7 +108,7 @@ rollback_from_backup() {
         print_message "${BLUE}" "Rollback cancelled"
         return 1
     fi
-    
+
     if "${PROJECT_ROOT}/sql/backups/restore_database.sh" -d "${dbname}" -f "${backup_file}"; then
         print_message "${GREEN}" "✓ Rollback completed successfully"
         return 0
@@ -124,19 +124,19 @@ rollback_from_backup() {
 run_migrations() {
     local dbname="${1}"
     local verbose="${2:-false}"
-    
+
     print_message "${BLUE}" "Running database migrations..."
-    
+
     if [[ ! -f "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" ]]; then
         print_message "${RED}" "Migration script not found"
         return 1
     fi
-    
+
     local args=("-d" "${dbname}")
     if [[ "${verbose}" == "true" ]]; then
         args+=("-v")
     fi
-    
+
     if "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" "${args[@]}"; then
         print_message "${GREEN}" "✓ Migrations completed successfully"
         return 0
@@ -154,7 +154,7 @@ main() {
     local rollback_file=""
     local list_only=false
     local verbose=false
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -189,13 +189,13 @@ main() {
                 ;;
         esac
     done
-    
+
     # Check database connection
     if ! psql -d "${DBNAME}" -c "SELECT 1;" > /dev/null 2>&1; then
         print_message "${RED}" "ERROR: Cannot connect to database: ${DBNAME}"
         exit 1
     fi
-    
+
     # Rollback mode
     if [[ -n "${rollback_file}" ]]; then
         if rollback_from_backup "${rollback_file}" "${DBNAME}"; then
@@ -204,13 +204,13 @@ main() {
             exit 1
         fi
     fi
-    
+
     # List mode
     if [[ "${list_only}" == "true" ]]; then
         "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" -d "${DBNAME}" -l
         exit 0
     fi
-    
+
     # Create backup if requested
     if [[ "${create_backup_flag}" == "true" ]]; then
         if ! create_backup "${DBNAME}"; then
@@ -219,7 +219,7 @@ main() {
         fi
         echo
     fi
-    
+
     # Run migrations
     if run_migrations "${DBNAME}" "${verbose}"; then
         print_message "${GREEN}" "Migration process completed successfully"

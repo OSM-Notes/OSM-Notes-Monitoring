@@ -156,8 +156,8 @@ detect_notes_out_of_bounds() {
  log_info "${COMPONENT}: Detecting notes with coordinates out of bounds"
 
  # Check for notes with invalid coordinates (outside valid lat/lon ranges)
- local query="SELECT COUNT(*) FROM notes 
-                 WHERE latitude < -90 OR latitude > 90 
+ local query="SELECT COUNT(*) FROM notes
+                 WHERE latitude < -90 OR latitude > 90
                     OR longitude < -180 OR longitude > 180;"
  local result
  result=$(execute_sql_query "${query}" 2> /dev/null | tr -d '[:space:]' || echo "0")
@@ -181,8 +181,8 @@ detect_wrong_country_assignments() {
  log_info "${COMPONENT}: Detecting notes with potentially wrong country assignment"
 
  # Check 1: Notes with country_id that doesn't exist in countries table
- local query_invalid_ref="SELECT COUNT(*) FROM notes n 
-                             WHERE n.country_id IS NOT NULL 
+ local query_invalid_ref="SELECT COUNT(*) FROM notes n
+                             WHERE n.country_id IS NOT NULL
                                AND NOT EXISTS (
                                    SELECT 1 FROM countries c WHERE c.id = n.country_id
                                );"
@@ -201,7 +201,7 @@ detect_wrong_country_assignments() {
                      AND n.latitude IS NOT NULL
                      AND n.longitude IS NOT NULL
                      AND EXISTS (
-                         SELECT 1 FROM countries c 
+                         SELECT 1 FROM countries c
                          WHERE c.id = n.country_id
                            AND (
                                -- Check if note coordinates are outside country bounding box
@@ -225,7 +225,7 @@ detect_wrong_country_assignments() {
                          AND n.latitude IS NOT NULL
                          AND n.longitude IS NOT NULL
                          AND EXISTS (
-                             SELECT 1 FROM countries c 
+                             SELECT 1 FROM countries c
                              WHERE c.id = n.country_id
                                AND c.geometry IS NOT NULL
                                AND NOT ST_Contains(
@@ -297,7 +297,7 @@ detect_notes_affected_by_boundary_changes() {
                    AND n.longitude IS NOT NULL
                    AND n.updated_at < (SELECT MAX(updated_at) FROM countries WHERE updated_at IS NOT NULL)
                    AND EXISTS (
-                       SELECT 1 FROM countries c 
+                       SELECT 1 FROM countries c
                        WHERE c.id = n.country_id
                          AND c.updated_at > n.updated_at
                    );"

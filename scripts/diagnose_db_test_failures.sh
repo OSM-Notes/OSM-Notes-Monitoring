@@ -43,7 +43,7 @@ check_db_availability() {
     local dbuser="${3}"
     local dbname="${4}"
     local dbpassword="${5:-}"
-    
+
     # Try connection with timeout
     local psql_cmd
     if [[ -n "${dbpassword}" ]]; then
@@ -51,7 +51,7 @@ check_db_availability() {
     else
         psql_cmd="psql"
     fi
-    
+
     # Use timeout to avoid hanging
     if timeout 2 bash -c "eval ${psql_cmd} -h \"${dbhost}\" -p \"${dbport}\" -U \"${dbuser}\" -d \"${dbname}\" -c 'SELECT 1' > /dev/null 2>&1"; then
         return 0
@@ -65,13 +65,13 @@ check_db_availability() {
 ##
 extract_db_config() {
     local test_file="${1}"
-    
+
     local dbhost="localhost"
     local dbport="5432"
     local dbuser="postgres"
     local dbname="osm_notes_monitoring_test"  # Default, will be overridden if found in file
     local dbpassword="${PGPASSWORD:-}"
-    
+
     # Extract DBHOST
     if grep -q "export DBHOST=" "${test_file}" 2>/dev/null; then
         dbhost=$(grep "export DBHOST=" "${test_file}" | head -n 1 | sed -E "s/.*DBHOST=\"?([^\"]+)\"?.*/\1/" | sed -E "s/.*DBHOST=\$\{([^}]+)\}.*/\1/")
@@ -80,7 +80,7 @@ extract_db_config() {
             dbhost=$(eval echo "${dbhost}")
         fi
     fi
-    
+
     # Extract DBPORT
     if grep -q "export DBPORT=" "${test_file}" 2>/dev/null; then
         dbport=$(grep "export DBPORT=" "${test_file}" | head -n 1 | sed -E "s/.*DBPORT=\"?([^\"]+)\"?.*/\1/" | sed -E "s/.*DBPORT=\$\{([^}]+)\}.*/\1/")
@@ -89,7 +89,7 @@ extract_db_config() {
             dbport=$(eval echo "${dbport}")
         fi
     fi
-    
+
     # Extract DBUSER
     if grep -q "export DBUSER=" "${test_file}" 2>/dev/null; then
         dbuser=$(grep "export DBUSER=" "${test_file}" | head -n 1 | sed -E "s/.*DBUSER=\"?([^\"]+)\"?.*/\1/" | sed -E "s/.*DBUSER=\$\{([^}]+)\}.*/\1/")
@@ -98,7 +98,7 @@ extract_db_config() {
             dbuser=$(eval echo "${dbuser}")
         fi
     fi
-    
+
     # Extract DBNAME/TEST_DB_NAME
     if grep -q "export DBNAME=" "${test_file}" 2>/dev/null; then
         dbname=$(grep "export DBNAME=" "${test_file}" | head -n 1 | sed -E "s/.*DBNAME=\"?([^\"]+)\"?.*/\1/" | sed -E "s/.*DBNAME=\$\{([^}]+)\}.*/\1/")
@@ -113,7 +113,7 @@ extract_db_config() {
             dbname=$(eval echo "${dbname}")
         fi
     fi
-    
+
     echo "${dbhost}|${dbport}|${dbuser}|${dbname}|${dbpassword}"
 }
 
@@ -124,31 +124,31 @@ run_test_with_db_check() {
     local test_file="${1}"
     local test_name
     test_name=$(basename "${test_file}")
-    
+
     print_message "${BLUE}" "Testing: ${test_name}"
-    
+
     # Extract DB config from test file
     local db_config
     db_config=$(extract_db_config "${test_file}")
     local IFS='|'
     read -r dbhost dbport dbuser dbname dbpassword <<< "${db_config}"
-    
+
     # Check if test uses database
     if ! grep -q "skip_if_database_not_available\|check_database_connection\|psql" "${test_file}" 2>/dev/null; then
         echo "  Status: No database usage detected"
         return 0
     fi
-    
+
     # Check database availability
     print_message "${YELLOW}" "  Checking DB: ${dbuser}@${dbhost}:${dbport}/${dbname}"
-    
+
     if check_db_availability "${dbhost}" "${dbport}" "${dbuser}" "${dbname}" "${dbpassword}"; then
         print_message "${GREEN}" "  ✓ Database is available"
-        
+
         # Try running the test with timeout
         local test_output
         test_output=$(timeout 30 bats "${test_file}" 2>&1 || true)
-        
+
         # Check for database-related errors
         if echo "${test_output}" | grep -qi "database not available\|connection refused\|authentication failed\|password\|timeout\|connection.*failed"; then
             print_message "${RED}" "  ✗ Test failed with DB error (but DB is available - config issue?)"
@@ -165,10 +165,10 @@ run_test_with_db_check() {
     else
         print_message "${RED}" "  ✗ Database is NOT available"
         echo "    Config: ${dbuser}@${dbhost}:${dbport}/${dbname}"
-        
+
         # Check if it's a configuration issue
         local config_issue=false
-        
+
         # Check if using wrong host/port
         if [[ "${dbhost}" != "localhost" ]] && [[ "${dbhost}" != "127.0.0.1" ]]; then
             if check_db_availability "localhost" "${dbport}" "${dbuser}" "${dbname}" "${dbpassword}"; then
@@ -176,7 +176,7 @@ run_test_with_db_check() {
                 config_issue=true
             fi
         fi
-        
+
         # Check if using wrong port
         if [[ "${dbport}" != "5432" ]]; then
             if check_db_availability "${dbhost}" "5432" "${dbuser}" "${dbname}" "${dbpassword}"; then
@@ -184,7 +184,7 @@ run_test_with_db_check() {
                 config_issue=true
             fi
         fi
-        
+
         # Check if using wrong user
         if [[ "${dbuser}" != "${USER:-postgres}" ]] && [[ "${dbuser}" != "postgres" ]]; then
             if check_db_availability "${dbhost}" "${dbport}" "${USER:-postgres}" "${dbname}" "${dbpassword}"; then
@@ -192,13 +192,13 @@ run_test_with_db_check() {
                 config_issue=true
             fi
         fi
-        
+
         # Check if database doesn't exist
         if check_db_availability "${dbhost}" "${dbport}" "${dbuser}" "postgres" "${dbpassword}"; then
             print_message "${YELLOW}" "    ⚠ Server is available but database '${dbname}' may not exist (config issue)"
             config_issue=true
         fi
-        
+
         if [[ "${config_issue}" == "true" ]]; then
             return 2  # Configuration issue
         else
@@ -213,24 +213,24 @@ run_test_with_db_check() {
 main() {
     print_message "${GREEN}" "Database Test Failure Diagnosis"
     echo ""
-    
+
     mkdir -p "${PROJECT_ROOT}/coverage"
-    
+
     # Find all integration test files
     local test_files=()
     while IFS= read -r -d '' test_file; do
         test_files+=("${test_file}")
     done < <(find "${PROJECT_ROOT}/tests/integration" -name "*.sh" -type f -print0 2>/dev/null | sort -z)
-    
+
     print_message "${BLUE}" "Found ${#test_files[@]} integration test files"
     echo ""
-    
+
     # Check PostgreSQL client availability
     if ! command -v psql > /dev/null 2>&1; then
         print_message "${RED}" "ERROR: psql not found. Cannot check database availability."
         exit 1
     fi
-    
+
     # Check default database availability
     print_message "${BLUE}" "Checking default database configuration..."
     local default_available=false
@@ -244,13 +244,13 @@ main() {
         print_message "${YELLOW}" "⚠ Default database is NOT available"
     fi
     echo ""
-    
+
     # Analyze each test
     local db_unavailable_count=0
     local config_issue_count=0
     local passed_count=0
     local no_db_count=0
-    
+
     {
         echo "Database Test Failure Diagnosis Report"
         echo "Generated: $(date '+%Y-%m-%d %H:%M:%S')"
@@ -263,13 +263,13 @@ main() {
         printf "%-50s %-15s %-30s\n" "Test File" "Status" "Issue"
         echo "--------------------------------------------------------------------------------"
     } > "${OUTPUT_FILE}"
-    
+
     for test_file in "${test_files[@]}"; do
         local test_name
         test_name=$(basename "${test_file}")
         local result
         run_test_with_db_check "${test_file}" || result=$?
-        
+
         case "${result:-0}" in
             0)
                 passed_count=$((passed_count + 1))
@@ -290,7 +290,7 @@ main() {
         esac
         echo ""
     done
-    
+
     # Summary
     {
         echo ""
@@ -313,11 +313,11 @@ main() {
             echo "  - Check PostgreSQL service status"
         fi
     } >> "${OUTPUT_FILE}"
-    
+
     print_message "${GREEN}" "✓ Diagnosis complete!"
     print_message "${BLUE}" "Report saved to: ${OUTPUT_FILE}"
     echo ""
-    
+
     # Show summary
     tail -20 "${OUTPUT_FILE}"
 }

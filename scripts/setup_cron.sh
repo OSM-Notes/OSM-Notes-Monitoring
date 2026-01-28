@@ -62,7 +62,7 @@ EOF
 generate_cron_jobs() {
     local project_root="${1}"
     local log_dir="${2}"
-    
+
     cat << EOF
 # OSM-Notes-Monitoring Cron Jobs
 # Generated: $(date +"%Y-%m-%d %H:%M:%S")
@@ -107,9 +107,9 @@ EOF
 install_cron_jobs() {
     local user="${1}"
     local project_root="${2}"
-    
+
     print_message "${BLUE}" "Installing cron jobs for user: ${user}"
-    
+
     # Source properties to get log directory
     local log_dir="/var/log/osm-notes-monitoring"
     if [[ -f "${project_root}/etc/properties.sh" ]]; then
@@ -117,18 +117,18 @@ install_cron_jobs() {
         source "${project_root}/etc/properties.sh"
         log_dir="${LOG_DIR:-${log_dir}}"
     fi
-    
+
     # Create log directory if it doesn't exist
     mkdir -p "${log_dir}" 2>/dev/null || true
-    
+
     # Generate cron jobs
     local cron_jobs
     cron_jobs=$(generate_cron_jobs "${project_root}" "${log_dir}")
-    
+
     # Get current crontab
     local current_crontab
     current_crontab=$(crontab -u "${user}" -l 2>/dev/null || echo "")
-    
+
     # Check if cron jobs already exist
     if echo "${current_crontab}" | grep -q "OSM-Notes-Monitoring"; then
         print_message "${YELLOW}" "Cron jobs already exist for this project"
@@ -138,19 +138,19 @@ install_cron_jobs() {
             print_message "${BLUE}" "Installation cancelled"
             return 0
         fi
-        
+
         # Remove existing cron jobs
         current_crontab=$(echo "${current_crontab}" | grep -v "OSM-Notes-Monitoring" | grep -v "# Generated:" | grep -v "# Project:")
     fi
-    
+
     # Add new cron jobs
     local new_crontab
     new_crontab="${current_crontab}
 ${cron_jobs}"
-    
+
     # Install crontab
     echo "${new_crontab}" | crontab -u "${user}" -
-    
+
     print_message "${GREEN}" "✓ Cron jobs installed successfully"
     print_message "${BLUE}" "Logs will be written to: ${log_dir}"
 }
@@ -160,25 +160,25 @@ ${cron_jobs}"
 ##
 remove_cron_jobs() {
     local user="${1}"
-    
+
     print_message "${BLUE}" "Removing cron jobs for user: ${user}"
-    
+
     # Get current crontab
     local current_crontab
     current_crontab=$(crontab -u "${user}" -l 2>/dev/null || echo "")
-    
+
     if [[ -z "${current_crontab}" ]]; then
         print_message "${YELLOW}" "No crontab found for user: ${user}"
         return 0
     fi
-    
+
     # Remove OSM-Notes-Monitoring cron jobs
     local new_crontab
     new_crontab=$(echo "${current_crontab}" | grep -v "OSM-Notes-Monitoring" | grep -v "# Generated:" | grep -v "# Project:")
-    
+
     # Install updated crontab
     echo "${new_crontab}" | crontab -u "${user}" -
-    
+
     print_message "${GREEN}" "✓ Cron jobs removed successfully"
 }
 
@@ -187,23 +187,23 @@ remove_cron_jobs() {
 ##
 list_cron_jobs() {
     local user="${1}"
-    
+
     print_message "${BLUE}" "Cron jobs for user: ${user}"
     echo
-    
+
     # Get current crontab
     local current_crontab
     current_crontab=$(crontab -u "${user}" -l 2>/dev/null || echo "")
-    
+
     if [[ -z "${current_crontab}" ]]; then
         print_message "${YELLOW}" "No crontab found for user: ${user}"
         return 0
     fi
-    
+
     # Filter OSM-Notes-Monitoring cron jobs
     local monitoring_jobs
     monitoring_jobs=$(echo "${current_crontab}" | grep -A 1 "OSM-Notes-Monitoring" || echo "")
-    
+
     if [[ -z "${monitoring_jobs}" ]]; then
         print_message "${YELLOW}" "No OSM-Notes-Monitoring cron jobs found"
     else
@@ -217,7 +217,7 @@ list_cron_jobs() {
 main() {
     local action=""
     local user="${USER}"
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "${1}" in
@@ -248,18 +248,18 @@ main() {
                 ;;
         esac
     done
-    
+
     # Default to install if no action specified
     if [[ -z "${action}" ]]; then
         action="install"
     fi
-    
+
     # Check if running as root for other users
     if [[ "${user}" != "${USER}" && "${EUID}" -ne 0 ]]; then
         print_message "${RED}" "ERROR: Must run as root to install cron jobs for other users"
         exit 1
     fi
-    
+
     # Execute action
     case "${action}" in
         install)

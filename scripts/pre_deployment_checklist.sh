@@ -43,7 +43,7 @@ print_message() {
 check_result() {
     local status="${1}"
     local message="${2}"
-    
+
     case "${status}" in
         PASS)
             print_message "${GREEN}" "  ✓ ${message}"
@@ -66,10 +66,10 @@ check_result() {
 check_prerequisites() {
     print_message "${BLUE}" "1. Checking Prerequisites"
     print_message "${BLUE}" "========================="
-    
+
     local missing=()
     local required_commands=("bash" "psql" "curl")
-    
+
     for cmd in "${required_commands[@]}"; do
         if command -v "${cmd}" > /dev/null 2>&1; then
             check_result "PASS" "${cmd} is installed"
@@ -78,7 +78,7 @@ check_prerequisites() {
             missing+=("${cmd}")
         fi
     done
-    
+
     # Check PostgreSQL version
     if command -v psql > /dev/null 2>&1; then
         local pg_version
@@ -89,7 +89,7 @@ check_prerequisites() {
             check_result "WARN" "PostgreSQL version ${pg_version} (< 12 recommended)"
         fi
     fi
-    
+
     echo
     return 0
 }
@@ -100,20 +100,20 @@ check_prerequisites() {
 check_configuration() {
     print_message "${BLUE}" "2. Checking Configuration Files"
     print_message "${BLUE}" "================================"
-    
+
     local config_files=(
         "etc/properties.sh"
         "config/monitoring.conf"
         "config/alerts.conf"
         "config/security.conf"
     )
-    
+
     for config_file in "${config_files[@]}"; do
         local full_path="${PROJECT_ROOT}/${config_file}"
-        
+
         if [[ -f "${full_path}" ]]; then
             check_result "PASS" "${config_file} exists"
-            
+
             # Check for default values
             if grep -q "example.com\|changeme\|password\|/path/to" "${full_path}" 2>/dev/null; then
                 local defaults
@@ -124,7 +124,7 @@ check_configuration() {
             check_result "FAIL" "${config_file} is MISSING"
         fi
     done
-    
+
     # Validate configuration
     if [[ -f "${PROJECT_ROOT}/scripts/test_config_validation.sh" ]]; then
         if "${PROJECT_ROOT}/scripts/test_config_validation.sh" > /dev/null 2>&1; then
@@ -133,7 +133,7 @@ check_configuration() {
             check_result "WARN" "Configuration validation found issues"
         fi
     fi
-    
+
     echo
 }
 
@@ -143,7 +143,7 @@ check_configuration() {
 check_scripts() {
     print_message "${BLUE}" "3. Checking Deployment Scripts"
     print_message "${BLUE}" "=============================="
-    
+
     local scripts=(
         "scripts/production_setup.sh"
         "scripts/production_migration.sh"
@@ -153,10 +153,10 @@ check_scripts() {
         "scripts/setup_cron.sh"
         "scripts/setup_backups.sh"
     )
-    
+
     for script in "${scripts[@]}"; do
         local full_path="${PROJECT_ROOT}/${script}"
-        
+
         if [[ -f "${full_path}" && -x "${full_path}" ]]; then
             if bash -n "${full_path}" > /dev/null 2>&1; then
                 check_result "PASS" "${script} (syntax OK)"
@@ -167,7 +167,7 @@ check_scripts() {
             check_result "FAIL" "${script} (missing or not executable)"
         fi
     done
-    
+
     echo
 }
 
@@ -177,7 +177,7 @@ check_scripts() {
 check_monitoring_scripts() {
     print_message "${BLUE}" "4. Checking Monitoring Scripts"
     print_message "${BLUE}" "==============================="
-    
+
     local scripts=(
         "bin/monitor/monitorIngestion.sh"
         "bin/monitor/monitorAnalytics.sh"
@@ -185,11 +185,11 @@ check_monitoring_scripts() {
         "bin/monitor/monitorInfrastructure.sh"
         "bin/monitor/monitorData.sh"
     )
-    
+
     local found=0
     for script in "${scripts[@]}"; do
         local full_path="${PROJECT_ROOT}/${script}"
-        
+
         if [[ -f "${full_path}" && -x "${full_path}" ]]; then
             if bash -n "${full_path}" > /dev/null 2>&1; then
                 check_result "PASS" "${script} (syntax OK)"
@@ -201,11 +201,11 @@ check_monitoring_scripts() {
             check_result "WARN" "${script} (missing or not executable)"
         fi
     done
-    
+
     if [[ ${found} -eq 0 ]]; then
         check_result "FAIL" "No monitoring scripts found"
     fi
-    
+
     echo
 }
 
@@ -215,7 +215,7 @@ check_monitoring_scripts() {
 check_database() {
     print_message "${BLUE}" "5. Checking Database Setup"
     print_message "${BLUE}" "=========================="
-    
+
     # Source properties to get database name
     local dbname="notes_monitoring"
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
@@ -223,11 +223,11 @@ check_database() {
         source "${PROJECT_ROOT}/etc/properties.sh" 2>/dev/null || true
         dbname="${DBNAME:-${dbname}}"
     fi
-    
+
     # Check connection
     if psql -d "${dbname}" -c "SELECT 1;" > /dev/null 2>&1; then
         check_result "PASS" "Database connection successful (${dbname})"
-        
+
         # Check schema
         local table_count
         table_count=$(psql -d "${dbname}" -t -A -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null || echo "0")
@@ -239,21 +239,21 @@ check_database() {
     else
         check_result "WARN" "Database connection failed (will be created during setup)"
     fi
-    
+
     # Check migration script
     if [[ -f "${PROJECT_ROOT}/sql/migrations/run_migrations.sh" ]]; then
         check_result "PASS" "Migration script exists"
     else
         check_result "FAIL" "Migration script missing"
     fi
-    
+
     # Check backup script
     if [[ -f "${PROJECT_ROOT}/sql/backups/backup_database.sh" ]]; then
         check_result "PASS" "Backup script exists"
     else
         check_result "FAIL" "Backup script missing"
     fi
-    
+
     echo
 }
 
@@ -263,7 +263,7 @@ check_database() {
 check_security() {
     print_message "${BLUE}" "6. Checking Security"
     print_message "${BLUE}" "==================="
-    
+
     # Check file permissions
     local world_writable
     world_writable=$(find "${PROJECT_ROOT}/bin" -type f -perm -002 2>/dev/null | wc -l)
@@ -272,21 +272,21 @@ check_security() {
     else
         check_result "WARN" "Found ${world_writable} world-writable files"
     fi
-    
+
     # Check for hardcoded credentials
     if grep -r "password.*=.*['\"].*[^example|test|dummy]" "${PROJECT_ROOT}/bin" "${PROJECT_ROOT}/config" --exclude="*.example" 2>/dev/null | grep -v "example\|test\|dummy" > /dev/null; then
         check_result "WARN" "Potential hardcoded credentials found (review manually)"
     else
         check_result "PASS" "No obvious hardcoded credentials"
     fi
-    
+
     # Check security audit script
     if [[ -f "${PROJECT_ROOT}/scripts/security_audit.sh" ]]; then
         check_result "PASS" "Security audit script exists"
     else
         check_result "WARN" "Security audit script missing"
     fi
-    
+
     echo
 }
 
@@ -296,7 +296,7 @@ check_security() {
 check_documentation() {
     print_message "${BLUE}" "7. Checking Documentation"
     print_message "${BLUE}" "========================="
-    
+
     local docs=(
         "docs/DEPLOYMENT_GUIDE.md"
         "docs/MIGRATION_GUIDE.md"
@@ -304,7 +304,7 @@ check_documentation() {
         "docs/PRODUCTION_TROUBLESHOOTING_GUIDE.md"
         "README.md"
     )
-    
+
     for doc in "${docs[@]}"; do
         if [[ -f "${PROJECT_ROOT}/${doc}" ]]; then
             check_result "PASS" "${doc} exists"
@@ -312,7 +312,7 @@ check_documentation() {
             check_result "WARN" "${doc} missing"
         fi
     done
-    
+
     echo
 }
 
@@ -322,7 +322,7 @@ check_documentation() {
 check_resources() {
     print_message "${BLUE}" "8. Checking System Resources"
     print_message "${BLUE}" "============================"
-    
+
     # Check disk space
     local available_space
     available_space=$(df -BG "${PROJECT_ROOT}" | tail -1 | awk '{print $4}' | sed 's/G//')
@@ -331,7 +331,7 @@ check_resources() {
     else
         check_result "WARN" "Low disk space: ${available_space}GB available"
     fi
-    
+
     # Check memory
     if command -v free > /dev/null 2>&1; then
         local available_mem
@@ -342,7 +342,7 @@ check_resources() {
             check_result "WARN" "Low memory: ${available_mem}GB available"
         fi
     fi
-    
+
     # Check log directory
     local log_dir="/var/log/osm-notes-monitoring"
     if [[ -f "${PROJECT_ROOT}/etc/properties.sh" ]]; then
@@ -350,7 +350,7 @@ check_resources() {
         source "${PROJECT_ROOT}/etc/properties.sh" 2>/dev/null || true
         log_dir="${LOG_DIR:-${log_dir}}"
     fi
-    
+
     if [[ -d "${log_dir}" && -w "${log_dir}" ]]; then
         check_result "PASS" "Log directory exists and is writable: ${log_dir}"
     elif [[ -w "$(dirname "${log_dir}")" ]]; then
@@ -358,7 +358,7 @@ check_resources() {
     else
         check_result "FAIL" "Cannot create log directory: ${log_dir}"
     fi
-    
+
     echo
 }
 
@@ -370,14 +370,14 @@ generate_summary() {
     print_message "${BLUE}" "Pre-Deployment Checklist Summary"
     print_message "${BLUE}" "================================="
     echo
-    
+
     local total=$((CHECKS_PASSED + CHECKS_WARNINGS + CHECKS_FAILED))
-    
+
     print_message "${GREEN}" "Passed: ${CHECKS_PASSED}/${total}"
     print_message "${YELLOW}" "Warnings: ${CHECKS_WARNINGS}/${total}"
     print_message "${RED}" "Failed: ${CHECKS_FAILED}/${total}"
     echo
-    
+
     if [[ ${CHECKS_FAILED} -eq 0 ]]; then
         if [[ ${CHECKS_WARNINGS} -eq 0 ]]; then
             print_message "${GREEN}" "✓ All checks passed! Ready for production deployment."
@@ -415,7 +415,7 @@ main() {
     echo
     print_message "${BLUE}" "This checklist verifies everything is ready for production deployment."
     echo
-    
+
     check_prerequisites || true
     check_configuration || true
     check_scripts || true
@@ -424,7 +424,7 @@ main() {
     check_security || true
     check_documentation || true
     check_resources || true
-    
+
     generate_summary
 }
 

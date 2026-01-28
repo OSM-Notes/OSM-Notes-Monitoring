@@ -405,7 +405,7 @@ show_stats() {
  local dbport="${DBPORT:-5432}"
  local dbuser="${DBUSER:-postgres}"
 
- local query="SELECT 
+ local query="SELECT
                    component,
                    alert_level,
                    status,

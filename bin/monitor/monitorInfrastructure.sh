@@ -58,7 +58,7 @@ Options:
     -q, --quiet         Suppress non-error output
     -c, --config FILE   Use specific configuration file
     --check CHECK       Run specific check only
-                        Available checks: server_resources, network_connectivity, 
+                        Available checks: server_resources, network_connectivity,
                                         database_health, service_dependencies
 
 Examples:
@@ -374,10 +374,10 @@ check_advanced_system_metrics() {
 
  # Check load average threshold
  local load_avg_query
- load_avg_query="SELECT metric_value FROM metrics 
-                    WHERE component = 'infrastructure' 
-                      AND metric_name = 'system_load_average_1min' 
-                    ORDER BY timestamp DESC 
+ load_avg_query="SELECT metric_value FROM metrics
+                    WHERE component = 'infrastructure'
+                      AND metric_name = 'system_load_average_1min'
+                    ORDER BY timestamp DESC
                     LIMIT 1;"
 
  local load_1min
@@ -386,10 +386,10 @@ check_advanced_system_metrics() {
  if [[ -n "${load_1min}" ]] && [[ "${load_1min}" =~ ^[0-9]+\.?[0-9]*$ ]]; then
   # Get CPU count for threshold calculation
   local cpu_count_query
-  cpu_count_query="SELECT metric_value FROM metrics 
-                        WHERE component = 'infrastructure' 
-                          AND metric_name = 'system_cpu_count' 
-                        ORDER BY timestamp DESC 
+  cpu_count_query="SELECT metric_value FROM metrics
+                        WHERE component = 'infrastructure'
+                          AND metric_name = 'system_cpu_count'
+                        ORDER BY timestamp DESC
                         LIMIT 1;"
 
   local cpu_count
@@ -415,10 +415,10 @@ check_advanced_system_metrics() {
 
  # Check swap usage threshold
  local swap_usage_query
- swap_usage_query="SELECT metric_value FROM metrics 
-                     WHERE component = 'infrastructure' 
-                       AND metric_name = 'system_swap_usage_percent' 
-                     ORDER BY timestamp DESC 
+ swap_usage_query="SELECT metric_value FROM metrics
+                     WHERE component = 'infrastructure'
+                       AND metric_name = 'system_swap_usage_percent'
+                     ORDER BY timestamp DESC
                      LIMIT 1;"
 
  local swap_usage
@@ -561,7 +561,7 @@ check_database_server_health() {
 
   # Get connection statistics
   local conn_query="
-            SELECT 
+            SELECT
                 COUNT(*) as active_connections,
                 (SELECT setting::integer FROM pg_settings WHERE name = 'max_connections') as max_connections
             FROM pg_stat_activity
