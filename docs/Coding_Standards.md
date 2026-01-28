@@ -304,7 +304,7 @@ validate_config() {
 
 ### Function Documentation
 
-Every function must have:
+Every function must have complete documentation including return codes, error conditions, context variables, and side effects:
 
 ```bash
 ##
@@ -313,21 +313,51 @@ Every function must have:
 # Longer description if needed (multiple lines)
 #
 # Arguments:
-#   $1 - Description of first argument
-#   $2 - Description of second argument (optional)
+#   $1 - Description of first argument [required/optional]
+#   $2 - Description of second argument [required/optional]
 #
 # Returns:
-#   0 on success
-#   1 on failure
+#   0: Success - operation completed successfully
+#   1: General error (see logs for details)
+#   2: Invalid argument (missing or invalid format)
+#   3: Missing dependency (required command/file not found)
+#   4: Configuration error (invalid config)
+#   5: Database error (connection/query failed)
+#   6: Network error (connection timeout/failure)
+#   7: File error (file not found/permission denied)
+#   <other>: Project-specific error codes (see STANDARD_ERROR_CODES.md)
 #
-# Example:
-#   function_name "arg1" "arg2"
+# Error codes:
+#   0: Success
+#   1: General failure (check logs for specific error)
+#   2: Invalid argument format or missing required argument
+#   6: Network timeout or connection failure
+#   <document all possible return codes>
+#
+# Context variables:
+#   Reads: <list global/env vars read>
+#     - VAR_NAME: Description of what it's used for
+#   Sets: <list output variables set>
+#     - OUTPUT_VAR: Description of what it contains
+#   Modifies: <list global vars modified>
+#     - GLOBAL_VAR: Description of how it's modified
 #
 # Side effects:
-#   - Logs to monitoring.log
-#   - Updates database
+#   - Creates/modifies/deletes files: <list file operations>
+#   - Database operations: <list DB operations>
+#   - Network operations: <list network calls>
+#   - Logging: <list what gets logged>
+#
+# Example:
+#   if function_name "arg1" "arg2"; then
+#     echo "Success"
+#   else
+#     echo "Failed with code: $?"
+#   fi
 ##
 ```
+
+**Reference**: See `STANDARD_ERROR_CODES.md` for complete error code definitions.
 
 ### Script Documentation
 
