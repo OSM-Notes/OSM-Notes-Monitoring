@@ -19,24 +19,24 @@ setup() {
     # Set test environment
     export TEST_MODE=true
     export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
-    
+
     # Initialize logging
     TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../../tmp/logs"
     mkdir -p "${TEST_LOG_DIR}"
     export LOG_FILE="${TEST_LOG_DIR}/test_exportDashboard.log"
     export LOG_DIR="${TEST_LOG_DIR}"  # Set LOG_DIR to avoid permission issues
     init_logging "${LOG_FILE}" "test_exportDashboard"
-    
+
     # Create test dashboard directories
     TEST_DASHBOARD_DIR=$(mktemp -d)
     export DASHBOARD_OUTPUT_DIR="${TEST_DASHBOARD_DIR}"
     mkdir -p "${TEST_DASHBOARD_DIR}/grafana"
     mkdir -p "${TEST_DASHBOARD_DIR}/html"
-    
+
     # Create test files
     echo '{"test":"grafana"}' > "${TEST_DASHBOARD_DIR}/grafana/test.json"
     echo '<html>test</html>' > "${TEST_DASHBOARD_DIR}/html/test.html"
-    
+
     # Create output directory
     TEST_OUTPUT_DIR=$(mktemp -d)
     export TEST_OUTPUT_DIR
@@ -104,7 +104,7 @@ teardown() {
     if ! command -v zip &> /dev/null; then
         skip "zip command not available"
     fi
-    
+
     local output_file="${TEST_OUTPUT_DIR}/backup"
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" --format zip grafana "${output_file}"
     assert_success
@@ -118,28 +118,28 @@ teardown() {
     # Mock generateMetrics.sh script
     local metrics_script="${BATS_TEST_DIRNAME}/../../../bin/dashboard/generateMetrics.sh"
     local mock_script="${TEST_OUTPUT_DIR}/mock_generateMetrics.sh"
-    
+
     # Create mock script that outputs JSON without database calls
     cat > "${mock_script}" << 'EOF'
 #!/usr/bin/env bash
 echo '{"test":"metrics"}'
 EOF
     chmod +x "${mock_script}"
-    
+
     # Temporarily replace generateMetrics.sh with mock
     local original_script="${metrics_script}.orig"
     if [[ -f "${metrics_script}" ]]; then
         mv "${metrics_script}" "${original_script}"
     fi
     cp "${mock_script}" "${metrics_script}"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" --include-data grafana "${TEST_OUTPUT_DIR}"
-    
+
     # Restore original script
     if [[ -f "${original_script}" ]]; then
         mv "${original_script}" "${metrics_script}"
     fi
-    
+
     assert_success
     # Should create metrics directory
     assert_dir_exists "${TEST_OUTPUT_DIR}/metrics" || assert_dir_exists "${TEST_OUTPUT_DIR}/grafana/metrics"
@@ -167,11 +167,12 @@ EOF
 
 @test "exportDashboard.sh handles --config flag" {
     local test_config="${BATS_TEST_DIRNAME}/../../../tmp/test_exportDashboard_config.conf"
+    mkdir -p "$(dirname "${test_config}")"
     echo "TEST_CONFIG_VAR=test_value" > "${test_config}"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" --config "${test_config}" grafana "${TEST_OUTPUT_DIR}"
     assert_success
-    
+
     rm -f "${test_config}"
 }
 
@@ -180,10 +181,10 @@ EOF
     custom_dir=$(mktemp -d)
     mkdir -p "${custom_dir}/grafana"
     echo '{"custom":"dashboard"}' > "${custom_dir}/grafana/custom.json"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --dashboard "${custom_dir}" grafana "${TEST_OUTPUT_DIR}"
     assert_success
-    
+
     rm -rf "${custom_dir}"
 }
 
@@ -220,28 +221,28 @@ EOF
     # Mock generateMetrics.sh script
     local metrics_script="${BATS_TEST_DIRNAME}/../../../bin/dashboard/generateMetrics.sh"
     local mock_script="${TEST_OUTPUT_DIR}/mock_generateMetrics.sh"
-    
+
     # Create mock script that outputs JSON without database calls
     cat > "${mock_script}" << 'EOF'
 #!/usr/bin/env bash
 echo '{"test":"metrics"}'
 EOF
     chmod +x "${mock_script}"
-    
+
     # Temporarily replace generateMetrics.sh with mock
     local original_script="${metrics_script}.orig"
     if [[ -f "${metrics_script}" ]]; then
         mv "${metrics_script}" "${original_script}"
     fi
     cp "${mock_script}" "${metrics_script}"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/exportDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" --include-data grafana "${TEST_OUTPUT_DIR}"
-    
+
     # Restore original script
     if [[ -f "${original_script}" ]]; then
         mv "${original_script}" "${metrics_script}"
     fi
-    
+
     assert_success
     # Should create metrics directory
     assert_dir_exists "${TEST_OUTPUT_DIR}/metrics" || assert_dir_exists "${TEST_OUTPUT_DIR}/grafana/metrics"

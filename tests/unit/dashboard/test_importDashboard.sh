@@ -19,32 +19,32 @@ setup() {
     # Set test environment
     export TEST_MODE=true
     export LOG_LEVEL="${LOG_LEVEL_DEBUG}"
-    
+
     # Initialize logging
     TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../../tmp/logs"
     mkdir -p "${TEST_LOG_DIR}"
     export LOG_FILE="${TEST_LOG_DIR}/test_importDashboard.log"
     export LOG_DIR="${TEST_LOG_DIR}"  # Set LOG_DIR to avoid permission issues
     init_logging "${LOG_FILE}" "test_importDashboard"
-    
+
     # Create test dashboard directories
     TEST_DASHBOARD_DIR=$(mktemp -d)
     export DASHBOARD_OUTPUT_DIR="${TEST_DASHBOARD_DIR}"
     mkdir -p "${TEST_DASHBOARD_DIR}/grafana"
     mkdir -p "${TEST_DASHBOARD_DIR}/html"
-    
+
     # Create test archive files
     TEST_ARCHIVE_DIR=$(mktemp -d)
     mkdir -p "${TEST_ARCHIVE_DIR}/grafana"
     echo '{"test":"import"}' > "${TEST_ARCHIVE_DIR}/grafana/import.json"
-    
+
     # Create tar archive (use absolute path to avoid issues)
     local current_dir
     current_dir=$(pwd)
     cd "${TEST_ARCHIVE_DIR}" || exit 1
     tar -czf "${TEST_ARCHIVE_DIR}/backup.tar.gz" . 2>/dev/null || true
     cd "${current_dir}" || exit 1
-    
+
     # Create zip archive if zip is available
     if command -v zip &> /dev/null; then
         cd "${TEST_ARCHIVE_DIR}" || exit 1
@@ -103,7 +103,7 @@ teardown() {
     if ! command -v zip &> /dev/null; then
         skip "zip command not available"
     fi
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" "${TEST_ARCHIVE_DIR}/backup.zip" grafana
     assert_success
     assert_file_exists "${TEST_DASHBOARD_DIR}/grafana/import.json"
@@ -115,14 +115,14 @@ teardown() {
 @test "importDashboard.sh imports all dashboards" {
     mkdir -p "${TEST_ARCHIVE_DIR}/html"
     echo '<html>test</html>' > "${TEST_ARCHIVE_DIR}/html/test.html"
-    
+
     # Create tar archive in a separate directory to avoid race condition
     local temp_archive_dir
     temp_archive_dir=$(mktemp -d)
     cp -r "${TEST_ARCHIVE_DIR}"/* "${temp_archive_dir}/" 2>/dev/null || true
     (cd "${temp_archive_dir}" && tar -czf "${TEST_ARCHIVE_DIR}/backup_all.tar.gz" .)
     rm -rf "${temp_archive_dir}"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --dashboard "${TEST_DASHBOARD_DIR}" "${TEST_ARCHIVE_DIR}/backup_all.tar.gz" all
     assert_success
     assert_file_exists "${TEST_DASHBOARD_DIR}/grafana/import.json"
@@ -134,10 +134,10 @@ teardown() {
 ##
 @test "importDashboard.sh creates backup with --backup flag" {
     echo '{"existing":"data"}' > "${TEST_DASHBOARD_DIR}/grafana/existing.json"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --backup "${TEST_ARCHIVE_DIR}/backup.tar.gz" grafana
     assert_success
-    
+
     # Check backup directory exists
     local backup_dirs
     backup_dirs=$(find "${TEST_DASHBOARD_DIR}" -type d -name "backup_*" | wc -l)
@@ -149,10 +149,10 @@ teardown() {
 ##
 @test "importDashboard.sh overwrites existing files with --overwrite" {
     echo '{"old":"data"}' > "${TEST_DASHBOARD_DIR}/grafana/import.json"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --overwrite "${TEST_ARCHIVE_DIR}/backup.tar.gz" grafana
     assert_success
-    
+
     # Check file was overwritten
     assert_file_exists "${TEST_DASHBOARD_DIR}/grafana/import.json"
     run grep -q "test" "${TEST_DASHBOARD_DIR}/grafana/import.json"
@@ -164,7 +164,7 @@ teardown() {
 ##
 @test "importDashboard.sh handles invalid archive gracefully" {
     echo "invalid data" > "${TEST_ARCHIVE_DIR}/invalid.tar.gz"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" "${TEST_ARCHIVE_DIR}/invalid.tar.gz" grafana
     # Should handle error gracefully
     assert_failure
@@ -182,11 +182,12 @@ teardown() {
 
 @test "importDashboard.sh handles --config flag" {
     local test_config="${BATS_TEST_DIRNAME}/../../../tmp/test_importDashboard_config.conf"
+    mkdir -p "$(dirname "${test_config}")"
     echo "TEST_CONFIG_VAR=test_value" > "${test_config}"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --config "${test_config}" "${TEST_ARCHIVE_DIR}" grafana
     assert_success
-    
+
     rm -f "${test_config}"
 }
 
@@ -194,10 +195,10 @@ teardown() {
     local custom_dir
     custom_dir=$(mktemp -d)
     mkdir -p "${custom_dir}/grafana"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" --dashboard "${custom_dir}" "${TEST_ARCHIVE_DIR}" grafana
     assert_success
-    
+
     rm -rf "${custom_dir}"
 }
 
@@ -214,17 +215,17 @@ teardown() {
 @test "importDashboard.sh handles directory without dashboards" {
     local empty_dir
     empty_dir=$(mktemp -d)
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" "${empty_dir}" grafana
     # Should handle gracefully
     assert_success || assert_failure
-    
+
     rm -rf "${empty_dir}"
 }
 
 @test "importDashboard.sh preserves existing files without --overwrite" {
     echo '{"existing":"data"}' > "${TEST_DASHBOARD_DIR}/grafana/existing.json"
-    
+
     run "${BATS_TEST_DIRNAME}/../../../bin/dashboard/importDashboard.sh" "${TEST_ARCHIVE_DIR}/backup.tar.gz" grafana
     assert_success
     # Existing file should still exist

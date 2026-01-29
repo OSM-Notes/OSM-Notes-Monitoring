@@ -44,7 +44,27 @@ init_logging() {
   local log_dir
   log_dir="$(dirname "${LOG_FILE}")"
   if [[ ! -d "${log_dir}" ]]; then
-   mkdir -p "${log_dir}"
+   # In test mode or if we don't have permissions, use a temporary directory
+   if [[ "${TEST_MODE:-false}" == "true" ]] || ! mkdir -p "${log_dir}" 2>/dev/null; then
+    # Use TMP_DIR if set, otherwise try PROJECT_ROOT/tmp/logs, or use /tmp
+    local fallback_dir
+    if [[ -n "${TMP_DIR:-}" ]]; then
+     fallback_dir="${TMP_DIR}/logs"
+    elif [[ -n "${PROJECT_ROOT:-}" ]] && [[ -d "${PROJECT_ROOT}" ]]; then
+     fallback_dir="${PROJECT_ROOT}/tmp/logs"
+    else
+     fallback_dir="/tmp/osm-notes-monitoring-logs"
+    fi
+    mkdir -p "${fallback_dir}" 2>/dev/null || true
+    if [[ -d "${fallback_dir}" ]]; then
+     LOG_FILE="${fallback_dir}/$(basename "${LOG_FILE}")"
+     log_dir="${fallback_dir}"
+    else
+     # Last resort: use /tmp
+     LOG_FILE="/tmp/$(basename "${LOG_FILE}")"
+     log_dir="/tmp"
+    fi
+   fi
   fi
  fi
 

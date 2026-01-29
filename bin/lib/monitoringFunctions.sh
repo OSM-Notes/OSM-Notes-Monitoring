@@ -360,6 +360,12 @@ update_component_health() {
   ;;
  esac
 
+ # Validate error_count is numeric, default to 0 if not
+ if ! [[ "${error_count}" =~ ^[0-9]+$ ]]; then
+  # If error_count is not numeric (e.g., a message was passed), default to 0
+  error_count=0
+ fi
+
  local query
  if [[ "${status}" == "healthy" ]]; then
   query="UPDATE component_health

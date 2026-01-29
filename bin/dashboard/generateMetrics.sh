@@ -99,6 +99,11 @@ generate_component_metrics() {
  local dbport="${DBPORT:-5432}"
  local dbuser="${DBUSER:-postgres}"
 
+ # Validate time_range_hours is numeric, default to 24 if not
+ if ! [[ "${time_range_hours}" =~ ^[0-9]+$ ]]; then
+  time_range_hours=24
+ fi
+
  # Convert component to lowercase for database constraint
  local component_lower
  component_lower=$(echo "${component}" | tr '[:upper:]' '[:lower:]')
@@ -292,6 +297,11 @@ main() {
  # Override time range if provided
  if [[ -n "${4:-}" ]]; then
   time_range_hours="${4}"
+ fi
+
+ # Validate time_range_hours is numeric, default to 24 if not
+ if ! [[ "${time_range_hours}" =~ ^[0-9]+$ ]]; then
+  time_range_hours=24
  fi
 
  # Generate metrics
