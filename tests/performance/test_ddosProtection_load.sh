@@ -63,11 +63,8 @@ setup() {
     # Initialize security functions
     init_security
 
-    # Check database availability - skip all tests if not available
-    skip_if_database_not_available
-
     # Ensure security_events table exists before cleaning
-    ensure_security_tables
+    ensure_security_tables || true
 
     # Clean test database
     clean_test_database || true

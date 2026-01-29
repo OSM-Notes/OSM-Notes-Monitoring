@@ -102,11 +102,8 @@ INFO: duration: 1800s" > "${MOCK_ANALYTICS_DIR}/logs/etl_job1.log"
     # Initialize alerting
     init_alerting
 
-    # Check database availability - skip all tests if not available
-    skip_if_database_not_available
-
-    # Setup test analytics database schema
-    setup_test_analytics_db
+    # Setup test analytics database schema (will skip if DB not available)
+    setup_test_analytics_db || true
 }
 
 teardown() {

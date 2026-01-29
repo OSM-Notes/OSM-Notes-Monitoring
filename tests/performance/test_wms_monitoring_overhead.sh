@@ -93,9 +93,6 @@ setup() {
 
     # Initialize alerting
     init_alerting
-
-    # Check database availability - skip all tests if not available
-    skip_if_database_not_available
 }
 
 teardown() {
