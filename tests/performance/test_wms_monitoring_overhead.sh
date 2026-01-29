@@ -57,6 +57,12 @@ setup() {
     export DBPORT="${DBPORT:-5432}"
     export DBUSER="${DBUSER:-postgres}"
 
+    # Initialize logging first
+    TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../tmp/logs"
+    mkdir -p "${TEST_LOG_DIR}"
+    export LOG_FILE="${TEST_LOG_DIR}/test_wms_monitoring_overhead.log"
+    init_logging "${LOG_FILE}" "test_wms_monitoring_overhead"
+
     # Set test WMS configuration
     export WMS_ENABLED="true"
     export WMS_BASE_URL="http://localhost:8080"
@@ -85,14 +91,11 @@ setup() {
     }
     export -f curl
 
-    # Initialize logging
-    TEST_LOG_DIR="${BATS_TEST_DIRNAME}/../tmp/logs"
-    mkdir -p "${TEST_LOG_DIR}"
-    export LOG_FILE="${TEST_LOG_DIR}/test_wms_monitoring_overhead.log"
-    init_logging "${LOG_FILE}" "test_wms_monitoring_overhead"
-
     # Initialize alerting
     init_alerting
+
+    # Check database availability - skip all tests if not available
+    skip_if_database_not_available
 }
 
 teardown() {
