@@ -34,8 +34,18 @@ elif [[ -z "${LOG_DIR:-}" ]]; then
  export LOG_DIR="${PROJECT_ROOT}/logs"
 fi
 
-# Ensure log directory exists
-mkdir -p "${LOG_DIR}"
+# Ensure log directory exists (handle permission errors gracefully)
+mkdir -p "${LOG_DIR}" 2>/dev/null || {
+  # If we can't create LOG_DIR, try fallback locations
+  if [[ -n "${TMP_DIR:-}" ]]; then
+    export LOG_DIR="${TMP_DIR}/logs"
+  elif [[ -n "${PROJECT_ROOT:-}" ]] && [[ -d "${PROJECT_ROOT}" ]]; then
+    export LOG_DIR="${PROJECT_ROOT}/tmp/logs"
+  else
+    export LOG_DIR="/tmp/osm-notes-monitoring-logs"
+  fi
+  mkdir -p "${LOG_DIR}" 2>/dev/null || export LOG_DIR="/tmp"
+}
 
 # Only initialize if not in test mode or if script is executed directly
 if [[ "${TEST_MODE:-false}" != "true" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

@@ -257,7 +257,11 @@ teardown() {
 	}
 	export -f record_metric
 
+	# Set LOG_DIR to test directory if not already set
+	export LOG_DIR="${LOG_DIR:-${TEST_LOG_DIR}}"
+	
 	# Create a mock log file with old execution times
+	mkdir -p "${LOG_DIR}" 2>/dev/null || export LOG_DIR="${TEST_LOG_DIR}"
 	mkdir -p "${LOG_DIR}"
 	echo "cron_etl_last_execution_seconds 3600" >"${LOG_DIR}/cron_metrics.log"
 

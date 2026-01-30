@@ -44,8 +44,9 @@ init_logging() {
   local log_dir
   log_dir="$(dirname "${LOG_FILE}")"
   if [[ ! -d "${log_dir}" ]]; then
-   # In test mode or if we don't have permissions, use a temporary directory
-   if [[ "${TEST_MODE:-false}" == "true" ]] || ! mkdir -p "${log_dir}" 2>/dev/null; then
+   # Try to create the directory first
+   # Only use fallback if creation fails (e.g., no permissions)
+   if ! mkdir -p "${log_dir}" 2>/dev/null; then
     # Use TMP_DIR if set, otherwise try PROJECT_ROOT/tmp/logs, or use /tmp
     local fallback_dir
     if [[ -n "${TMP_DIR:-}" ]]; then
