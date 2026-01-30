@@ -371,7 +371,7 @@ check_error_rate() {
 # Alert if error rate exceeds threshold
 if [[ ${error_rate} -gt ${threshold} ]]; then
  log_warning "${COMPONENT}: Error rate (${error_rate}%) exceeds threshold (${threshold}%)"
- if command -v send_alert >/dev/null 2>&1; then
+ if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
   send_alert "${COMPONENT}" "WARNING" "error_rate_exceeded" "WMS error rate (${error_rate}%) exceeds threshold (${threshold}%, errors: ${error_count}, requests: ${total_requests})" || true
  fi
  return 1

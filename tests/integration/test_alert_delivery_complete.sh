@@ -9,14 +9,25 @@
 
 set -euo pipefail
 
-SCRIPT_DIR=""
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-PROJECT_ROOT=""
-PROJECT_ROOT="$(dirname "$(dirname "${SCRIPT_DIR}")")"
-# Remove trailing slash if present
-PROJECT_ROOT="${PROJECT_ROOT%/}"
-readonly PROJECT_ROOT
+# Only set SCRIPT_DIR if not already set (allows sourcing multiple times)
+if [[ -z "${SCRIPT_DIR:-}" ]]; then
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ readonly SCRIPT_DIR
+fi
+
+# Only set PROJECT_ROOT if not already set (allows sourcing multiple times)
+if [[ -z "${PROJECT_ROOT:-}" ]]; then
+ PROJECT_ROOT="$(dirname "$(dirname "${SCRIPT_DIR}")")"
+ # Remove trailing slash if present
+ PROJECT_ROOT="${PROJECT_ROOT%/}"
+ readonly PROJECT_ROOT
+fi
+
+# Validate PROJECT_ROOT exists
+if [[ ! -d "${PROJECT_ROOT}/bin/lib" ]]; then
+ echo "Error: Cannot find PROJECT_ROOT. SCRIPT_DIR=${SCRIPT_DIR}, PROJECT_ROOT=${PROJECT_ROOT}" >&2
+ exit 1
+fi
 
 # Source libraries
 # shellcheck disable=SC1091

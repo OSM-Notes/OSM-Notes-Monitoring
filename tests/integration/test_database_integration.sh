@@ -154,19 +154,19 @@ skip_if_database_not_available() {
     # Step 1: Record metric
     record_metric "ingestion" "timestamp_test" "100" "test=timestamp"
 
-    # Step 2: Get timestamp
-    local metric_timestamp
-    metric_timestamp=$(psql -h "${DBHOST}" -p "${DBPORT}" -U "${DBUSER}" -d "${DBNAME}" -t -c \
-        "SELECT timestamp FROM metrics WHERE component = 'ingestion' AND metric_name = 'timestamp_test' ORDER BY timestamp DESC LIMIT 1;" 2>/dev/null | tr -d ' ' || echo "")
+    # Step 2: Get timestamp as Unix epoch (more reliable than parsing date strings)
+    local metric_time
+    metric_time=$(psql -h "${DBHOST}" -p "${DBPORT}" -U "${DBUSER}" -d "${DBNAME}" -t -c \
+        "SELECT EXTRACT(EPOCH FROM timestamp)::bigint FROM metrics WHERE component = 'ingestion' AND metric_name = 'timestamp_test' ORDER BY timestamp DESC LIMIT 1;" 2>/dev/null | tr -d '[:space:]' || echo "0")
 
     # Step 3: Verify timestamp is recent (within last minute)
     local current_time
     current_time=$(date +%s)
-    local metric_time
-    metric_time=$(date -d "${metric_timestamp}" +%s 2>/dev/null || echo "0")
     local time_diff
     time_diff=$((current_time - metric_time))
 
+    # Ensure metric_time is valid (greater than 0) and recent
+    assert [ "${metric_time}" -gt 0 ]
     assert [ "${time_diff}" -lt 60 ]
 }
 

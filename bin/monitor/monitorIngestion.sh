@@ -311,7 +311,7 @@ check_error_rate() {
  local error_count_threshold="${INGESTION_ERROR_COUNT_THRESHOLD:-1000}"
  if [[ ${error_lines} -gt ${error_count_threshold} ]]; then
   log_warning "${COMPONENT}: Error count (${error_lines}) exceeds threshold (${error_count_threshold})"
-  if command -v send_alert >/dev/null 2>&1; then
+  if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
    send_alert "${COMPONENT}" "WARNING" "error_rate" "High error count detected: ${error_lines} errors in 24h (threshold: ${error_count_threshold})" || true
   fi
  fi
@@ -320,7 +320,7 @@ check_error_rate() {
  local warning_count_threshold="${INGESTION_WARNING_COUNT_THRESHOLD:-2000}"
  if [[ ${warning_lines} -gt ${warning_count_threshold} ]]; then
   log_warning "${COMPONENT}: Warning count (${warning_lines}) exceeds threshold (${warning_count_threshold})"
-  if command -v send_alert >/dev/null 2>&1; then
+  if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
    send_alert "${COMPONENT}" "INFO" "warning_rate" "High warning count detected: ${warning_lines} warnings in 24h (threshold: ${warning_count_threshold})" || true
   fi
  fi
@@ -329,7 +329,7 @@ check_error_rate() {
  local max_error_rate="${INGESTION_MAX_ERROR_RATE:-5}"
  if [[ ${error_rate} -gt ${max_error_rate} ]]; then
   log_warning "${COMPONENT}: Error rate (${error_rate}%) exceeds threshold (${max_error_rate}%)"
-  if command -v send_alert >/dev/null 2>&1; then
+  if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
    send_alert "${COMPONENT}" "WARNING" "error_rate" "High error rate detected: ${error_rate}% (threshold: ${max_error_rate}%, errors: ${error_lines}/${total_lines})" || true
   fi
   return 1
@@ -339,7 +339,7 @@ check_error_rate() {
 local warning_rate_threshold="${INGESTION_WARNING_RATE_THRESHOLD:-15}"
 if [[ ${warning_rate} -gt ${warning_rate_threshold} ]]; then
  log_warning "${COMPONENT}: Warning rate (${warning_rate}%) exceeds threshold (${warning_rate_threshold}%)"
- if command -v send_alert >/dev/null 2>&1; then
+ if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
   send_alert "${COMPONENT}" "WARNING" "warning_rate" "High warning rate detected: ${warning_rate}% (threshold: ${warning_rate_threshold}%, warnings: ${warning_lines}/${total_lines})" || true
  fi
 fi

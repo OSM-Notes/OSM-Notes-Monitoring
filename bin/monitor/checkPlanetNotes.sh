@@ -109,7 +109,7 @@ run_planet_check() {
   if [[ ${duration} -gt ${planet_duration_threshold} ]]; then
    log_warning "${COMPONENT}: Planet check duration (${duration}s) exceeds threshold (${planet_duration_threshold}s)"
    # Only send alert if send_alert function is available
-   if command -v send_alert >/dev/null 2>&1; then
+   if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
     send_alert "${COMPONENT}" "WARNING" "planet_check_duration" "Planet Notes check took too long: ${duration}s (threshold: ${planet_duration_threshold}s)" || true
    fi
   fi
@@ -118,12 +118,12 @@ run_planet_check() {
  else
   log_error "${COMPONENT}: Planet Notes check failed (exit_code: ${exit_code}, duration: ${duration}s)"
   # Record metrics (don't fail if record_metric is not available or fails)
-  if command -v record_metric >/dev/null 2>&1; then
+  if declare -f record_metric >/dev/null 2>&1 || command -v record_metric >/dev/null 2>&1; then
    record_metric "${COMPONENT}" "planet_check_status" "0" "component=ingestion,check=processCheckPlanetNotes" || true
    record_metric "${COMPONENT}" "planet_check_duration" "${duration}" "component=ingestion,check=processCheckPlanetNotes" || true
   fi
   # Only send alert if send_alert function is available
-  if command -v send_alert >/dev/null 2>&1; then
+  if declare -f send_alert >/dev/null 2>&1 || command -v send_alert >/dev/null 2>&1; then
    send_alert "${COMPONENT}" "ERROR" "planet_check_failed" "Planet Notes check failed: exit_code=${exit_code}" || true
   fi
   return 1

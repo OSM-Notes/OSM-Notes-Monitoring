@@ -55,7 +55,7 @@ setup() {
     export DBHOST="localhost"
     export DBPORT="5432"
     export DBUSER="test_user"
-    export ANALYTICS_DBNAME="analytics_test_db"
+    export ANALYTICS_DBNAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
     
     # Define mocks BEFORE sourcing libraries
     # Mock psql first, as it's a low-level dependency

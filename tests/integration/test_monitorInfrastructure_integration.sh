@@ -6,7 +6,7 @@
 # shellcheck disable=SC2030,SC2031
 # SC2030/SC2031: Variables modified in subshells are expected in BATS tests
 
-export TEST_DB_NAME="test_monitor_infrastructure"
+export TEST_DB_NAME="${TEST_DB_NAME:-osm_notes_monitoring_test}"
 load "${BATS_TEST_DIRNAME}/../test_helper.bash"
 
 # Test directories

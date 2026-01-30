@@ -212,12 +212,33 @@ create_test_log() {
     # Ensure log directory exists
     mkdir -p "${TEST_INGESTION_DIR}/logs"
     
-    # Create log file with errors
-    create_test_log "test.log" "INFO: Test message
-ERROR: Test error
-INFO: Another message
-ERROR: Another error
-WARNING: Test warning"
+    # Create log file with low error rate (below threshold)
+    # 1 error out of 25 lines = 4% error rate (below 5% threshold, should pass)
+    create_test_log "test.log" "INFO: Test message 1
+INFO: Test message 2
+INFO: Test message 3
+INFO: Test message 4
+INFO: Test message 5
+INFO: Test message 6
+INFO: Test message 7
+INFO: Test message 8
+INFO: Test message 9
+INFO: Test message 10
+INFO: Test message 11
+INFO: Test message 12
+INFO: Test message 13
+INFO: Test message 14
+INFO: Test message 15
+INFO: Test message 16
+INFO: Test message 17
+INFO: Test message 18
+INFO: Test message 19
+INFO: Test message 20
+INFO: Test message 21
+INFO: Test message 22
+INFO: Test message 23
+INFO: Test message 24
+ERROR: Test error"
     
     # Mock log functions
     # shellcheck disable=SC2317
@@ -244,10 +265,13 @@ WARNING: Test warning"
     }
     export -f send_alert
     
+    # Set threshold to default (5%) - 1 error out of 25 = 4%, below threshold
+    export INGESTION_MAX_ERROR_RATE="5"
+    
     # Run check
     run check_error_rate
     
-    # Should succeed
+    # Should succeed (error rate is at threshold, not exceeding it)
     assert_success
 }
 

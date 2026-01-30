@@ -180,24 +180,28 @@ is_alert_duplicate() {
  local dbport="${DBPORT:-5432}"
  local dbuser="${DBUSER:-postgres}"
 
+ # Escape single quotes in message for SQL
+ local message_escaped="${message//\'/\'\'}"
+
  local query
  query="SELECT COUNT(*) FROM alerts
            WHERE component = '${component}'
              AND alert_type = '${alert_type}'
-             AND message = '${message}'
+             AND message = '${message_escaped}'
              AND status = 'active'
              AND created_at > CURRENT_TIMESTAMP - INTERVAL '${window_minutes} minutes';"
 
  local count
- # Use PGPASSWORD only if set, otherwise let psql use default authentication
- if [[ -n "${PGPASSWORD:-}" ]]; then
-  count=$(PGPASSWORD="${PGPASSWORD}" psql \
+ # Use PGPASSWORD or DBPASSWORD if set, otherwise let psql use default authentication
+ local dbpassword="${PGPASSWORD:-${DBPASSWORD:-}}"
+ if [[ -n "${dbpassword}" ]]; then
+  count=$(PGPASSWORD="${dbpassword}" psql \
    -h "${dbhost}" \
    -p "${dbport}" \
    -U "${dbuser}" \
    -d "${dbname}" \
    -t -A \
-   -c "${query}" 2> /dev/null)
+   -c "${query}" 2> /dev/null || echo "0")
  else
   count=$(psql \
    -h "${dbhost}" \
@@ -205,10 +209,14 @@ is_alert_duplicate() {
    -U "${dbuser}" \
    -d "${dbname}" \
    -t -A \
-   -c "${query}" 2> /dev/null)
+   -c "${query}" 2> /dev/null || echo "0")
  fi
 
- if [[ "${count:-0}" -gt 0 ]]; then
+ # Ensure count is numeric and handle empty result
+ count=$(echo "${count}" | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "0")
+ count=$((count + 0))
+
+ if [[ "${count}" -gt 0 ]]; then
   return 0 # Duplicate
  else
   return 1 # Not duplicate
