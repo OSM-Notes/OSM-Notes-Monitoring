@@ -480,9 +480,9 @@ If consolidating to a single Grafana instance:
 
 ### OSM-Notes-API
 
-- [Monitoring Documentation](../../../OSM-Notes-API/docs/Monitoring.md)
-- [Docker Configuration](../../../OSM-Notes-API/docker/README.md)
-- [Grafana Dashboards](../OSM-Notes-API/docker/grafana/provisioning/dashboards/)
+- [Monitoring Documentation](https://github.com/OSM-Notes/OSM-Notes-API/blob/main/docs/Monitoring.md)
+- [Docker Configuration](https://github.com/OSM-Notes/OSM-Notes-API/blob/main/docker/README.md)
+- [Grafana Dashboards](https://github.com/OSM-Notes/OSM-Notes-API/tree/main/docker/grafana/provisioning/dashboards)
 
 ### OSM-Notes-Monitoring
 

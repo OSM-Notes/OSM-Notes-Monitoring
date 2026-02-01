@@ -61,4 +61,4 @@ We will use Bash scripts for monitoring, leveraging system tools and common libr
 ## References
 
 - [Monitoring Scripts](../bin/monitor/)
-- [OSM-Notes-Common Libraries](../../OSM-Notes-Common/)
+- [OSM-Notes-Common Libraries](https://github.com/OSM-Notes/OSM-Notes-Common)
